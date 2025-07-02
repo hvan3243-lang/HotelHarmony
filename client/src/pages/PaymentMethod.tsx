@@ -125,21 +125,41 @@ export default function PaymentMethod() {
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Mock booking data - trong thực tế sẽ lấy từ state hoặc params
-  const bookingData = {
-    id: 1,
-    roomNumber: "101",
-    roomType: "Deluxe",
-    checkIn: "2025-01-15",
-    checkOut: "2025-01-17", 
-    guests: 2,
-    totalPrice: 2500000,
-    customerName: "Nguyễn Văn A",
-    customerEmail: "customer@example.com",
-    customerPhone: "0123456789"
+  // Lấy booking data từ localStorage hoặc state
+  const getBookingData = () => {
+    const storedBooking = localStorage.getItem('currentBooking');
+    if (storedBooking) {
+      return JSON.parse(storedBooking);
+    }
+    
+    // Fallback data
+    return {
+      id: null,
+      roomNumber: "101",
+      roomType: "Standard",
+      checkIn: "2025-01-15",
+      checkOut: "2025-01-17", 
+      guests: 2,
+      totalPrice: 500000,
+      customerName: "Khách hàng",
+      customerEmail: "customer@example.com",
+      customerPhone: "0123456789"
+    };
   };
+  
+  const bookingData = getBookingData();
 
   const handleCashOnArrival = async () => {
+    if (!bookingData.id) {
+      toast({
+        title: "Lỗi",
+        description: "Không tìm thấy thông tin đặt phòng. Vui lòng đặt phòng lại.",
+        variant: "destructive",
+      });
+      setLocation("/booking");
+      return;
+    }
+
     setIsProcessing(true);
     try {
       await apiRequest("POST", "/api/confirm-payment", {
@@ -150,9 +170,11 @@ export default function PaymentMethod() {
       
       toast({
         title: "Đặt phòng thành công!",
-        description: "Bạn sẽ thanh toán khi nhận phòng. Mã đặt phòng: #" + bookingData.id,
+        description: `Bạn sẽ thanh toán khi nhận phòng. Mã đặt phòng: #HLX${bookingData.id}`,
       });
       
+      // Xóa dữ liệu booking tạm thời
+      localStorage.removeItem('currentBooking');
       setLocation("/customer");
     } catch (error: any) {
       toast({
@@ -166,6 +188,16 @@ export default function PaymentMethod() {
   };
 
   const handleWalletPayment = async () => {
+    if (!bookingData.id) {
+      toast({
+        title: "Lỗi",
+        description: "Không tìm thấy thông tin đặt phòng. Vui lòng đặt phòng lại.",
+        variant: "destructive",
+      });
+      setLocation("/booking");
+      return;
+    }
+
     setIsProcessing(true);
     try {
       // Giả lập thanh toán ví điện tử
@@ -179,9 +211,11 @@ export default function PaymentMethod() {
       
       toast({
         title: "Thanh toán ví thành công!",
-        description: "Đặt phòng đã được xác nhận.",
+        description: `Đặt phòng đã được xác nhận. Mã đặt phòng: #HLX${bookingData.id}`,
       });
       
+      // Xóa dữ liệu booking tạm thời
+      localStorage.removeItem('currentBooking');
       setLocation("/customer");
     } catch (error: any) {
       toast({

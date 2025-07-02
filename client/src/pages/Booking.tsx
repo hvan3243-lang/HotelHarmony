@@ -130,9 +130,23 @@ export default function Booking() {
       const response = await apiRequest("POST", "/api/bookings", bookingData);
       const booking = await response.json();
 
+      // Lưu thông tin booking vào localStorage để sử dụng trong payment
+      const bookingForPayment = {
+        id: booking.id,
+        roomNumber: room.number,
+        roomType: getRoomTypeLabel(room.type),
+        checkIn: checkIn,
+        checkOut: checkOut,
+        guests: parseInt(guests),
+        totalPrice: calculateTotalPrice(room),
+        specialRequests: bookingForm.specialRequests || ""
+      };
+      
+      localStorage.setItem('currentBooking', JSON.stringify(bookingForPayment));
+
       toast({
         title: "Đặt phòng thành công",
-        description: "Chúng tôi đã gửi email xác nhận cho bạn",
+        description: "Vui lòng chọn phương thức thanh toán",
       });
 
       // Redirect to payment method selection
