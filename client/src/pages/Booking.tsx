@@ -99,19 +99,50 @@ export default function Booking() {
       return;
     }
 
-    const bookingData = {
-      roomId: room.id,
-      checkIn: searchParams.checkIn,
-      checkOut: searchParams.checkOut,
-      guests: parseInt(searchParams.guests),
-      totalPrice: calculateTotalPrice(room),
-      specialRequests: ""
-    };
+    try {
+      const bookingData = {
+        roomId: room.id,
+        checkIn: searchParams.checkIn,
+        checkOut: searchParams.checkOut,
+        guests: parseInt(searchParams.guests),
+        totalPrice: calculateTotalPrice(room).toString(),
+        specialRequests: ""
+      };
 
-    // Save booking data to localStorage and redirect to payment
-    localStorage.setItem('bookingData', JSON.stringify(bookingData));
-    localStorage.setItem('selectedRoomInfo', JSON.stringify(room));
-    setLocation('/payment');
+      // Create booking in database first
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authManager.getToken()}`
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Không thể tạo đặt phòng');
+      }
+
+      const booking = await response.json();
+      
+      // Save booking info to localStorage for payment
+      localStorage.setItem('currentBooking', JSON.stringify(booking));
+      localStorage.setItem('selectedRoomInfo', JSON.stringify(room));
+      
+      toast({
+        title: "Tạo đặt phòng thành công",
+        description: "Chuyển đến trang thanh toán...",
+      });
+      
+      setLocation('/payment');
+    } catch (error: any) {
+      toast({
+        title: "Lỗi tạo đặt phòng",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const getRoomTypeLabel = (type: string) => {

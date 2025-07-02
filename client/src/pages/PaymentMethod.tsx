@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,32 +125,48 @@ export default function PaymentMethod() {
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Lấy booking data từ localStorage hoặc state
+  // Lấy booking data từ localStorage
   const getBookingData = () => {
     const storedBooking = localStorage.getItem('currentBooking');
     if (storedBooking) {
-      return JSON.parse(storedBooking);
+      try {
+        return JSON.parse(storedBooking);
+      } catch (e) {
+        console.error('Error parsing booking data:', e);
+        return null;
+      }
     }
-    
-    // Fallback data
-    return {
-      id: null,
-      roomNumber: "101",
-      roomType: "Standard",
-      checkIn: "2025-01-15",
-      checkOut: "2025-01-17", 
-      guests: 2,
-      totalPrice: 500000,
-      customerName: "Khách hàng",
-      customerEmail: "customer@example.com",
-      customerPhone: "0123456789"
-    };
+    return null;
   };
   
   const bookingData = getBookingData();
 
+  // Redirect if no booking data
+  useEffect(() => {
+    if (!bookingData) {
+      toast({
+        title: "Không tìm thấy thông tin đặt phòng",
+        description: "Vui lòng đặt phòng lại",
+        variant: "destructive",
+      });
+      setLocation('/booking');
+    }
+  }, [bookingData, toast, setLocation]);
+
+  // Don't render if no booking data
+  if (!bookingData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted-foreground">Đang chuyển hướng...</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleCashOnArrival = async () => {
-    if (!bookingData.id) {
+    if (!bookingData || !bookingData.id) {
       toast({
         title: "Lỗi",
         description: "Không tìm thấy thông tin đặt phòng. Vui lòng đặt phòng lại.",
