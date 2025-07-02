@@ -1,0 +1,541 @@
+Chi tiết từng trang
+
+1. Trang chủ
+
+Mô tả: Trang giới thiệu khách sạn với thiết kế hiện đại, hiệu ứng mượt mà, và trải nghiệm người dùng tối ưu.
+Tính năng:
+
+
+
+
+
+Banner động: Sử dụng carousel (Framer Motion) hiển thị hình ảnh khách sạn, tiện ích (hồ bơi, nhà hàng, spa) với hiệu ứng chuyển cảnh.
+
+
+
+Form tìm phòng thông minh:
+
+
+
+
+
+Nhập ngày nhận/trả phòng, số khách, loại phòng (đơn/đôi/suite/VIP).
+
+
+
+Gợi ý phòng dựa trên lịch sử tìm kiếm hoặc sở thích (dùng AI đơn giản).
+
+
+
+Bản đồ tương tác: Hiển thị vị trí khách sạn qua Google Maps API, có đánh dấu tiện ích lân cận.
+
+
+
+Thông tin nổi bật: Hiển thị các ưu đãi (giảm giá, combo nghỉ dưỡng) với hiệu ứng hover.
+
+
+
+Dark mode: Nút chuyển đổi sáng/tối, lưu trạng thái trong localStorage.
+
+
+
+PWA: Hỗ trợ cài đặt trên điện thoại, thông báo đẩy khi có ưu đãi mới.
+
+
+
+Chatbot AI: Góc phải dưới, trả lời câu hỏi về giá, tiện nghi, hoặc chuyển hướng đặt phòng.
+
+2. Trang đặt phòng
+
+Mô tả: Trang đặt phòng với giao diện trực quan, hỗ trợ thời gian thực và thanh toán hiện đại.
+Tính năng:
+
+
+
+
+
+Danh sách phòng trống:
+
+
+
+
+
+Hiển thị phòng theo ngày, loại phòng, giá, tiện nghi (Wi-Fi, view biển).
+
+
+
+Hiệu ứng thẻ phòng: Hover để xem chi tiết, hình ảnh phóng to.
+
+
+
+Cập nhật thời gian thực (WebSocket): Trạng thái phòng thay đổi ngay khi có đặt phòng mới.
+
+
+
+Form đặt phòng:
+
+
+
+
+
+Nhập thông tin: Tên, email, số điện thoại, yêu cầu đặc biệt (ví dụ: thêm giường).
+
+
+
+Tích hợp AI: Gợi ý phòng dựa trên sở thích (lưu trong Users.s preferences).
+
+
+
+Thanh toán:
+
+
+
+
+
+Tích hợp Stripe (giả lập): Form thanh toán với giao diện hiện đại, hỗ trợ thẻ tín dụng.
+
+
+
+Hiển thị tổng giá, chi tiết (thuế, phí dịch vụ).
+
+
+
+Xác nhận thời gian thực: Gửi thông báo qua WebSocket khi đặt phòng thành công.
+
+
+
+Email xác nhận: Gửi email qua SendGrid với thông tin đặt phòng (phòng, ngày, giá).
+
+
+
+Chatbot AI: Hỗ trợ giải đáp chính sách hủy, thanh toán, hoặc yêu cầu đặc biệt.
+
+3. Trang đăng nhập/đăng ký
+
+Mô tả: Trang quản lý tài khoản với giao diện tối giản, bảo mật cao, và trải nghiệm mượt mà.
+Tính năng:
+
+
+
+
+
+Đăng nhập:
+
+
+
+
+
+Form: Email, mật khẩu, nút "Quên mật khẩu" (gửi link reset qua email).
+
+
+
+Xác thực: JWT token, lưu trong localStorage, hết hạn sau 24h.
+
+
+
+Điều hướng: Customer đến trang khách hàng, admin đến dashboard.
+
+
+
+Thông báo lỗi: Hiển thị nếu sai thông tin, hiệu ứng fade-in.
+
+
+
+Đăng ký:
+
+
+
+
+
+Form: Tên, email, mật khẩu, số điện thoại, sở thích (checkbox: biển, núi, sang trọng).
+
+
+
+Xác nhận: Gửi email chào mừng qua SendGrid với thông tin tài khoản.
+
+
+
+Vai trò mặc định: Customer (admin thêm thủ công trong cơ sở dữ liệu).
+
+
+
+Tính năng hiện đại:
+
+
+
+
+
+Đăng nhập bằng Google (OAuth, giả lập trong đồ án).
+
+
+
+Giao diện: Hiệu ứng chuyển đổi mượt mà (Framer Motion) khi đổi giữa đăng nhập/đăng ký.
+
+
+
+Dark mode: Đồng bộ với cài đặt toàn hệ thống.
+
+
+
+Chatbot AI: Hỗ trợ hướng dẫn đăng ký, khôi phục mật khẩu, hoặc giải đáp chính sách tài khoản.
+
+4. Trang khách hàng
+
+Mô tả: Trang cá nhân với giao diện hiện đại, hỗ trợ quản lý thông tin và đặt phòng.
+Tính năng:
+
+
+
+
+
+Thông tin cá nhân:
+
+
+
+
+
+Hiển thị: Tên, email, số điện thoại, sở thích.
+
+
+
+Form sửa thông tin: Cập nhật tên, số điện thoại, sở thích (checkbox).
+
+
+
+Bảo mật: Yêu cầu nhập mật khẩu để xác nhận thay đổi.
+
+
+
+Lịch sử đặt phòng:
+
+
+
+
+
+Danh sách: Hiển thị đặt phòng (phòng, ngày, trạng thái, giá) với bộ lọc (đã hoàn thành, đang chờ).
+
+
+
+Hủy đặt phòng: Nút hủy (chỉ cho trạng thái "chờ"), gửi thông báo qua WebSocket.
+
+
+
+Chi tiết đặt phòng: Hiển thị hóa đơn, tiện nghi phòng.
+
+
+
+Đặt phòng mới: Nút chuyển hướng đến trang đặt phòng với gợi ý dựa trên sở thích.
+
+
+
+Thông báo thời gian thực: Nhận thông báo (qua WebSocket) khi trạng thái đặt phòng thay đổi.
+
+
+
+Tính năng hiện đại:
+
+
+
+
+
+Giao diện: Bảng điều khiển cá nhân với hiệu ứng động (Framer Motion).
+
+
+
+Dark mode: Đồng bộ với hệ thống.
+
+
+
+PWA: Xem lịch sử đặt phòng offline.
+
+
+
+Chatbot AI: Hỗ trợ xem lịch sử đặt phòng, hỏi về ưu đãi, hoặc đặt phòng mới.
+
+5. Trang admin
+
+Mô tả: Dashboard quản lý toàn diện với giao diện hiện đại, biểu đồ trực quan, và cập nhật thời gian thực.
+Tính năng:
+
+
+
+
+
+Quản lý phòng:
+
+
+
+
+
+Danh sách: Hiển thị số phòng, loại, giá, trạng thái, tiện nghi (bảng hoặc thẻ).
+
+
+
+Thêm phòng: Form nhập số phòng, loại, giá, tiện nghi, hình ảnh (URL).
+
+
+
+Sửa/xóa phòng: Cập nhật thông tin, xóa nếu không có đặt phòng liên quan.
+
+
+
+Thời gian thực: Cập nhật trạng thái phòng qua WebSocket (ví dụ: khi khách đặt).
+
+
+
+Quản lý khách hàng:
+
+
+
+
+
+Danh sách: Hiển thị tên, email, số điện thoại, vai trò (VIP/thường).
+
+
+
+Phân loại VIP: Tự động gán dựa trên số lần đặt phòng (>5 lần).
+
+
+
+Xem lịch sử: Chi tiết đặt phòng của từng khách hàng.
+
+
+
+Tìm kiếm: Lọc khách hàng theo tên, email.
+
+
+
+Quản lý nhân viên:
+
+
+
+
+
+Danh sách: Hiển thị tên, email, vai trò, ca làm việc.
+
+
+
+Thêm/sửa/xóa: Form nhập thông tin, gán vai trò (lễ tân/quản lý/dọn dẹp).
+
+
+
+Phân quyền: Chỉ admin cấp cao có thể thay đổi vai trò.
+
+
+
+Báo cáo doanh thu:
+
+
+
+
+
+Biểu đồ: Doanh thu theo ngày, tuần, tháng (Chart.js, hiệu ứng mượt).
+
+
+
+Lọc: Chọn khoảng thời gian (7 ngày, 30 ngày, tùy chỉnh).
+
+
+
+Xuất PDF: Tạo báo cáo doanh thu với biểu đồ và chi tiết.
+
+
+
+Thông báo thời gian thực: Cập nhật khi có đặt phòng mới, hủy phòng, hoặc yêu cầu từ nhân viên.
+
+
+
+Tính năng hiện đại:
+
+
+
+
+
+Giao diện: Dashboard với bố cục lưới, hiệu ứng chuyển đổi (Framer Motion).
+
+
+
+Dark mode: Đồng bộ với hệ thống.
+
+
+
+PWA: Xem báo cáo offline.
+
+
+
+Chatbot AI: Hỗ trợ admin thêm phòng, xem báo cáo, hoặc giải đáp cách sử dụng hệ thống.
+
+6. Chatbot AI
+
+Mô tả: Chatbot thông minh tích hợp trên mọi trang, sử dụng Dialogflow để cung cấp hỗ trợ 24/7.
+Tính năng:
+
+
+
+
+
+Vị trí: Góc phải dưới, nút mở/đóng với hiệu ứng mượt (Framer Motion).
+
+
+
+Intent chính:
+
+
+
+
+
+Trả lời: Giá phòng, tiện nghi, chính sách hủy, giờ check-in/out.
+
+
+
+Hướng dẫn: Đặt phòng, đăng ký tài khoản, xem lịch sử đặt phòng.
+
+
+
+Gợi ý: Phòng phù hợp dựa trên sở thích (tích hợp AI đơn giản).
+
+
+
+Tính năng hiện đại:
+
+
+
+
+
+Lịch sử trò chuyện: Lưu trong phiên, hiển thị dạng bong bóng chat.
+
+
+
+Đa ngôn ngữ: Hỗ trợ tiếng Việt và tiếng Anh (Dialogflow).
+
+
+
+Thời gian thực: Gửi thông báo qua WebSocket khi có câu trả lời quan trọng (ví dụ: xác nhận đặt phòng).
+
+
+
+Tích hợp: Kết nối Dialogflow qua API, hỗ trợ chuyển hướng đến trang đặt phòng hoặc liên hệ.
+
+Quy trình hoạt động
+
+
+
+
+
+Đăng nhập/Đăng ký:
+
+
+
+
+
+Khách hàng đăng ký với sở thích, nhận email chào mừng.
+
+
+
+Admin đăng nhập để quản lý, nhận thông báo thời gian thực.
+
+
+
+Đặt phòng:
+
+
+
+
+
+Tìm phòng trên trang chủ hoặc trang đặt phòng với gợi ý AI.
+
+
+
+Nhập thông tin, thanh toán qua Stripe, nhận xác nhận qua email và WebSocket.
+
+
+
+Quản lý:
+
+
+
+
+
+Admin quản lý phòng, khách hàng, nhân viên qua dashboard.
+
+
+
+Xem báo cáo doanh thu, xuất PDF, nhận thông báo thời gian thực.
+
+
+
+Hỗ trợ:
+
+
+
+
+
+Chatbot AI trả lời câu hỏi, gợi ý phòng, hoặc chuyển hướng.
+
+Tính năng hiện đại bổ sung
+
+
+
+
+
+AI gợi ý phòng: Phân tích sở thích khách hàng (lưu trong Users.preferences) để đề xuất phòng phù hợp (ví dụ: thích view biển thì gợi ý phòng suite gần biển).
+
+
+
+PWA: Hỗ trợ cài đặt trên điện thoại, xem thông tin offline, gửi thông thông báo đẩy (ưu đãi, xác nhận).
+
+
+
+WebSocket: Cập nhật trạng thái phòng, thông báo đặt phòng/hủy phòng ngay lập tức.
+
+
+
+Dark mode: Tự động điều chỉnh giao diện theo thời gian hoặc sở thích người dùng.
+
+
+
+Hiệu ứng giao diện: Sử dụng Framer Motion cho chuyển cảnh mượt mà, tăng trải nghiệm người dùng.
+
+Lưu ý triển khai
+
+
+
+
+
+Bảo mật:
+
+
+
+
+
+Mã hóa mật khẩu bằng bcrypt.
+
+
+
+JWT xác thực với thời hạn, làm mới token tự động.
+
+
+
+Lọc dữ liệu đầu vào để tránh XSS/SQL injection.
+
+
+
+Tích hợp:
+
+
+
+
+
+Dialogflow: Tạo intent đa dạng, hỗ trợ tiếng Việt và Anh.
+
+
+
+Stripe: Giả lập thanh toán với giao diện hiện đại.
+
+
+
+SendGrid: Gửi email xác nhận với template chuyên nghiệp.
+
+
+
+Google Maps API: Hiển thị vị trí khách sạn và tiện ích lân cận.
