@@ -154,6 +154,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check room availability for specific dates
+  app.post("/api/rooms/check-availability", async (req: Request, res: Response) => {
+    try {
+      const { checkIn, checkOut, roomId } = req.body;
+      
+      if (!checkIn || !checkOut) {
+        return res.status(400).json({ message: "Vui lòng cung cấp ngày nhận và trả phòng" });
+      }
+      
+      const availableRooms = await storage.getAvailableRooms(
+        new Date(checkIn),
+        new Date(checkOut)
+      );
+      
+      const isAvailable = roomId ? 
+        availableRooms.some(room => room.id === parseInt(roomId)) :
+        availableRooms.length > 0;
+      
+      res.json({
+        isAvailable,
+        availableRooms: roomId ? [] : availableRooms,
+        message: isAvailable ? 
+          "Phòng có sẵn cho thời gian này" : 
+          "Phòng không có sẵn cho thời gian được chọn"
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   app.post("/api/rooms", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
       const roomData = insertRoomSchema.parse(req.body);
@@ -217,7 +247,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       if (!availableRooms.find(room => room.id === bookingData.roomId)) {
-        return res.status(400).json({ message: "Phòng không còn trống trong thời gian này" });
+        return res.status(400).json({ 
+          message: "Phòng này đã được đặt cho thời gian bạn chọn. Vui lòng chọn phòng khác hoặc thời gian khác.",
+          code: "ROOM_NOT_AVAILABLE"
+        });
       }
       
       const booking = await storage.createBooking(bookingData);

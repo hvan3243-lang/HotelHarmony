@@ -134,6 +134,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Fixed booking flow: customers now create bookings in database before payment, eliminating "booking not found" errors
 - July 02, 2025. Added admin chat management: new "Tin nhắn" tab allows admin to view customer conversations and respond to messages in real-time
 - July 02, 2025. Enhanced chat system with sender names: both admin and customer interfaces now display sender names (Admin or customer full name) above each message for better conversation clarity
+- July 02, 2025. Improved booking conflict prevention: system now blocks double booking by checking both confirmed and pending bookings, preventing multiple users from booking the same room simultaneously
 
 ## User Preferences
 

@@ -5,7 +5,7 @@ import {
   type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, or, sql } from "drizzle-orm";
+import { eq, and, gte, lte, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -278,19 +278,19 @@ export class DatabaseStorage implements IStorage {
     // Get all rooms that are available
     const availableRooms = await db.select().from(rooms).where(eq(rooms.status, 'available'));
     
-    // Get all confirmed bookings and filter in JavaScript for now
-    const confirmedBookings = await db.select()
+    // Get all non-cancelled bookings (both confirmed and pending to prevent double booking)
+    const activeBookings = await db.select()
       .from(bookings)
-      .where(eq(bookings.status, 'confirmed'));
+      .where(or(eq(bookings.status, 'confirmed'), eq(bookings.status, 'pending')));
     
     // Filter out rooms with conflicts
     const unavailableRoomIds = new Set();
     
-    for (const booking of confirmedBookings) {
+    for (const booking of activeBookings) {
       const bookingStart = new Date(booking.checkIn);
       const bookingEnd = new Date(booking.checkOut);
       
-      // Check for overlap
+      // Check for overlap: booking conflicts if requested period overlaps with existing booking
       if (checkIn < bookingEnd && checkOut > bookingStart) {
         unavailableRoomIds.add(booking.roomId);
       }
