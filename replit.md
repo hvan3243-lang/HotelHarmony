@@ -132,6 +132,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Synchronized blog system: admin can create/edit blog posts with publish control, public blog page displays only published posts from API
 - July 02, 2025. Added comprehensive booking management: admin now has dedicated "Đặt phòng" tab showing all customer bookings with details, status, and actions
 - July 02, 2025. Fixed booking flow: customers now create bookings in database before payment, eliminating "booking not found" errors
+- July 02, 2025. Added admin chat management: new "Tin nhắn" tab allows admin to view customer conversations and respond to messages in real-time
 
 ## User Preferences
 

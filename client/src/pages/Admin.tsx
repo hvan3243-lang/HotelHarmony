@@ -16,7 +16,9 @@ import {
   BarChart3,
   FileText,
   MessageSquare,
-  Clock
+  Clock,
+  MessageCircle,
+  Send
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -100,6 +102,10 @@ export default function Admin() {
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
+  
+  // Chat states
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [newMessage, setNewMessage] = useState('');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -123,6 +129,16 @@ export default function Admin() {
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['/api/bookings'],
+  });
+
+  // Chat queries
+  const { data: chatConversations } = useQuery({
+    queryKey: ['/api/admin/chat/conversations'],
+  });
+
+  const { data: chatMessages, isLoading: chatMessagesLoading } = useQuery({
+    queryKey: ['/api/chat/messages', selectedUserId],
+    enabled: !!selectedUserId,
   });
 
   // Forms
@@ -258,6 +274,17 @@ export default function Admin() {
     }
   });
 
+  // Chat mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: (data: { userId: number; message: string; isFromAdmin: boolean }) => 
+      apiRequest('POST', '/api/chat/messages', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/messages', selectedUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/chat/conversations'] });
+      toast({ title: 'Thành công', description: 'Tin nhắn đã được gửi' });
+    }
+  });
+
   // Event handlers
   const handleEditRoom = (room: Room) => {
     setEditingRoom(room);
@@ -359,10 +386,11 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
-            <TabsTrigger value="rooms">Quản lý phòng</TabsTrigger>
+            <TabsTrigger value="chat">Tin nhắn</TabsTrigger>
+            <TabsTrigger value="rooms">Phòng</TabsTrigger>
             <TabsTrigger value="services">Dịch vụ</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
@@ -585,6 +613,145 @@ export default function Admin() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="mt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Quản lý tin nhắn</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Chat List */}
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Danh sách khách hàng</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {(chatConversations as any[])?.map((conversation: any) => (
+                        <div
+                          key={conversation.userId}
+                          className={`p-4 cursor-pointer hover:bg-muted transition-colors border-b ${
+                            selectedUserId === conversation.userId ? 'bg-muted' : ''
+                          }`}
+                          onClick={() => setSelectedUserId(conversation.userId)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium">
+                                {conversation.user?.firstName} {conversation.user?.lastName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {conversation.lastMessage}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(conversation.lastMessageTime).toLocaleDateString('vi-VN')}
+                              </p>
+                              {conversation.unreadCount > 0 && (
+                                <Badge variant="destructive" className="text-xs">
+                                  {conversation.unreadCount}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {(!(chatConversations as any[]) || (chatConversations as any[])?.length === 0) && (
+                        <div className="p-8 text-center text-muted-foreground">
+                          <MessageCircle className="mx-auto mb-2" size={32} />
+                          <p>Chưa có tin nhắn nào</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="lg:col-span-2">
+                {selectedUserId ? (
+                  <Card className="h-[600px] flex flex-col">
+                    <CardHeader className="border-b">
+                      <CardTitle className="text-lg">
+                        Trò chuyện với khách hàng #{selectedUserId}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-0 flex flex-col">
+                      {/* Messages */}
+                      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                        {(chatMessages as any[])?.map((message: any, index: number) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.isFromAdmin ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[70%] p-3 rounded-lg ${
+                                message.isFromAdmin
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted'
+                              }`}
+                            >
+                              <p className="text-sm">{message.message}</p>
+                              <p className="text-xs opacity-70 mt-1">
+                                {new Date(message.createdAt).toLocaleString('vi-VN')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        {chatMessagesLoading && (
+                          <div className="flex justify-center">
+                            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Message Input */}
+                      <div className="border-t p-4">
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (newMessage.trim() && selectedUserId) {
+                              sendMessageMutation.mutate({
+                                userId: selectedUserId,
+                                message: newMessage,
+                                isFromAdmin: true
+                              });
+                              setNewMessage('');
+                            }
+                          }}
+                          className="flex gap-2"
+                        >
+                          <Input
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Nhập tin nhắn..."
+                            className="flex-1"
+                          />
+                          <Button 
+                            type="submit" 
+                            disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                          >
+                            <Send size={16} />
+                          </Button>
+                        </form>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="h-[600px] flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <MessageCircle className="mx-auto mb-4" size={48} />
+                      <h3 className="text-lg font-semibold mb-2">Chọn khách hàng</h3>
+                      <p>Chọn một khách hàng từ danh sách để bắt đầu trò chuyện</p>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           {/* Rooms Tab */}
