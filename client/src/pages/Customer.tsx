@@ -15,6 +15,7 @@ import { authManager } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useRouter } from "wouter";
 import { User as UserType, Booking, Room } from "@shared/schema";
 
 export default function Customer() {
@@ -107,6 +108,24 @@ export default function Customer() {
       });
     },
   });
+
+  const handleRebookRoom = (room: Room) => {
+    // Lưu thông tin phòng vào localStorage để sử dụng lại
+    localStorage.setItem('rebookRoom', JSON.stringify({
+      roomId: room.id,
+      roomNumber: room.number,
+      roomType: room.type,
+      price: room.price
+    }));
+    
+    // Chuyển đến trang đặt phòng
+    setLocation('/booking');
+    
+    toast({
+      title: "Chuyển đến trang đặt phòng",
+      description: `Đã chọn phòng ${room.number} để đặt lại`,
+    });
+  };
 
   const preferences = [
     "view biển",
@@ -554,7 +573,7 @@ export default function Customer() {
                                       </DialogContent>
                                     </Dialog>
                                     
-                                    {booking.status === 'pending' && (
+                                    {(booking.status === 'pending' || booking.status === 'confirmed') && (
                                       <Button 
                                         variant="destructive" 
                                         size="sm"
@@ -565,7 +584,11 @@ export default function Customer() {
                                         Hủy
                                       </Button>
                                     )}
-                                    <Button variant="ghost" size="sm">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => handleRebookRoom(booking.room)}
+                                    >
                                       Đặt lại
                                     </Button>
                                   </div>

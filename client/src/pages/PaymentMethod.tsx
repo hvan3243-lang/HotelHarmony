@@ -407,10 +407,26 @@ export default function PaymentMethod() {
                         <h3 className="font-semibold mb-4 text-lg">Quét mã QR để thanh toán</h3>
                         <div className="w-64 h-80 bg-white rounded-lg mx-auto mb-4 p-2 shadow-md">
                           <img 
-                            src="/attached_assets/image_1751445716454.png" 
-                            alt="VietQR Code" 
-                            className="w-full h-full object-contain rounded-lg"
+                            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                            alt="QR Code VietQR - DANG VAN HOANG" 
+                            className="w-full h-full object-contain rounded-lg bg-gray-100"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.background = 'linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)';
+                              target.style.backgroundSize = '20px 20px';
+                              target.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+                            }}
                           />
+                          <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-sm font-medium">
+                            <div className="text-center bg-white/90 p-4 rounded-lg">
+                              <div className="font-bold text-lg mb-2">QR CODE THANH TOÁN</div>
+                              <div className="text-sm">DANG VAN HOANG</div>
+                              <div className="text-sm">0389597728</div>
+                              <div className="text-xs mt-2 text-gray-500">
+                                Quét bằng app ngân hàng để thanh toán
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <div className="space-y-3">
                           <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border border-red-200 dark:border-red-800">

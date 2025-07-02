@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -40,6 +41,18 @@ const requireAdmin = (req: any, res: Response, next: any) => {
     return res.sendStatus(403);
   }
   next();
+};
+
+// WebSocket connections để thông báo admin
+let adminClients: WebSocket[] = [];
+
+// Function để gửi thông báo cho admin
+const notifyAdmin = (message: any) => {
+  adminClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -209,6 +222,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const booking = await storage.createBooking(bookingData);
       const bookingWithDetails = await storage.getBooking(booking.id);
+      
+      // Thông báo admin về booking mới
+      if (bookingWithDetails) {
+        notifyAdmin({
+          type: 'new_booking',
+          data: {
+            id: bookingWithDetails.id,
+            customerName: `${req.user.firstName} ${req.user.lastName}`,
+            room: `${bookingWithDetails.room.type} - Phòng ${bookingWithDetails.room.number}`,
+            checkIn: bookingWithDetails.checkIn,
+            checkOut: bookingWithDetails.checkOut,
+            totalPrice: bookingWithDetails.totalPrice,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
       
       // Send confirmation email
       if (bookingWithDetails) {
@@ -641,5 +670,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server cho thông báo admin
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('WebSocket client connected');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.type === 'admin_connect') {
+          adminClients.push(ws);
+          console.log('Admin connected to WebSocket');
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      adminClients = adminClients.filter(client => client !== ws);
+      console.log('WebSocket client disconnected');
+    });
+  });
+  
   return httpServer;
 }

@@ -37,6 +37,7 @@ import { Room, Booking, User as UserType } from "@shared/schema";
 import { useEffect } from "react";
 import { LiveChat } from "@/components/LiveChat";
 import { AdminChatGuide } from "@/components/AdminChatGuide";
+import { AdminNotifications } from "@/components/AdminNotifications";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -281,7 +282,8 @@ export default function Admin() {
             </h1>
             <p className="text-muted-foreground mt-2">Tổng quan hệ thống khách sạn</p>
           </div>
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 items-center">
+            <AdminNotifications />
             <Button onClick={() => setShowRoomDialog(true)}>
               <Plus className="mr-2" size={16} />
               Thêm phòng
