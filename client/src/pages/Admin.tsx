@@ -276,7 +276,7 @@ export default function Admin() {
 
   // Chat mutation
   const sendMessageMutation = useMutation({
-    mutationFn: (data: { userId: number; message: string; isFromAdmin: boolean }) => 
+    mutationFn: (data: { targetUserId: number; message: string; isFromAdmin: boolean }) => 
       apiRequest('POST', '/api/chat/messages', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/messages', selectedUserId] });
@@ -716,7 +716,7 @@ export default function Admin() {
                             e.preventDefault();
                             if (newMessage.trim() && selectedUserId) {
                               sendMessageMutation.mutate({
-                                userId: selectedUserId,
+                                targetUserId: selectedUserId,
                                 message: newMessage,
                                 isFromAdmin: true
                               });
