@@ -694,7 +694,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/blog", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const validatedData = insertBlogPostSchema.parse(req.body);
+      const data = req.body;
+      // Auto-generate slug from title if not provided
+      if (!data.slug && data.title) {
+        data.slug = data.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+      const validatedData = insertBlogPostSchema.parse(data);
       const post = await storage.createBlogPost(validatedData);
       res.status(201).json(post);
     } catch (error: any) {

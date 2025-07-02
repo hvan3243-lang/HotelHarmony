@@ -275,7 +275,7 @@ export default function Admin() {
       description: service.description || '',
       price: service.price,
       category: service.category,
-      isActive: service.isActive
+      isActive: service.isActive || false
     });
     setIsServiceDialogOpen(true);
   };
@@ -290,7 +290,7 @@ export default function Admin() {
       category: blogPost.category,
       tags: blogPost.tags || [],
       image: blogPost.image || '',
-      published: blogPost.published
+      published: blogPost.published || false
     });
     setIsBlogDialogOpen(true);
   };
@@ -320,26 +320,26 @@ export default function Admin() {
   };
 
   // Filter data
-  const filteredRooms = rooms?.filter((room: Room) => {
+  const filteredRooms = Array.isArray(rooms) ? (rooms as Room[]).filter((room: Room) => {
     const matchesSearch = room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          room.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = roomFilter === 'all' || room.type === roomFilter;
     return matchesSearch && matchesFilter;
-  });
+  }) : [];
 
-  const filteredServices = services?.filter((service: Service) => {
+  const filteredServices = Array.isArray(services) ? (services as Service[]).filter((service: Service) => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          service.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = serviceFilter === 'all' || service.category === serviceFilter;
     return matchesSearch && matchesFilter;
-  });
+  }) : [];
 
-  const filteredBlogPosts = blogPosts?.filter((post: BlogPost) => {
+  const filteredBlogPosts = Array.isArray(blogPosts) ? (blogPosts as BlogPost[]).filter((post: BlogPost) => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.author.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = blogFilter === 'all' || post.category === blogFilter;
     return matchesSearch && matchesFilter;
-  });
+  }) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
