@@ -1,4 +1,6 @@
 import { users, rooms, bookings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, lte, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -26,277 +28,243 @@ export interface IStorage {
   cancelBooking(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private rooms: Map<number, Room>;
-  private bookings: Map<number, Booking>;
-  private currentUserId: number;
-  private currentRoomId: number;
-  private currentBookingId: number;
-
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.users = new Map();
-    this.rooms = new Map();
-    this.bookings = new Map();
-    this.currentUserId = 1;
-    this.currentRoomId = 1;
-    this.currentBookingId = 1;
-    
+    // Seed data when the storage is initialized
     this.seedData();
   }
 
   private async seedData() {
-    // Create admin user
-    const adminPassword = await bcrypt.hash("admin123", 10);
-    const admin: User = {
-      id: this.currentUserId++,
-      email: "admin@hotellux.com",
-      password: adminPassword,
-      firstName: "Admin",
-      lastName: "HotelLux",
-      phone: "0123456789",
-      role: "admin",
-      preferences: [],
-      isVip: false,
-      createdAt: new Date(),
-    };
-    this.users.set(admin.id, admin);
+    try {
+      // Check if admin user already exists
+      const existingAdmin = await db.select().from(users).where(eq(users.email, "admin@hotellux.com"));
+      if (existingAdmin.length === 0) {
+        // Create admin user
+        const adminPassword = await bcrypt.hash("admin123", 10);
+        const [adminUser] = await db.insert(users).values({
+          email: "admin@hotellux.com",
+          password: adminPassword,
+          firstName: "Admin",
+          lastName: "User",
+          phone: "+1-555-0100",
+          role: "admin",
+          preferences: ["luxury", "spa"],
+          isVip: false
+        }).returning();
 
-    // Create sample customer
-    const customerPassword = await bcrypt.hash("customer123", 10);
-    const customer: User = {
-      id: this.currentUserId++,
-      email: "customer@example.com",
-      password: customerPassword,
-      firstName: "Nguyễn",
-      lastName: "Văn A",
-      phone: "0987654321",
-      role: "customer",
-      preferences: ["view biển", "spa", "sang trọng"],
-      isVip: true,
-      createdAt: new Date(),
-    };
-    this.users.set(customer.id, customer);
+        // Create customer user
+        const customerPassword = await bcrypt.hash("customer123", 10);
+        await db.insert(users).values({
+          email: "john@example.com",
+          password: customerPassword,
+          firstName: "John",
+          lastName: "Doe", 
+          phone: "+1-555-0101",
+          role: "customer",
+          preferences: ["wifi", "parking"],
+          isVip: true
+        });
 
-    // Create sample rooms
-    const sampleRooms: Room[] = [
-      {
-        id: this.currentRoomId++,
-        number: "101",
-        type: "standard",
-        price: "800000",
-        capacity: 2,
-        amenities: ["WiFi", "TV", "AC"],
-        images: ["https://images.unsplash.com/photo-1618773928121-c32242e63f39"],
-        status: "available",
-        description: "Phòng tiêu chuẩn với đầy đủ tiện nghi",
-        createdAt: new Date(),
-      },
-      {
-        id: this.currentRoomId++,
-        number: "201",
-        type: "deluxe",
-        price: "1500000",
-        capacity: 2,
-        amenities: ["WiFi", "TV", "AC", "Balcony", "City View"],
-        images: ["https://images.unsplash.com/photo-1618773928121-c32242e63f39"],
-        status: "available",
-        description: "Phòng Deluxe với view thành phố",
-        createdAt: new Date(),
-      },
-      {
-        id: this.currentRoomId++,
-        number: "301",
-        type: "suite",
-        price: "2800000",
-        capacity: 4,
-        amenities: ["WiFi", "TV", "AC", "Ocean View", "Balcony", "Jacuzzi"],
-        images: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"],
-        status: "available",
-        description: "Suite Ocean View với tầm nhìn panoramic",
-        createdAt: new Date(),
-      },
-      {
-        id: this.currentRoomId++,
-        number: "401",
-        type: "presidential",
-        price: "8500000",
-        capacity: 6,
-        amenities: ["WiFi", "TV", "AC", "Ocean View", "Private Pool", "Butler Service", "Helicopter Pad"],
-        images: ["https://images.unsplash.com/photo-1520250497591-112f2f40a3f4"],
-        status: "available",
-        description: "Presidential Suite với dịch vụ butler 24/7",
-        createdAt: new Date(),
-      },
-    ];
+        // Create sample rooms
+        const room1 = await db.insert(rooms).values({
+          number: "101",
+          type: "standard",
+          status: "available",
+          price: "150.00",
+          capacity: 2,
+          amenities: ["wifi", "tv", "minibar"],
+          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          description: "Comfortable standard room with modern amenities"
+        }).returning();
 
-    sampleRooms.forEach(room => {
-      this.rooms.set(room.id, room);
-    });
+        const room2 = await db.insert(rooms).values({
+          number: "201",
+          type: "deluxe", 
+          status: "available",
+          price: "250.00",
+          capacity: 3,
+          amenities: ["wifi", "tv", "minibar", "balcony", "room-service"],
+          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          description: "Spacious deluxe room with city view and premium amenities"
+        }).returning();
+
+        const room3 = await db.insert(rooms).values({
+          number: "301",
+          type: "suite",
+          status: "available", 
+          price: "400.00",
+          capacity: 4,
+          amenities: ["wifi", "tv", "minibar", "balcony", "room-service", "jacuzzi"],
+          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          description: "Luxurious suite with separate living area and premium amenities"
+        }).returning();
+
+        const room4 = await db.insert(rooms).values({
+          number: "401",
+          type: "presidential",
+          status: "available",
+          price: "800.00", 
+          capacity: 6,
+          amenities: ["wifi", "tv", "minibar", "balcony", "room-service", "jacuzzi", "kitchen"],
+          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          description: "Presidential suite with panoramic views and exclusive amenities"
+        }).returning();
+
+        // Create sample booking
+        const [existingCustomer] = await db.select().from(users).where(eq(users.email, "john@example.com"));
+        const [room101] = await db.select().from(rooms).where(eq(rooms.number, "101"));
+        
+        if (existingCustomer && room101) {
+          await db.insert(bookings).values({
+            userId: existingCustomer.id,
+            roomId: room101.id,
+            checkIn: new Date('2024-01-15'),
+            checkOut: new Date('2024-01-18'),
+            guests: 2,
+            totalPrice: "450.00",
+            status: "confirmed",
+            specialRequests: "Late check-in preferred"
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error seeding data:", error);
+    }
   }
 
-  // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
-    const user: User = {
-      ...insertUser,
-      id: this.currentUserId++,
-      password: hashedPassword,
-      role: "customer",
-      isVip: false,
-      createdAt: new Date(),
-    };
-    this.users.set(user.id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...updates };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return user || undefined;
   }
 
-  // Room methods
   async getRooms(): Promise<Room[]> {
-    return Array.from(this.rooms.values());
+    return await db.select().from(rooms);
   }
 
   async getRoom(id: number): Promise<Room | undefined> {
-    return this.rooms.get(id);
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
+    return room || undefined;
   }
 
   async getRoomByNumber(number: string): Promise<Room | undefined> {
-    return Array.from(this.rooms.values()).find(room => room.number === number);
+    const [room] = await db.select().from(rooms).where(eq(rooms.number, number));
+    return room || undefined;
   }
 
   async createRoom(insertRoom: InsertRoom): Promise<Room> {
-    const room: Room = {
-      ...insertRoom,
-      id: this.currentRoomId++,
-      status: "available",
-      createdAt: new Date(),
-    };
-    this.rooms.set(room.id, room);
+    const [room] = await db.insert(rooms).values(insertRoom).returning();
     return room;
   }
 
   async updateRoom(id: number, updates: Partial<Room>): Promise<Room | undefined> {
-    const room = this.rooms.get(id);
-    if (!room) return undefined;
-    
-    const updatedRoom = { ...room, ...updates };
-    this.rooms.set(id, updatedRoom);
-    return updatedRoom;
+    const [room] = await db.update(rooms).set(updates).where(eq(rooms.id, id)).returning();
+    return room || undefined;
   }
 
   async deleteRoom(id: number): Promise<boolean> {
-    return this.rooms.delete(id);
+    const result = await db.delete(rooms).where(eq(rooms.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   async getAvailableRooms(checkIn: Date, checkOut: Date): Promise<Room[]> {
-    const bookedRoomIds = new Set();
+    // Get all rooms that are available
+    const availableRooms = await db.select().from(rooms).where(eq(rooms.status, 'available'));
     
-    // Find rooms that are booked during the requested period
-    for (const booking of this.bookings.values()) {
-      if (booking.status === "confirmed" || booking.status === "pending") {
-        const bookingCheckIn = new Date(booking.checkIn);
-        const bookingCheckOut = new Date(booking.checkOut);
-        
-        // Check for overlap
-        if (checkIn < bookingCheckOut && checkOut > bookingCheckIn) {
-          bookedRoomIds.add(booking.roomId);
-        }
+    // Get all confirmed bookings and filter in JavaScript for now
+    const confirmedBookings = await db.select()
+      .from(bookings)
+      .where(eq(bookings.status, 'confirmed'));
+    
+    // Filter out rooms with conflicts
+    const unavailableRoomIds = new Set();
+    
+    for (const booking of confirmedBookings) {
+      const bookingStart = new Date(booking.checkIn);
+      const bookingEnd = new Date(booking.checkOut);
+      
+      // Check for overlap
+      if (checkIn < bookingEnd && checkOut > bookingStart) {
+        unavailableRoomIds.add(booking.roomId);
       }
     }
     
-    return Array.from(this.rooms.values()).filter(
-      room => room.status === "available" && !bookedRoomIds.has(room.id)
-    );
+    return availableRooms.filter(room => !unavailableRoomIds.has(room.id));
   }
 
-  // Booking methods
   async getBookings(): Promise<(Booking & { user: User; room: Room })[]> {
-    const bookingsWithDetails = [];
-    
-    for (const booking of this.bookings.values()) {
-      const user = this.users.get(booking.userId);
-      const room = this.rooms.get(booking.roomId);
-      
-      if (user && room) {
-        bookingsWithDetails.push({ ...booking, user, room });
-      }
-    }
-    
-    return bookingsWithDetails;
+    const result = await db.select({
+      booking: bookings,
+      user: users,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(users, eq(bookings.userId, users.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id));
+
+    return result.map(r => ({ ...r.booking, user: r.user, room: r.room }));
   }
 
   async getBooking(id: number): Promise<(Booking & { user: User; room: Room }) | undefined> {
-    const booking = this.bookings.get(id);
-    if (!booking) return undefined;
-    
-    const user = this.users.get(booking.userId);
-    const room = this.rooms.get(booking.roomId);
-    
-    if (!user || !room) return undefined;
-    
-    return { ...booking, user, room };
+    const result = await db.select({
+      booking: bookings,
+      user: users,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(users, eq(bookings.userId, users.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(eq(bookings.id, id));
+
+    const first = result[0];
+    return first ? { ...first.booking, user: first.user, room: first.room } : undefined;
   }
 
   async getUserBookings(userId: number): Promise<(Booking & { room: Room })[]> {
-    const userBookings = [];
-    
-    for (const booking of this.bookings.values()) {
-      if (booking.userId === userId) {
-        const room = this.rooms.get(booking.roomId);
-        if (room) {
-          userBookings.push({ ...booking, room });
-        }
-      }
-    }
-    
-    return userBookings.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    const result = await db.select({
+      booking: bookings,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(eq(bookings.userId, userId));
+
+    return result.map(r => ({ ...r.booking, room: r.room }));
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const booking: Booking = {
+    const [booking] = await db.insert(bookings).values({
       ...insertBooking,
-      id: this.currentBookingId++,
-      status: "pending",
-      paymentIntentId: null,
-      createdAt: new Date(),
-    };
-    this.bookings.set(booking.id, booking);
+      status: "pending"
+    }).returning();
     return booking;
   }
 
   async updateBooking(id: number, updates: Partial<Booking>): Promise<Booking | undefined> {
-    const booking = this.bookings.get(id);
-    if (!booking) return undefined;
-    
-    const updatedBooking = { ...booking, ...updates };
-    this.bookings.set(id, updatedBooking);
-    return updatedBooking;
+    const [booking] = await db.update(bookings).set(updates).where(eq(bookings.id, id)).returning();
+    return booking || undefined;
   }
 
   async cancelBooking(id: number): Promise<boolean> {
-    const booking = this.bookings.get(id);
-    if (!booking) return false;
-    
-    booking.status = "cancelled";
-    this.bookings.set(id, booking);
-    return true;
+    const result = await db.update(bookings)
+      .set({ status: "cancelled" })
+      .where(eq(bookings.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

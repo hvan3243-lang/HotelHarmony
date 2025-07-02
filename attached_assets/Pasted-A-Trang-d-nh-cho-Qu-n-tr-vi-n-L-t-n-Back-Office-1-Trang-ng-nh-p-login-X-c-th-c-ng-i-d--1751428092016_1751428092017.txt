@@ -1,0 +1,106 @@
+A. Trang dành cho Quản trị viên & Lễ tân (Back Office)
+1. Trang đăng nhập (/login)
+Xác thực người dùng (admin / nhân viên)
+
+Nhập email + mật khẩu
+
+Lưu token đăng nhập
+
+2. Trang Dashboard (Bảng điều khiển) (/dashboard)
+Tổng quan số liệu:
+
+Tổng phòng, phòng trống
+
+Số khách đang lưu trú
+
+Doanh thu hôm nay / tháng
+
+Biểu đồ đặt phòng / doanh thu
+
+3. Trang Quản lý phòng (/rooms)
+Danh sách các phòng khách sạn
+
+Thêm / sửa / xóa phòng
+
+Gán trạng thái phòng: trống / đang sử dụng / đang bảo trì
+
+Xem ảnh và loại phòng
+
+4. Trang Quản lý đặt phòng (/bookings)
+Danh sách các đơn đặt phòng
+
+Tạo đơn đặt phòng mới
+
+Check-in / Check-out khách
+
+Cập nhật, hủy đơn đặt phòng
+
+5. Trang Quản lý khách hàng (/customers)
+Danh sách khách lưu trú
+
+Thông tin: tên, CCCD, SĐT, lịch sử đặt phòng
+
+Thêm / sửa / xóa khách
+
+6. Trang Quản lý hóa đơn (/invoices)
+Xem & tạo hóa đơn sau khi khách trả phòng
+
+Tính tiền phòng + dịch vụ + thuế
+
+Ghi nhận thanh toán (tiền mặt, chuyển khoản)
+
+Xuất hóa đơn PDF
+
+7. Trang Quản lý dịch vụ (/services)
+Danh sách dịch vụ: ăn uống, giặt ủi, đưa đón,...
+
+Thêm / sửa / xóa dịch vụ
+
+Gắn dịch vụ vào từng đơn đặt phòng
+
+8. Trang Quản lý nhân viên (/employees)
+Danh sách nhân viên hệ thống
+
+Gán quyền (admin / lễ tân / nhân viên)
+
+Quản lý thông tin, trạng thái làm việc
+
+9. Trang Báo cáo & Thống kê (/reports)
+Biểu đồ doanh thu theo ngày / tháng / năm
+
+Tỷ lệ đặt phòng
+
+Xuất file báo cáo Excel hoặc PDF
+
+10. Trang Cài đặt tài khoản cá nhân (/profile)
+Đổi mật khẩu
+
+Cập nhật email, tên hiển thị
+
+Ảnh đại diện
+
+🧍‍♂️ B. Trang dành cho khách hàng (nếu có frontend công khai)
+11. Trang xem phòng khách sạn (/rooms-list)
+Hiển thị tất cả các phòng
+
+Ảnh, loại phòng, giá, tiện nghi
+
+Lọc theo giá / loại phòng
+
+12. Trang đặt phòng online (/book-room)
+Khách chọn ngày đến / ngày đi, loại phòng
+
+Nhập thông tin cá nhân
+
+Gửi yêu cầu đặt phòng
+
+13. Trang theo dõi đơn đặt phòng (/my-bookings)
+Khách đăng nhập xem lịch sử đặt phòng
+
+Trạng thái đơn (chờ xác nhận, đã xác nhận, đã hủy)
+
+14. Trang liên hệ / hỗ trợ (/contact)
+Gửi yêu cầu hỗ trợ, góp ý
+
+Hotline, email khách sạn
+

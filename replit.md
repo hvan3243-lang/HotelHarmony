@@ -116,6 +116,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 
 ## Changelog
 - July 02, 2025. Initial setup
+- July 02, 2025. Added PostgreSQL database integration with Drizzle ORM, replacing in-memory storage with persistent database storage
 
 ## User Preferences
 
