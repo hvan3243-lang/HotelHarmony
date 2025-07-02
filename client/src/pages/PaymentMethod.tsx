@@ -405,54 +405,32 @@ export default function PaymentMethod() {
                       {/* QR Code Section */}
                       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border text-center shadow-sm">
                         <h3 className="font-semibold mb-4 text-lg">Quét mã QR để thanh toán</h3>
-                        <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center mb-4 p-4">
-                          <svg width="180" height="180" viewBox="0 0 180 180" className="fill-current">
-                            {/* QR Code Pattern */}
-                            <rect x="0" y="0" width="15" height="15" />
-                            <rect x="30" y="0" width="15" height="15" />
-                            <rect x="60" y="0" width="15" height="15" />
-                            <rect x="0" y="30" width="15" height="15" />
-                            <rect x="60" y="30" width="15" height="15" />
-                            <rect x="0" y="60" width="75" height="15" />
-                            
-                            <rect x="90" y="0" width="15" height="15" />
-                            <rect x="120" y="0" width="15" height="15" />
-                            <rect x="150" y="0" width="30" height="30" />
-                            <rect x="165" y="15" width="15" height="15" />
-                            <rect x="105" y="15" width="45" height="15" />
-                            <rect x="90" y="30" width="15" height="15" />
-                            <rect x="135" y="30" width="15" height="15" />
-                            <rect x="165" y="30" width="15" height="15" />
-                            
-                            <rect x="0" y="90" width="15" height="15" />
-                            <rect x="30" y="90" width="45" height="15" />
-                            <rect x="90" y="90" width="15" height="15" />
-                            <rect x="120" y="90" width="15" height="15" />
-                            <rect x="150" y="90" width="15" height="15" />
-                            
-                            <rect x="0" y="120" width="45" height="15" />
-                            <rect x="60" y="120" width="15" height="15" />
-                            <rect x="90" y="120" width="30" height="15" />
-                            <rect x="150" y="120" width="15" height="15" />
-                            
-                            <rect x="0" y="150" width="75" height="30" />
-                            <rect x="15" y="165" width="45" height="15" />
-                            <rect x="90" y="150" width="15" height="15" />
-                            <rect x="120" y="150" width="15" height="15" />
-                            <rect x="150" y="150" width="15" height="30" />
-                            <rect x="90" y="180" width="30" height="15" />
-                            <rect x="150" y="180" width="75" height="15" />
-                          </svg>
+                        <div className="w-64 h-80 bg-white rounded-lg mx-auto mb-4 p-2 shadow-md">
+                          <img 
+                            src="/attached_assets/image_1751445716454.png" 
+                            alt="VietQR Code" 
+                            className="w-full h-full object-contain rounded-lg"
+                          />
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-lg font-semibold text-primary">
-                            Số tiền: {bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Mã đặt phòng: <span className="font-mono font-semibold">HLX{bookingData.id}</span>
-                          </p>
+                        <div className="space-y-3">
+                          <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                            <p className="text-red-800 dark:text-red-200 font-medium">
+                              Chuyển khoản: <span className="font-bold">{bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ</span>
+                            </p>
+                            <p className="text-red-700 dark:text-red-300 text-sm">
+                              Tài khoản: DANG VAN HOANG - 0389597728
+                            </p>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-blue-800 dark:text-blue-200 font-medium">
+                              Nội dung: <span className="font-mono font-bold">HLX{bookingData.id}</span>
+                            </p>
+                            <p className="text-blue-700 dark:text-blue-300 text-sm">
+                              (Vui lòng ghi chính xác nội dung chuyển khoản)
+                            </p>
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            Quét mã QR bằng ứng dụng ví điện tử để thanh toán
+                            Quét mã QR bằng app ngân hàng hoặc ví điện tử
                           </p>
                         </div>
                       </div>
@@ -462,8 +440,12 @@ export default function PaymentMethod() {
                         className="w-full"
                         disabled={isProcessing}
                       >
-                        {isProcessing ? "Đang xử lý..." : "Xác nhận đã thanh toán qua QR"}
+                        {isProcessing ? "Đang xử lý..." : "Tôi đã chuyển khoản"}
                       </Button>
+                      
+                      <p className="text-xs text-center text-muted-foreground mt-2">
+                        Sau khi chuyển khoản thành công, nhấn nút "Tôi đã chuyển khoản" để xác nhận
+                      </p>
                     </div>
                   )}
                 </div>

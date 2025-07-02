@@ -121,6 +121,9 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Resolved booking system validation errors - customers can now successfully book rooms
 - July 02, 2025. Fixed room deletion constraints - admin can now delete rooms (bookings are deleted first)
 - July 02, 2025. Enhanced chat system - admin can now respond to specific customers via targetUserId parameter
+- July 02, 2025. Added real QR code payment integration - replaced mock QR with user's VietQR code (DANG VAN HOANG - 0389597728)
+- July 02, 2025. Implemented booking cancellation with smart refund policy (100% >48h, 50% 24-48h, 0% <24h)
+- July 02, 2025. Added detailed booking view dialog with complete information display for customers
 
 ## User Preferences
 
