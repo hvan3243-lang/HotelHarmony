@@ -84,18 +84,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-700 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/30"></div>
+      <section className="relative h-screen flex items-center justify-center gradient-bg-1 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 backdrop-blur-sm"></div>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="relative z-10 text-center px-4 max-w-4xl mx-auto"
         >
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Chào mừng đến với <span className="text-yellow-400">HotelLux</span>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-float">
+            Chào mừng đến với <span className="text-gradient-3 animate-glow">HotelLux</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-gray-200">
+          <p className="text-xl md:text-2xl mb-8 text-white/90 font-medium">
             Trải nghiệm nghỉ dưỡng đẳng cấp với dịch vụ hoàn hảo
           </p>
           
@@ -104,7 +105,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl"
+            className="glass rounded-2xl p-6 shadow-2xl hover-glow"
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div className="text-left">
@@ -140,7 +141,7 @@ export default function Home() {
                 </select>
               </div>
               <Link href="/booking">
-                <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3">
+                <Button size="lg" className="w-full btn-primary hover-glow">
                   <Search className="mr-2" size={20} />
                   Tìm phòng
                 </Button>
@@ -173,15 +174,15 @@ export default function Home() {
                 whileHover={{ y: -10 }}
                 className="group"
               >
-                <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300">
+                <Card className="card-enhanced hover-grow overflow-hidden">
                   <div className="relative h-64 overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white text-lg font-semibold">{room.name}</span>
+                    <div className={`w-full h-full gradient-bg-${(index % 5) + 1} flex items-center justify-center`}>
+                      <span className="text-white text-lg font-semibold animate-float">{room.name}</span>
                     </div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center">
-                      <Star className="text-yellow-500 mr-1" size={16} fill="currentColor" />
-                      <span className="text-sm font-semibold">{room.rating}</span>
-                      <span className="text-xs text-gray-600 ml-1">({room.reviews})</span>
+                    <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 flex items-center backdrop-blur-lg">
+                      <Star className="text-yellow-400 mr-1" size={16} fill="currentColor" />
+                      <span className="text-sm font-semibold text-white">{room.rating}</span>
+                      <span className="text-xs text-white/80 ml-1">({room.reviews})</span>
                     </div>
                   </div>
                   <CardContent className="p-6">
@@ -199,7 +200,7 @@ export default function Home() {
                         <span className="text-sm text-muted-foreground">/đêm</span>
                       </div>
                       <Link href="/booking">
-                        <Button className="group-hover:shadow-lg transition-all">
+                        <Button className="btn-secondary hover-glow group-hover:shadow-lg transition-all">
                           Đặt ngay
                           <ChevronRight className="ml-1" size={16} />
                         </Button>
@@ -214,7 +215,7 @@ export default function Home() {
       </section>
 
       {/* Services */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 gradient-bg-6">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -222,8 +223,8 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4">Dịch vụ đẳng cấp</h2>
-            <p className="text-xl text-muted-foreground">Những tiện ích hiện đại dành cho kỳ nghỉ hoàn hảo</p>
+            <h2 className="text-4xl font-bold mb-4 text-gradient">Dịch vụ đẳng cấp</h2>
+            <p className="text-xl text-gray-700">Những tiện ích hiện đại dành cho kỳ nghỉ hoàn hảo</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -235,9 +236,9 @@ export default function Home() {
                 transition={{ delay: index * 0.1, duration: 0.6 }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="text-center p-6 hover:shadow-lg transition-all">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <service.icon className="text-primary" size={32} />
+                <Card className="card-enhanced text-center p-6 hover-grow backdrop-blur-md">
+                  <div className={`w-16 h-16 gradient-bg-${(index % 4) + 1} rounded-full flex items-center justify-center mx-auto mb-4 animate-float`}>
+                    <service.icon className="text-white" size={32} />
                   </div>
                   <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
                   <p className="text-muted-foreground">{service.description}</p>
@@ -299,27 +300,27 @@ export default function Home() {
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-8 text-white"
+              className="gradient-bg-1 rounded-2xl p-8 text-white glass hover-glow"
             >
-              <h3 className="text-2xl font-bold mb-4">Đặt phòng ngay hôm nay</h3>
-              <p className="mb-6 text-blue-100">
+              <h3 className="text-2xl font-bold mb-4 animate-fadeInUp">Đặt phòng ngay hôm nay</h3>
+              <p className="mb-6 text-white/90">
                 Nhận ưu đãi đặc biệt khi đặt phòng trực tiếp qua website
               </p>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between animate-slideInLeft">
                   <span>Giảm giá lên đến:</span>
-                  <span className="text-2xl font-bold text-yellow-400">20%</span>
+                  <span className="text-2xl font-bold text-yellow-300 animate-glow">20%</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between animate-slideInLeft">
                   <span>Check-in sớm miễn phí</span>
-                  <span className="text-green-400">✓</span>
+                  <span className="text-green-300 animate-bounce">✓</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between animate-slideInLeft">
                   <span>Wifi tốc độ cao</span>
-                  <span className="text-green-400">✓</span>
+                  <span className="text-green-300 animate-bounce">✓</span>
                 </div>
                 <Link href="/booking">
-                  <Button className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold mt-4">
+                  <Button className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold mt-4 btn-glow hover-scale">
                     <Calendar className="mr-2" size={20} />
                     Đặt phòng ngay
                   </Button>

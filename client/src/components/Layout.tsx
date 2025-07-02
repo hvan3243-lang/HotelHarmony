@@ -40,26 +40,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Header */}
-      <header className="bg-card dark:bg-card shadow-lg sticky top-0 z-50 border-b">
+      <header className="glass backdrop-blur-lg sticky top-0 z-50 border-b shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
                 <Link href="/">
-                  <h1 className="text-2xl font-bold text-primary cursor-pointer">
-                    <Hotel className="inline mr-2" size={24} />
+                  <h1 className="text-2xl font-bold text-gradient hover-scale cursor-pointer transition-all">
+                    <Hotel className="inline mr-2 animate-float" size={24} />
                     HotelLux
                   </h1>
                 </Link>
               </div>
               
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex space-x-8">
+              <nav className="hidden md:flex space-x-2">
                 {navItems.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <Button
                       variant={location === item.href ? "default" : "ghost"}
-                      className="font-medium"
+                      className={`font-medium hover-scale transition-all ${
+                        location === item.href ? "btn-primary" : "hover:bg-primary/10"
+                      }`}
                     >
                       {item.label}
                     </Button>
@@ -74,6 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 variant="outline"
                 size="icon"
                 onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="hover-scale glass"
               >
                 {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
               </Button>
@@ -81,16 +84,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {/* User Menu */}
               {user ? (
                 <div className="hidden md:flex items-center space-x-4">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground font-medium">
                     {user.firstName} {user.lastName}
                   </span>
-                  <Button variant="outline" onClick={handleLogout}>
+                  <Button variant="outline" onClick={handleLogout} className="hover-glow">
                     Đăng xuất
                   </Button>
                 </div>
               ) : (
                 <Link href="/auth">
-                  <Button>
+                  <Button className="btn-primary hover-glow">
                     Đăng nhập
                   </Button>
                 </Link>

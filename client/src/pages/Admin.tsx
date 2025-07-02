@@ -345,15 +345,15 @@ export default function Admin() {
           className="flex justify-between items-center mb-8"
         >
           <div>
-            <h1 className="text-4xl font-bold flex items-center">
-              <BarChart3 className="mr-3 text-primary" />
+            <h1 className="text-4xl font-bold flex items-center text-gradient animate-fadeInUp">
+              <BarChart3 className="mr-3 text-primary animate-float" />
               Dashboard Quản Lý
             </h1>
-            <p className="text-muted-foreground mt-2">Hệ thống quản lý khách sạn</p>
+            <p className="text-muted-foreground mt-2">Hệ thống quản lý khách sạn hiện đại</p>
           </div>
           <div className="flex space-x-4 items-center">
             <AdminNotifications />
-            <Button onClick={() => setLocation("/")}>
+            <Button onClick={() => setLocation("/")} className="btn-secondary hover-glow">
               Về trang chủ
             </Button>
           </div>

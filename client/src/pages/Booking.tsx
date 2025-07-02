@@ -162,7 +162,7 @@ export default function Booking() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <Card>
+          <Card className="card-enhanced glass backdrop-blur-lg">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
@@ -216,7 +216,7 @@ export default function Booking() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button className="w-full">
+                  <Button className="w-full btn-primary hover-glow">
                     <Search className="mr-2" size={16} />
                     Tìm kiếm
                   </Button>
@@ -299,14 +299,14 @@ export default function Booking() {
                 whileHover={{ y: -5 }}
                 className="group"
               >
-                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 h-full">
+                <Card className="card-enhanced hover-grow overflow-hidden h-full">
                   {/* Room Image Placeholder */}
-                  <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                    <div className="text-white text-center">
+                  <div className={`relative h-48 gradient-bg-${(index % 5) + 1} flex items-center justify-center`}>
+                    <div className="text-white text-center animate-float">
                       <Bed className="mx-auto mb-2" size={32} />
                       <span className="text-lg font-semibold">Phòng {room.number}</span>
                     </div>
-                    <Badge className="absolute top-3 right-3 bg-white/90 text-gray-800">
+                    <Badge className="absolute top-3 right-3 glass backdrop-blur-lg text-white">
                       {getRoomTypeLabel(room.type)}
                     </Badge>
                   </div>
@@ -385,7 +385,7 @@ export default function Booking() {
                       )}
 
                       <Button 
-                        className="w-full group-hover:shadow-md transition-all"
+                        className="w-full btn-secondary hover-glow group-hover:shadow-md transition-all"
                         onClick={() => handleBookRoom(room)}
                       >
                         <Calendar className="mr-2" size={16} />
