@@ -1005,6 +1005,28 @@ export default function Admin() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={blogForm.control}
+                        name="published"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">Xuất bản</FormLabel>
+                              <div className="text-sm text-muted-foreground">
+                                Bài viết sẽ hiển thị trên trang blog công khai
+                              </div>
+                            </div>
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="rounded border-gray-300"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
                       <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setIsBlogDialogOpen(false)}>
                           Hủy

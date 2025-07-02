@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,127 +13,65 @@ import {
   ChevronRight,
   TrendingUp,
   Star,
-  Eye
+  Eye,
+  BookOpen
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  date: string;
-  readTime: string;
-  category: string;
-  tags: string[];
-  image: string;
-}
+import { format } from "date-fns";
+import type { BlogPost } from "@shared/schema";
 
 export default function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const blogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: "10 Điểm du lịch không thể bỏ qua tại Việt Nam",
-      excerpt: "Khám phá những địa điểm tuyệt vời nhất mà Việt Nam có thể mang đến cho du khách trong và ngoài nước.",
-      content: "Việt Nam là một đất nước với vẻ đẹp thiên nhiên hùng vĩ và văn hóa đa dạng...",
-      author: "Nguyễn Văn A",
-      date: "2024-01-15",
-      readTime: "5 phút",
-      category: "Du lịch",
-      tags: ["Việt Nam", "Du lịch", "Khám phá"],
-      image: "/api/placeholder/600/400"
-    },
-    {
-      id: 2,
-      title: "Bí quyết đặt phòng khách sạn giá tốt",
-      excerpt: "Những mẹo hay giúp bạn tìm được phòng khách sạn chất lượng với mức giá phù hợp nhất.",
-      content: "Việc đặt phòng khách sạn thông minh có thể giúp bạn tiết kiệm đáng kể chi phí...",
-      author: "Trần Thị B",
-      date: "2024-01-12",
-      readTime: "7 phút",
-      category: "Khách sạn",
-      tags: ["Đặt phòng", "Tiết kiệm", "Mẹo hay"],
-      image: "/api/placeholder/600/400"
-    },
-    {
-      id: 3,
-      title: "Trải nghiệm ẩm thực đặc sắc tại HotelLux",
-      excerpt: "Hành trình khám phá hương vị độc đáo từ nhà hàng 5 sao của chúng tôi.",
-      content: "Nhà hàng HotelLux tự hào mang đến những món ăn tinh tế nhất...",
-      author: "Chef Minh",
-      date: "2024-01-10",
-      readTime: "4 phút",
-      category: "Ẩm thực",
-      tags: ["Nhà hàng", "Ẩm thực", "HotelLux"],
-      image: "/api/placeholder/600/400"
-    },
-    {
-      id: 4,
-      title: "Xu hướng du lịch 2024: Những điểm đến hot nhất",
-      excerpt: "Cập nhật những xu hướng du lịch mới nhất và các điểm đến được yêu thích trong năm 2024.",
-      content: "Năm 2024 đánh dấu sự trở lại mạnh mẽ của ngành du lịch...",
-      author: "Lê Văn C",
-      date: "2024-01-08",
-      readTime: "6 phút",
-      category: "Xu hướng",
-      tags: ["2024", "Xu hướng", "Hot trend"],
-      image: "/api/placeholder/600/400"
-    },
-    {
-      id: 5,
-      title: "Spa & Wellness: Thư giãn hoàn hảo",
-      excerpt: "Khám phá các dịch vụ spa cao cấp và phương pháp thư giãn tại HotelLux.",
-      content: "Dịch vụ spa của chúng tôi được thiết kế để mang lại sự thư giãn tuyệt đối...",
-      author: "Spa Manager",
-      date: "2024-01-05",
-      readTime: "5 phút",
-      category: "Spa",
-      tags: ["Spa", "Wellness", "Thư giãn"],
-      image: "/api/placeholder/600/400"
-    },
-    {
-      id: 6,
-      title: "Hướng dẫn check-in thông minh",
-      excerpt: "Quy trình check-in nhanh chóng và tiện lợi tại HotelLux để bạn có trải nghiệm tốt nhất.",
-      content: "Với công nghệ hiện đại, việc check-in tại HotelLux trở nên đơn giản hơn bao giờ hết...",
-      author: "Front Office",
-      date: "2024-01-03",
-      readTime: "3 phút",
-      category: "Hướng dẫn",
-      tags: ["Check-in", "Hướng dẫn", "Công nghệ"],
-      image: "/api/placeholder/600/400"
-    }
-  ];
+  // Fetch blog posts from API
+  const { data: blogPosts, isLoading } = useQuery({
+    queryKey: ['/api/blog'],
+  });
 
-  const categories = ["all", "Du lịch", "Khách sạn", "Ẩm thức", "Xu hướng", "Spa", "Hướng dẫn"];
+  // Filter published posts only
+  const publishedPosts = Array.isArray(blogPosts) ? 
+    (blogPosts as BlogPost[]).filter(post => post.published) : [];
 
-  const filteredPosts = blogPosts.filter(post => {
+  // Filter posts based on search and category
+  const filteredPosts = publishedPosts.filter((post: BlogPost) => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+                         post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.author.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const featuredPost = blogPosts[0];
-  const recentPosts = blogPosts.slice(1, 4);
+  // Get unique categories from published posts
+  const categories = Array.from(new Set(publishedPosts.map((post: BlogPost) => post.category)));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p>Đang tải bài viết...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold mb-4">Blog HotelLux</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Khám phá những câu chuyện thú vị, mẹo du lịch và cập nhật mới nhất từ thế giới khách sạn
+          <h1 className="text-5xl font-bold text-slate-900 dark:text-white mb-4">
+            Blog HotelLux
+          </h1>
+          <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Khám phá những câu chuyện du lịch, mẹo hay và tin tức mới nhất từ HotelLux
           </p>
         </motion.div>
 
@@ -141,259 +80,182 @@ export default function Blog() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-col md:flex-row gap-4 mb-8"
-        >
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-            <Input
-              placeholder="Tìm kiếm bài viết..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
-                className="whitespace-nowrap"
-              >
-                {category === "all" ? "Tất cả" : category}
-              </Button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Featured Post */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
           className="mb-12"
         >
-          <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="h-64 lg:h-auto bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <div className="text-white text-center">
-                  <Star className="mx-auto mb-2" size={48} />
-                  <span className="text-lg font-semibold">Bài viết nổi bật</span>
+          <Card className="backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+                  <Input
+                    placeholder="Tìm kiếm bài viết..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-12 border-0 bg-slate-100 dark:bg-slate-700"
+                  />
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                    onClick={() => setSelectedCategory('all')}
+                    className="h-12"
+                  >
+                    Tất cả
+                  </Button>
+                  {categories.map((category) => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? 'default' : 'outline'}
+                      onClick={() => setSelectedCategory(category)}
+                      className="h-12"
+                    >
+                      {category}
+                    </Button>
+                  ))}
                 </div>
               </div>
-              <div className="p-8 flex flex-col justify-center">
-                <Badge className="w-fit mb-3 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                  <TrendingUp className="mr-1" size={14} />
-                  Nổi bật
-                </Badge>
-                <h2 className="text-2xl font-bold mb-3">{featuredPost.title}</h2>
-                <p className="text-muted-foreground mb-4">{featuredPost.excerpt}</p>
-                <div className="flex items-center text-sm text-muted-foreground mb-4">
-                  <User className="mr-1" size={14} />
-                  <span className="mr-4">{featuredPost.author}</span>
-                  <Calendar className="mr-1" size={14} />
-                  <span className="mr-4">{new Date(featuredPost.date).toLocaleDateString('vi-VN')}</span>
-                  <Clock className="mr-1" size={14} />
-                  <span>{featuredPost.readTime}</span>
-                </div>
-                <Button className="w-fit">
-                  Đọc thêm
-                  <ChevronRight className="ml-1" size={16} />
-                </Button>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         </motion.div>
 
-        {/* Blog Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -5 }}
-                >
-                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 h-full">
-                    <div className="h-48 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <Eye className="mx-auto mb-2" size={24} />
-                        <span className="text-sm font-medium">{post.category}</span>
+        {/* Blog Posts */}
+        {filteredPosts.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-center py-16"
+          >
+            <Card className="max-w-md mx-auto">
+              <CardContent className="p-8">
+                <BookOpen className="mx-auto mb-4 text-muted-foreground" size={48} />
+                <h3 className="text-lg font-semibold mb-2">Chưa có bài viết</h3>
+                <p className="text-muted-foreground">
+                  {publishedPosts.length === 0 
+                    ? "Chưa có bài viết nào được xuất bản" 
+                    : "Không tìm thấy bài viết phù hợp với tìm kiếm của bạn"
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredPosts.map((post: BlogPost, index: number) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * (index + 1) }}
+              >
+                <Card className="h-full hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm bg-white/90 dark:bg-slate-800/90 border-0">
+                  {post.image && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    </div>
+                  )}
+                  
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        {post.category}
+                      </Badge>
+                      <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                        <Clock size={14} className="mr-1" />
+                        {post.readTime || 5} phút
                       </div>
                     </div>
-                    <CardContent className="p-6 flex-1 flex flex-col">
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        <Badge variant="secondary">{post.category}</Badge>
-                        {post.tags.slice(0, 2).map((tag, i) => (
+
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 line-clamp-2">
+                      {post.title}
+                    </h3>
+
+                    {post.excerpt && (
+                      <p className="text-slate-600 dark:text-slate-300 mb-4 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                        <User size={14} className="mr-1" />
+                        {post.author}
+                      </div>
+                      <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                        <Calendar size={14} className="mr-1" />
+                        {post.createdAt ? format(new Date(post.createdAt), 'dd/MM/yyyy') : 'N/A'}
+                      </div>
+                    </div>
+
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {post.tags.slice(0, 3).map((tag: string, i: number) => (
                           <Badge key={i} variant="outline" className="text-xs">
-                            <Tag className="mr-1" size={10} />
                             {tag}
                           </Badge>
                         ))}
+                        {post.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{post.tags.length - 3}
+                          </Badge>
+                        )}
                       </div>
-                      
-                      <h3 className="text-lg font-semibold mb-3 line-clamp-2">
-                        {post.title}
-                      </h3>
-                      
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-1">
-                        {post.excerpt}
-                      </p>
-                      
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                        <div className="flex items-center">
-                          <User className="mr-1" size={12} />
-                          <span>{post.author}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="mr-1" size={12} />
-                          <span>{new Date(post.date).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="mr-1" size={12} />
-                          <span>{post.readTime}</span>
-                        </div>
-                      </div>
-                      
-                      <Button variant="outline" className="w-full">
-                        Đọc thêm
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                    )}
 
-            {/* Pagination */}
-            <div className="flex justify-center mt-8">
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm">Trước</Button>
-                <Button size="sm">1</Button>
-                <Button variant="outline" size="sm">2</Button>
-                <Button variant="outline" size="sm">3</Button>
-                <Button variant="outline" size="sm">Sau</Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Recent Posts */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Bài viết mới nhất</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentPosts.map((post) => (
-                      <div key={post.id} className="flex space-x-3 pb-4 border-b last:border-b-0">
-                        <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded flex-shrink-0 flex items-center justify-center">
-                          <span className="text-white text-xs font-semibold text-center">
-                            {post.category}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                            {post.title}
-                          </h4>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Calendar className="mr-1" size={10} />
-                            <span>{new Date(post.date).toLocaleDateString('vi-VN')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Categories */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Danh mục</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {categories.filter(cat => cat !== "all").map((category) => (
-                      <Button
-                        key={category}
-                        variant="ghost"
-                        className="w-full justify-between"
-                        onClick={() => setSelectedCategory(category)}
-                      >
-                        <span>{category}</span>
-                        <Badge variant="secondary">
-                          {blogPosts.filter(post => post.category === category).length}
-                        </Badge>
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Newsletter */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-3">Đăng ký nhận tin</h3>
-                  <p className="text-blue-100 mb-4 text-sm">
-                    Nhận thông tin mới nhất về du lịch và ưu đãi đặc biệt từ HotelLux
-                  </p>
-                  <div className="space-y-3">
-                    <Input
-                      placeholder="Email của bạn"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/70"
-                    />
-                    <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
-                      Đăng ký ngay
+                    <Button className="w-full group">
+                      Đọc thêm
+                      <ChevronRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Empty State */}
-        {filteredPosts.length === 0 && (
+        {/* Statistics */}
+        {publishedPosts.length > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-16"
           >
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="text-muted-foreground" size={32} />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Không tìm thấy bài viết</h3>
-            <p className="text-muted-foreground mb-4">
-              Thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục khác
-            </p>
-            <Button variant="outline" onClick={() => {
-              setSearchTerm("");
-              setSelectedCategory("all");
-            }}>
-              Xem tất cả bài viết
-            </Button>
+            <Card className="backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 border-0 shadow-xl">
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                  <div>
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {publishedPosts.length}
+                    </div>
+                    <div className="text-slate-600 dark:text-slate-300">
+                      Bài viết đã xuất bản
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {categories.length}
+                    </div>
+                    <div className="text-slate-600 dark:text-slate-300">
+                      Danh mục
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {Array.from(new Set(publishedPosts.map((post: BlogPost) => post.author))).length}
+                    </div>
+                    <div className="text-slate-600 dark:text-slate-300">
+                      Tác giả
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
       </div>
