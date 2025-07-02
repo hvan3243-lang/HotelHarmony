@@ -436,6 +436,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get chart data for admin dashboard
+  app.get("/api/admin/chart-data", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const bookings = await storage.getBookings();
+      const rooms = await storage.getRooms();
+
+      // Calculate monthly revenue (last 6 months)
+      const monthlyRevenue = [];
+      const currentDate = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = monthDate.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+        
+        const monthBookings = bookings.filter(booking => {
+          const bookingDate = new Date(booking.createdAt!);
+          return bookingDate.getMonth() === monthDate.getMonth() && 
+                 bookingDate.getFullYear() === monthDate.getFullYear() &&
+                 (booking.status === 'confirmed' || booking.status === 'completed');
+        });
+        
+        const revenue = monthBookings.reduce((sum, booking) => sum + parseFloat(booking.totalPrice), 0);
+        monthlyRevenue.push({ month: monthName, revenue });
+      }
+
+      // Room type distribution
+      const roomTypes = rooms.reduce((acc, room) => {
+        acc[room.type] = (acc[room.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const roomDistribution = Object.entries(roomTypes).map(([type, count]) => ({
+        type,
+        count
+      }));
+
+      // Booking status distribution
+      const statusCount = bookings.reduce((acc, booking) => {
+        acc[booking.status] = (acc[booking.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const bookingStatus = Object.entries(statusCount).map(([status, count]) => ({
+        status,
+        count
+      }));
+
+      res.json({
+        monthlyRevenue,
+        roomDistribution,
+        bookingStatus
+      });
+    } catch (error: any) {
+      console.error("Chart data error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   // AI Recommendations (simple implementation)
   // Services routes
   app.get("/api/services", async (req: Request, res: Response) => {

@@ -56,6 +56,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
 import type { Room, Service, BlogPost } from '@shared/schema';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, LineElement, PointElement);
 
 // Form schemas
 const roomSchema = z.object({
@@ -113,6 +117,10 @@ export default function Admin() {
   // Queries
   const { data: stats } = useQuery({
     queryKey: ['/api/admin/stats'],
+  });
+
+  const { data: chartData } = useQuery({
+    queryKey: ['/api/admin/chart-data'],
   });
 
   const { data: rooms, isLoading: roomsLoading } = useQuery({
@@ -477,23 +485,179 @@ export default function Admin() {
             </div>
 
             {/* Charts Section */}
-            {stats && (stats as any).totalRooms > 0 ? (
-              <div className="grid grid-cols-1 gap-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <TrendingUp className="mr-2" size={20} />
-                      Thống kê hệ thống
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        Biểu đồ chi tiết sẽ hiển thị khi có đủ dữ liệu booking
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+            {chartData && stats && (stats as any).totalRooms > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Revenue Chart */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <BarChart3 className="mr-2" size={20} />
+                        Doanh thu theo tháng
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <Bar
+                          data={{
+                            labels: (chartData as any)?.monthlyRevenue?.map((item: any) => item.month) || [],
+                            datasets: [{
+                              label: 'Doanh thu (VNĐ)',
+                              data: (chartData as any)?.monthlyRevenue?.map((item: any) => item.revenue) || [],
+                              backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                              borderColor: 'rgba(59, 130, 246, 1)',
+                              borderWidth: 1,
+                              borderRadius: 8,
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                display: false
+                              }
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: true,
+                                ticks: {
+                                  callback: function(value) {
+                                    return new Intl.NumberFormat('vi-VN').format(value as number) + 'đ';
+                                  }
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Room Distribution Chart */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Bed className="mr-2" size={20} />
+                        Phân bố loại phòng
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px] flex items-center justify-center">
+                        <Doughnut
+                          data={{
+                            labels: (chartData as any)?.roomDistribution?.map((item: any) => {
+                              const typeNames: Record<string, string> = {
+                                'standard': 'Tiêu chuẩn',
+                                'deluxe': 'Deluxe',
+                                'suite': 'Suite',
+                                'presidential': 'Tổng thống'
+                              };
+                              return typeNames[item.type] || item.type;
+                            }) || [],
+                            datasets: [{
+                              data: (chartData as any)?.roomDistribution?.map((item: any) => item.count) || [],
+                              backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(239, 68, 68, 0.8)',
+                              ],
+                              borderWidth: 2,
+                              borderColor: '#ffffff'
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                position: 'bottom',
+                                labels: {
+                                  padding: 20,
+                                  usePointStyle: true
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Booking Status Chart */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="lg:col-span-2"
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <TrendingUp className="mr-2" size={20} />
+                        Trạng thái đặt phòng
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <Line
+                          data={{
+                            labels: (chartData as any)?.bookingStatus?.map((item: any) => {
+                              const statusNames: Record<string, string> = {
+                                'pending': 'Chờ xác nhận',
+                                'confirmed': 'Đã xác nhận',
+                                'completed': 'Hoàn thành',
+                                'cancelled': 'Đã hủy'
+                              };
+                              return statusNames[item.status] || item.status;
+                            }) || [],
+                            datasets: [{
+                              label: 'Số lượng đặt phòng',
+                              data: (chartData as any)?.bookingStatus?.map((item: any) => item.count) || [],
+                              borderColor: 'rgba(34, 197, 94, 1)',
+                              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                              tension: 0.4,
+                              fill: true,
+                              pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                              pointBorderColor: '#ffffff',
+                              pointBorderWidth: 2,
+                              pointRadius: 6
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                display: false
+                              }
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: true,
+                                ticks: {
+                                  stepSize: 1
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </div>
             ) : (
               <div className="text-center py-16">
