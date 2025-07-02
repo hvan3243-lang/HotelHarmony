@@ -70,7 +70,7 @@ export default function Services() {
   });
 
   const addServiceMutation = useMutation({
-    mutationFn: (serviceData: any) => apiRequest("/api/services", "POST", serviceData),
+    mutationFn: (serviceData: any) => apiRequest("POST", "/api/services", serviceData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsAddDialogOpen(false);
@@ -83,7 +83,7 @@ export default function Services() {
   });
 
   const updateServiceMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiRequest(`/api/services/${id}`, "PUT", data),
+    mutationFn: ({ id, ...data }: any) => apiRequest("PUT", `/api/services/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setEditingService(null);
@@ -95,7 +95,7 @@ export default function Services() {
   });
 
   const deleteServiceMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/services/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/services/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       toast({ title: "Thành công", description: "Đã xóa dịch vụ" });

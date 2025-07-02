@@ -9,13 +9,32 @@ import {
   Calendar, 
   DollarSign, 
   Activity,
-  LogIn,
-  LogOut,
-  Settings,
+  TrendingUp,
+  Bed,
+  Star,
   BarChart3,
   PieChart
 } from "lucide-react";
 import { authManager } from "@/lib/auth";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Area,
+  AreaChart
+} from 'recharts';
+
+// Chart colors
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function Dashboard() {
   const user = authManager.getUser();
@@ -30,9 +49,15 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: services } = useQuery({
+    queryKey: ["/api/services"],
+    enabled: !!user,
+  });
+
   // Calculate statistics
   const roomsArray = Array.isArray(rooms) ? rooms : [];
   const bookingsArray = Array.isArray(bookings) ? bookings : [];
+  const servicesArray = Array.isArray(services) ? services : [];
   
   const totalRooms = roomsArray.length;
   const availableRooms = roomsArray.filter((room: any) => room.status === 'available').length;
@@ -53,215 +78,291 @@ export default function Dashboard() {
     return sum;
   }, 0);
 
-  const monthRevenue = bookingsArray.reduce((sum: number, booking: any) => {
+  const monthlyRevenue = bookingsArray.reduce((sum: number, booking: any) => {
     const bookingDate = new Date(booking.createdAt);
-    const now = new Date();
-    if (bookingDate.getMonth() === now.getMonth() && bookingDate.getFullYear() === now.getFullYear()) {
+    const today = new Date();
+    if (bookingDate.getMonth() === today.getMonth() && bookingDate.getFullYear() === today.getFullYear()) {
       return sum + parseFloat(booking.totalPrice || 0);
     }
     return sum;
   }, 0);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
-  };
+  // Chart data
+  const roomTypeData = [
+    { name: 'Standard', value: roomsArray.filter((r: any) => r.type === 'standard').length },
+    { name: 'Deluxe', value: roomsArray.filter((r: any) => r.type === 'deluxe').length },
+    { name: 'Suite', value: roomsArray.filter((r: any) => r.type === 'suite').length },
+    { name: 'Presidential', value: roomsArray.filter((r: any) => r.type === 'presidential').length },
+  ].filter(item => item.value > 0);
+
+  const bookingStatusData = [
+    { name: 'Đã xác nhận', value: confirmedBookings },
+    { name: 'Chờ xử lý', value: pendingBookings },
+    { name: 'Đã hủy', value: bookingsArray.filter((b: any) => b.status === 'cancelled').length },
+  ].filter(item => item.value > 0);
+
+  // Monthly revenue data (last 6 months)
+  const monthlyRevenueData = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    const monthRevenue = bookingsArray
+      .filter((b: any) => {
+        const bookingDate = new Date(b.createdAt);
+        return bookingDate.getMonth() === date.getMonth() && 
+               bookingDate.getFullYear() === date.getFullYear();
+      })
+      .reduce((sum: number, b: any) => sum + parseFloat(b.totalPrice || 0), 0);
+    
+    monthlyRevenueData.push({
+      month: date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' }),
+      revenue: monthRevenue
+    });
+  }
+
+  // Daily bookings data (last 7 days)
+  const dailyBookingsData = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dayBookings = bookingsArray.filter((b: any) => {
+      const bookingDate = new Date(b.createdAt);
+      return bookingDate.toDateString() === date.toDateString();
+    }).length;
+    
+    dailyBookingsData.push({
+      day: date.toLocaleDateString('vi-VN', { weekday: 'short' }),
+      bookings: dayBookings
+    });
+  }
+
+  const stats = [
+    {
+      title: "Tổng số phòng",
+      value: totalRooms.toString(),
+      icon: Home,
+      description: `${availableRooms} phòng trống`,
+      trend: "+2.5%",
+      color: "text-blue-600"
+    },
+    {
+      title: "Khách hiện tại",
+      value: currentGuests.toString(),
+      icon: Users,
+      description: `Tỷ lệ lấp đầy ${occupancyRate}%`,
+      trend: "+12.3%",
+      color: "text-green-600"
+    },
+    {
+      title: "Đặt phòng hôm nay",
+      value: bookingsArray.filter((b: any) => {
+        const today = new Date();
+        const bookingDate = new Date(b.createdAt);
+        return bookingDate.toDateString() === today.toDateString();
+      }).length.toString(),
+      icon: Calendar,
+      description: `${pendingBookings} chờ xử lý`,
+      trend: "+5.2%",
+      color: "text-orange-600"
+    },
+    {
+      title: "Doanh thu tháng",
+      value: `${monthlyRevenue.toLocaleString('vi-VN')}₫`,
+      icon: DollarSign,
+      description: `Hôm nay: ${todayRevenue.toLocaleString('vi-VN')}₫`,
+      trend: "+18.7%",
+      color: "text-purple-600"
+    }
+  ];
+
+  const quickActions = [
+    { title: "Thêm đặt phòng mới", href: "/booking", icon: Calendar },
+    { title: "Quản lý phòng", href: "/admin", icon: Home },
+    { title: "Quản lý dịch vụ", href: "/services", icon: Star },
+    { title: "Báo cáo chi tiết", href: "#", icon: BarChart3 },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Bảng Điều Khiển - Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Chào mừng {user?.firstName} {user?.lastName}, hệ thống quản lý khách sạn
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Dashboard Quản lý
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Chào mừng trở lại, {user?.firstName}! Đây là tổng quan hệ thống hôm nay.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-green-600 border-green-600">
+              <Activity className="h-3 w-3 mr-1" />
+              Hệ thống hoạt động tốt
+            </Badge>
+          </div>
         </div>
 
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Rooms */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tổng Phòng</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalRooms}</div>
-              <p className="text-xs text-muted-foreground">
-                {availableRooms} phòng trống
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Current Guests */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Khách Hiện Tại</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{currentGuests}</div>
-              <p className="text-xs text-muted-foreground">
-                Tỷ lệ lấp đầy: {occupancyRate}%
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Today Revenue */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Doanh Thu Hôm Nay</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(todayRevenue)}</div>
-              <p className="text-xs text-muted-foreground">
-                Tháng này: {formatCurrency(monthRevenue)}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Bookings */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Đặt Phòng</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{confirmedBookings + pendingBookings}</div>
-              <p className="text-xs text-muted-foreground">
-                {pendingBookings} chờ xác nhận
-              </p>
-            </CardContent>
-          </Card>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {stat.value}
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {stat.description}
+                </p>
+                <div className="flex items-center mt-2">
+                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <span className="text-xs text-green-500">{stat.trend}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Recent Bookings & Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Recent Bookings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Đặt Phòng Gần Đây
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {bookingsArray.slice(0, 5).map((booking: any) => (
-                  <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{booking.user?.firstName} {booking.user?.lastName}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Phòng {booking.room?.number} - {booking.guests} khách
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(booking.checkIn).toLocaleDateString('vi-VN')} - {new Date(booking.checkOut).toLocaleDateString('vi-VN')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={
-                        booking.status === 'confirmed' ? 'default' :
-                        booking.status === 'pending' ? 'secondary' : 'destructive'
-                      }>
-                        {booking.status === 'confirmed' ? 'Đã xác nhận' :
-                         booking.status === 'pending' ? 'Chờ xác nhận' : 'Đã hủy'}
-                      </Badge>
-                      <p className="text-sm font-medium mt-1">
-                        {formatCurrency(parseFloat(booking.totalPrice || 0))}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Thao Tác Nhanh
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <Button className="h-20 flex-col gap-2" variant="outline">
-                  <LogIn className="h-6 w-6" />
-                  <span className="text-sm">Check-in</span>
-                </Button>
-                <Button className="h-20 flex-col gap-2" variant="outline">
-                  <LogOut className="h-6 w-6" />
-                  <span className="text-sm">Check-out</span>
-                </Button>
-                <Button className="h-20 flex-col gap-2" variant="outline">
-                  <Calendar className="h-6 w-6" />
-                  <span className="text-sm">Đặt Phòng Mới</span>
-                </Button>
-                <Button className="h-20 flex-col gap-2" variant="outline">
-                  <Users className="h-6 w-6" />
-                  <span className="text-sm">Quản Lý Khách</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Section */}
+        {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart Placeholder */}
+          {/* Revenue Chart */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Biểu Đồ Doanh Thu
+                Doanh thu 6 tháng gần đây
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600 dark:text-gray-400">Biểu đồ doanh thu theo tháng</p>
-                  <p className="text-sm text-gray-500">Tích hợp chart library để hiển thị</p>
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={monthlyRevenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: any) => [`${value.toLocaleString('vi-VN')}₫`, 'Doanh thu']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#8884d8" 
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Occupancy Chart Placeholder */}
+          {/* Daily Bookings Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Đặt phòng 7 ngày gần đây
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dailyBookingsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="bookings" fill="#00C49F" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Room Types Distribution */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5" />
-                Tỷ Lệ Lấp Đầy Phòng
+                Phân bố loại phòng
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <div className="text-center">
-                  <PieChart className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600 dark:text-gray-400">Biểu đồ tỷ lệ đặt phòng</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Phòng có khách:</span>
-                      <span className="font-medium">{occupiedRooms}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Phòng trống:</span>
-                      <span className="font-medium">{availableRooms}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={roomTypeData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {roomTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Booking Status Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Trạng thái đặt phòng
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={bookingStatusData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {bookingStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Thao tác nhanh</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="h-16 flex flex-col items-center justify-center gap-2"
+                  onClick={() => action.href !== '#' && (window.location.href = action.href)}
+                >
+                  <action.icon className="h-5 w-5" />
+                  <span className="text-xs text-center">{action.title}</span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

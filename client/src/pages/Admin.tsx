@@ -46,6 +46,7 @@ export default function Admin() {
     capacity: "",
     amenities: [] as string[],
     description: "",
+    images: [] as string[],
   });
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [showRoomDialog, setShowRoomDialog] = useState(false);
@@ -140,7 +141,9 @@ export default function Admin() {
       capacity: "",
       amenities: [],
       description: "",
+      images: [],
     });
+    setEditingRoom(null);
   };
 
   const handleRoomSubmit = (e: React.FormEvent) => {
@@ -151,6 +154,7 @@ export default function Admin() {
       price: parseFloat(roomForm.price).toString(),
       capacity: parseInt(roomForm.capacity),
       amenities: roomForm.amenities,
+      images: roomForm.images,
     };
 
     if (editingRoom) {
@@ -167,8 +171,9 @@ export default function Admin() {
       type: room.type,
       price: room.price,
       capacity: room.capacity.toString(),
-      amenities: room.amenities,
+      amenities: room.amenities || [],
       description: room.description || "",
+      images: room.images || [],
     });
     setShowRoomDialog(true);
   };
@@ -677,6 +682,51 @@ export default function Admin() {
                       <Label htmlFor={amenity} className="text-sm">{amenity}</Label>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Hình ảnh phòng</Label>
+                <div className="mt-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {roomForm.images.map((image, index) => (
+                      <div key={index} className="relative">
+                        <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                          <span className="text-xs text-gray-500">Ảnh {index + 1}</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={() => {
+                            setRoomForm(prev => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index)
+                            }));
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const imageUrl = prompt("Nhập URL hình ảnh:");
+                      if (imageUrl) {
+                        setRoomForm(prev => ({
+                          ...prev,
+                          images: [...prev.images, imageUrl]
+                        }));
+                      }
+                    }}
+                  >
+                    <Plus className="mr-2" size={16} />
+                    Thêm hình ảnh
+                  </Button>
                 </div>
               </div>
 

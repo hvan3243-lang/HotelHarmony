@@ -58,8 +58,7 @@ export default function Customer() {
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => apiRequest("PUT", "/api/users/profile", data),
-    onSuccess: async (response) => {
-      const updatedUser = await response.json();
+    onSuccess: (updatedUser) => {
       authManager.login(updatedUser, authManager.getToken()!);
       setUser(updatedUser);
       setEditingProfile(false);

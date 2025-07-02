@@ -25,6 +25,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "Trang chủ" },
     { href: "/booking", label: "Đặt phòng" },
+    { href: "/blog", label: "Blog" },
+    { href: "/contact", label: "Liên hệ" },
     ...(user ? [
       ...(user.role === 'admin' ? [
         { href: "/dashboard", label: "Dashboard" },

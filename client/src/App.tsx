@@ -15,6 +15,8 @@ import Admin from "@/pages/Admin";
 import Dashboard from "@/pages/Dashboard";
 import Services from "@/pages/Services";
 import Checkout from "@/pages/Checkout";
+import Contact from "@/pages/Contact";
+import Blog from "@/pages/Blog";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/services" component={Services} />
       <Route path="/checkout/:bookingId" component={Checkout} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/blog" component={Blog} />
       <Route component={NotFound} />
     </Switch>
   );
