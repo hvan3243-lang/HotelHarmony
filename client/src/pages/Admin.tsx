@@ -353,8 +353,11 @@ export default function Admin() {
           </div>
           <div className="flex space-x-4 items-center">
             <AdminNotifications />
-            <Button onClick={() => setLocation("/")}>
-              Về trang chủ
+            <Button onClick={() => {
+              authManager.logout();
+              setLocation("/auth");
+            }}>
+              Đăng xuất
             </Button>
           </div>
         </motion.div>
