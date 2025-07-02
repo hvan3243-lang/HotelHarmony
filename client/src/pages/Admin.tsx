@@ -445,7 +445,7 @@ export default function Admin() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-purple-100 text-sm font-medium">Khách hàng</p>
-                        <p className="text-3xl font-bold">{(stats as any)?.totalUsers || 0}</p>
+                        <p className="text-3xl font-bold">{(stats as any)?.totalCustomers || 0}</p>
                       </div>
                       <Users className="h-8 w-8 text-purple-200" />
                     </div>

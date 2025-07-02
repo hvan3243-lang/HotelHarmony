@@ -372,21 +372,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookings = await storage.getBookings();
       
       const totalRooms = rooms.length;
-      const occupiedRooms = bookings.filter(b => b.status === "confirmed").length;
-      const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
-      const totalCustomers = bookings.length; // Use bookings count as customer proxy
+      const totalBookings = bookings.length;
+      
+      // Count unique customers who have made bookings
+      const uniqueCustomerIds = new Set(bookings.map(b => b.user.id));
+      const totalCustomers = uniqueCustomerIds.size;
+      
+      // Calculate occupancy based on confirmed bookings
+      const confirmedBookings = bookings.filter(b => b.status === "confirmed");
+      const occupancyRate = totalRooms > 0 ? (confirmedBookings.length / totalRooms) * 100 : 0;
+      
+      // Calculate total revenue from confirmed and completed bookings
       const totalRevenue = bookings
         .filter(b => b.status === "confirmed" || b.status === "completed")
         .reduce((sum, b) => sum + parseFloat(b.totalPrice), 0);
       
       res.json({
         totalRooms,
+        totalBookings,
         occupancyRate: Math.round(occupancyRate),
         totalCustomers,
         totalRevenue,
-        recentBookings: bookings.slice(0, 5),
+        recentBookings: bookings
+          .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+          .slice(0, 5),
       });
     } catch (error: any) {
+      console.error("Error getting admin stats:", error);
       res.status(400).json({ message: error.message });
     }
   });
