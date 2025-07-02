@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { 
   Search, 
   Calendar, 
   User, 
@@ -14,7 +20,8 @@ import {
   TrendingUp,
   Star,
   Eye,
-  BookOpen
+  BookOpen,
+  X
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -23,6 +30,8 @@ import type { BlogPost } from "@shared/schema";
 export default function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
   // Fetch blog posts from API
   const { data: blogPosts, isLoading } = useQuery({
@@ -44,6 +53,12 @@ export default function Blog() {
 
   // Get unique categories from published posts
   const categories = Array.from(new Set(publishedPosts.map((post: BlogPost) => post.category)));
+
+  // Function to open post detail dialog
+  const handleReadMore = (post: BlogPost) => {
+    setSelectedPost(post);
+    setIsPostDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -207,7 +222,10 @@ export default function Blog() {
                       </div>
                     )}
 
-                    <Button className="w-full group">
+                    <Button 
+                      className="w-full group"
+                      onClick={() => handleReadMore(post)}
+                    >
                       Đọc thêm
                       <ChevronRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
@@ -258,6 +276,84 @@ export default function Blog() {
             </Card>
           </motion.div>
         )}
+
+        {/* Blog Post Detail Dialog */}
+        <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold pr-8">
+                {selectedPost?.title}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedPost && (
+              <div className="space-y-6">
+                {/* Post Meta */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground border-b pb-4">
+                  <div className="flex items-center">
+                    <User size={16} className="mr-2" />
+                    {selectedPost.author}
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar size={16} className="mr-2" />
+                    {selectedPost.createdAt ? format(new Date(selectedPost.createdAt), 'dd/MM/yyyy') : 'N/A'}
+                  </div>
+                  <div className="flex items-center">
+                    <Clock size={16} className="mr-2" />
+                    {selectedPost.readTime || 5} phút đọc
+                  </div>
+                  <Badge variant="secondary">
+                    {selectedPost.category}
+                  </Badge>
+                </div>
+
+                {/* Featured Image */}
+                {selectedPost.image && (
+                  <div className="relative h-64 md:h-80 overflow-hidden rounded-lg">
+                    <img
+                      src={selectedPost.image}
+                      alt={selectedPost.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Excerpt */}
+                {selectedPost.excerpt && (
+                  <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-primary">
+                    <p className="text-lg italic text-muted-foreground">
+                      {selectedPost.excerpt}
+                    </p>
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="prose prose-lg max-w-none dark:prose-invert">
+                  <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                    {selectedPost.content}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {selectedPost.tags && selectedPost.tags.length > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Tag size={16} className="text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Tags:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPost.tags.map((tag: string, i: number) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
