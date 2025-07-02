@@ -120,11 +120,11 @@ export default function Booking() {
     try {
       const bookingData = {
         roomId: room.id,
-        checkIn: new Date(checkIn).toISOString(),
-        checkOut: new Date(checkOut).toISOString(),
+        checkIn: checkIn,
+        checkOut: checkOut,
         guests: parseInt(guests),
         totalPrice: calculateTotalPrice(room).toString(),
-        specialRequests: bookingForm.specialRequests,
+        specialRequests: bookingForm.specialRequests || "",
       };
 
       const response = await apiRequest("POST", "/api/bookings", bookingData);

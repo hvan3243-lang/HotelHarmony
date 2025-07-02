@@ -46,7 +46,13 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: (message: string) => apiRequest("POST", "/api/chat/messages", { message }),
+    mutationFn: (message: string) => {
+      const payload: any = { message };
+      if (isAdmin && selectedUserId) {
+        payload.targetUserId = selectedUserId;
+      }
+      return apiRequest("POST", "/api/chat/messages", payload);
+    },
     onSuccess: () => {
       setNewMessage("");
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });

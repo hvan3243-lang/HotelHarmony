@@ -317,12 +317,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const rooms = await storage.getRooms();
       const bookings = await storage.getBookings();
-      const users = Array.from((storage as any).users.values());
       
       const totalRooms = rooms.length;
       const occupiedRooms = bookings.filter(b => b.status === "confirmed").length;
       const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
-      const totalCustomers = users.filter((u: any) => u.role === "customer").length;
+      const totalCustomers = bookings.length; // Use bookings count as customer proxy
       const totalRevenue = bookings
         .filter(b => b.status === "confirmed" || b.status === "completed")
         .reduce((sum, b) => sum + parseFloat(b.totalPrice), 0);
@@ -439,15 +438,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat/messages", authenticateToken, async (req: any, res: Response) => {
     try {
-      const { message } = req.body;
+      const { message, targetUserId } = req.body;
       if (!message) {
         return res.status(400).json({ message: "Nội dung tin nhắn không được trống" });
       }
 
+      const isFromAdmin = req.user.role === 'admin';
+      const userId = isFromAdmin && targetUserId ? targetUserId : req.user.id;
+
       const chatMessage = await storage.createChatMessage({
-        userId: req.user.id,
+        userId,
         message,
-        isFromAdmin: req.user.role === 'admin'
+        isFromAdmin
       });
 
       res.json(chatMessage);

@@ -139,6 +139,9 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   guests: true,
   totalPrice: true,
   specialRequests: true,
+}).extend({
+  checkIn: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+  checkOut: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
 });
 
 export const insertServiceSchema = createInsertSchema(services).pick({
