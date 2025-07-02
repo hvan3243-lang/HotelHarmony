@@ -24,7 +24,8 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  MessageCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { authManager } from "@/lib/auth";
@@ -33,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Room, Booking, User as UserType } from "@shared/schema";
 import { useEffect } from "react";
+import { LiveChat } from "@/components/LiveChat";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -50,6 +52,10 @@ export default function Admin() {
   });
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [showRoomDialog, setShowRoomDialog] = useState(false);
+  
+  // Get chat user ID from URL parameter for admin chat functionality
+  const urlParams = new URLSearchParams(window.location.search);
+  const chatUserId = urlParams.get('chatUserId') ? parseInt(urlParams.get('chatUserId')!) : undefined;
 
   useEffect(() => {
     const user = authManager.getUser();
@@ -248,6 +254,33 @@ export default function Admin() {
             </Button>
           </div>
         </motion.div>
+
+        {/* Chat Instructions for Admin */}
+        {chatUserId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <MessageCircle className="text-white" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                      Đang trò chuyện với khách hàng #{chatUserId}
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Nhấn vào biểu tượng chat ở góc dưới bên phải để trả lời tin nhắn khách hàng
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -748,6 +781,9 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
       </div>
+      
+      {/* Admin Live Chat */}
+      <LiveChat isAdmin={true} selectedUserId={chatUserId} />
     </div>
   );
 }

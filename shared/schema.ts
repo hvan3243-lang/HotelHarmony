@@ -35,7 +35,7 @@ export const bookings = pgTable("bookings", {
   checkIn: timestamp("check_in").notNull(),
   checkOut: timestamp("check_out").notNull(),
   guests: integer("guests").notNull(),
-  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 15, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, confirmed, cancelled, completed
   specialRequests: text("special_requests"),
   paymentIntentId: text("payment_intent_id"),

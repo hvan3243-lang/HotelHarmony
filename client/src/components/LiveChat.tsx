@@ -189,7 +189,10 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
                             <div
                               key={conv.userId}
                               className="p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors"
-                              onClick={() => {/* Handle conversation select */}}
+                              onClick={() => {
+                                // Set selectedUserId to show chat with this user
+                                window.location.href = `/admin?chatUserId=${conv.userId}`;
+                              }}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
