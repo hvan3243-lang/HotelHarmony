@@ -283,6 +283,13 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
                                               ? 'bg-primary text-primary-foreground'
                                               : 'bg-muted'
                                           }`}>
+                                            <p className={`text-xs font-medium mb-1 ${
+                                              isFromCurrentUser 
+                                                ? 'text-primary-foreground/80' 
+                                                : 'text-muted-foreground/80'
+                                            }`}>
+                                              {(message as any).senderName || (message.isFromAdmin ? 'Admin' : 'Khách hàng')}
+                                            </p>
                                             <p className="text-sm whitespace-pre-wrap break-words">
                                               {message.message}
                                             </p>

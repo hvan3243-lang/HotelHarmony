@@ -5,7 +5,7 @@ import {
   type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, or } from "drizzle-orm";
+import { eq, and, gte, lte, or, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -385,8 +385,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Chat methods
-  async getChatMessages(userId: number): Promise<ChatMessage[]> {
-    return await db.select().from(chatMessages).where(eq(chatMessages.userId, userId)).orderBy(chatMessages.createdAt);
+  async getChatMessages(userId: number): Promise<any[]> {
+    const messagesWithUser = await db.select({
+      message: chatMessages,
+      user: users
+    })
+    .from(chatMessages)
+    .leftJoin(users, eq(chatMessages.userId, users.id))
+    .where(eq(chatMessages.userId, userId))
+    .orderBy(chatMessages.createdAt);
+
+    return messagesWithUser.map(row => ({
+      ...row.message,
+      senderName: row.message.isFromAdmin ? 'Admin' : `${row.user?.firstName || ''} ${row.user?.lastName || ''}`.trim()
+    }));
   }
 
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {

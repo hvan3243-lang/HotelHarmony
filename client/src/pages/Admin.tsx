@@ -695,6 +695,9 @@ export default function Admin() {
                                   : 'bg-muted'
                               }`}
                             >
+                              <p className="text-xs font-medium mb-1 opacity-80">
+                                {message.senderName || (message.isFromAdmin ? 'Admin' : 'Khách hàng')}
+                              </p>
                               <p className="text-sm">{message.message}</p>
                               <p className="text-xs opacity-70 mt-1">
                                 {new Date(message.createdAt).toLocaleString('vi-VN')}
