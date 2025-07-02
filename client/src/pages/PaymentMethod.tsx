@@ -9,14 +9,19 @@ import { CreditCard, Wallet, MapPin, Shield, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { loadStripe } from '@stripe/stripe-js';
+// Import Stripe với cấu hình an toàn
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { apiRequest } from "@/lib/queryClient";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+// Kiểm tra public key có tồn tại không
+const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+if (!stripePublicKey) {
+  console.warn('VITE_STRIPE_PUBLIC_KEY not configured');
 }
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+// Khởi tạo Stripe Promise (chỉ khi có public key)
+const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
 interface PaymentFormProps {
   bookingData: any;
@@ -295,12 +300,20 @@ export default function PaymentMethod() {
 
                 <div className="mt-6">
                   {paymentMethod === "stripe" && (
-                    <Elements stripe={stripePromise}>
-                      <StripePaymentForm 
-                        bookingData={bookingData} 
-                        onPaymentSuccess={onPaymentSuccess}
-                      />
-                    </Elements>
+                    stripePromise ? (
+                      <Elements stripe={stripePromise}>
+                        <StripePaymentForm 
+                          bookingData={bookingData} 
+                          onPaymentSuccess={onPaymentSuccess}
+                        />
+                      </Elements>
+                    ) : (
+                      <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                        <p className="text-red-800 dark:text-red-200">
+                          Stripe chưa được cấu hình. Vui lòng chọn phương thức thanh toán khác.
+                        </p>
+                      </div>
+                    )
                   )}
 
                   {paymentMethod === "cash" && (

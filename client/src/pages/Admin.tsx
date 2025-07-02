@@ -36,6 +36,7 @@ import { useLocation } from "wouter";
 import { Room, Booking, User as UserType } from "@shared/schema";
 import { useEffect } from "react";
 import { LiveChat } from "@/components/LiveChat";
+import { AdminChatGuide } from "@/components/AdminChatGuide";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -307,6 +308,9 @@ export default function Admin() {
           </div>
         </motion.div>
 
+        {/* Admin Chat Guide */}
+        <AdminChatGuide />
+
         {/* Chat Instructions for Admin */}
         {chatUserId && (
           <motion.div
@@ -314,18 +318,18 @@ export default function Admin() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                     <MessageCircle className="text-white" size={20} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                      Đang trò chuyện với khách hàng #{chatUserId}
+                    <h3 className="font-semibold text-green-900 dark:text-green-100">
+                      ✅ Đang trò chuyện với khách hàng #{chatUserId}
                     </h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Nhấn vào biểu tượng chat ở góc dưới bên phải để trả lời tin nhắn khách hàng
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      Chat đã được mở sẵn với khách hàng này. Nhấn biểu tượng chat góc dưới để trả lời ngay!
                     </p>
                   </div>
                 </div>
