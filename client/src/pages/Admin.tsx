@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { 
   Form, 
   FormControl, 
@@ -1017,11 +1018,9 @@ export default function Admin() {
                               </div>
                             </div>
                             <FormControl>
-                              <input
-                                type="checkbox"
+                              <Switch
                                 checked={field.value}
-                                onChange={field.onChange}
-                                className="rounded border-gray-300"
+                                onCheckedChange={field.onChange}
                               />
                             </FormControl>
                           </FormItem>
