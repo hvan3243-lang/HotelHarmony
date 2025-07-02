@@ -137,7 +137,11 @@ export default function Admin() {
   });
 
   const { data: chatMessages, isLoading: chatMessagesLoading } = useQuery({
-    queryKey: ['/api/chat/messages', selectedUserId],
+    queryKey: ['/api/admin/chat/messages', selectedUserId],
+    queryFn: selectedUserId ? async () => {
+      const response = await apiRequest('GET', `/api/admin/chat/messages/${selectedUserId}`);
+      return response.json();
+    } : undefined,
     enabled: !!selectedUserId,
   });
 
@@ -677,7 +681,12 @@ export default function Admin() {
                   <Card className="h-[600px] flex flex-col">
                     <CardHeader className="border-b">
                       <CardTitle className="text-lg">
-                        Trò chuyện với khách hàng #{selectedUserId}
+                        {(() => {
+                          const conversation = (chatConversations as any[])?.find(c => c.userId === selectedUserId);
+                          return conversation ? 
+                            `Trò chuyện với ${conversation.userName} ${conversation.userLastName}` : 
+                            `Trò chuyện với khách hàng #${selectedUserId}`;
+                        })()}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="flex-1 p-0 flex flex-col">

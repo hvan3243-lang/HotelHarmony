@@ -619,6 +619,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get chat messages for a specific user (admin only)
+  app.get("/api/admin/chat/messages/:userId", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getChatMessages(userId);
+      
+      // Add sender names to messages
+      const messagesWithSenders = await Promise.all(
+        messages.map(async (msg: any) => {
+          if (msg.isFromAdmin) {
+            return { ...msg, senderName: 'Admin' };
+          } else {
+            const user = await storage.getUser(msg.userId);
+            return { ...msg, senderName: user ? `${user.firstName} ${user.lastName}` : 'Khách hàng' };
+          }
+        })
+      );
+      
+      res.json(messagesWithSenders);
+    } catch (error: any) {
+      console.error("Admin chat messages error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   // Export reports endpoint for admin
   app.get("/api/admin/export/:type", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
