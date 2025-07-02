@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   TrendingUp, 
@@ -217,6 +218,42 @@ export default function Admin() {
     return variants[status] || { variant: "secondary", label: status, icon: Clock };
   };
 
+  // Export function
+  const handleExportReport = async (type: string) => {
+    try {
+      const response = await fetch(`/api/admin/export/${type}?format=csv`, {
+        headers: {
+          'Authorization': `Bearer ${authManager.getToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Lỗi xuất báo cáo');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Xuất báo cáo thành công",
+        description: `Đã tải xuống báo cáo ${type}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi xuất báo cáo",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredRooms = rooms.filter((room: Room) => {
     if (!searchTerm) return true;
     return (
@@ -248,10 +285,25 @@ export default function Admin() {
               <Plus className="mr-2" size={16} />
               Thêm phòng
             </Button>
-            <Button variant="outline">
-              <Download className="mr-2" size={16} />
-              Xuất báo cáo
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="mr-2" size={16} />
+                  Xuất báo cáo
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleExportReport('bookings')}>
+                  Báo cáo đặt phòng
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportReport('rooms')}>
+                  Danh sách phòng
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportReport('revenue')}>
+                  Báo cáo doanh thu
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </motion.div>
 

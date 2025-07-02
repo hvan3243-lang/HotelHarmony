@@ -33,6 +33,17 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
   // Fetch messages for current conversation
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["/api/chat/messages", currentUserId],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (isAdmin && selectedUserId) {
+        params.append('userId', selectedUserId.toString());
+      }
+      return fetch(`/api/chat/messages?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${authManager.getToken()}`
+        }
+      }).then(res => res.json());
+    },
     enabled: !!currentUserId && isOpen,
     refetchInterval: 2000, // Refresh every 2 seconds for real-time updates
   });

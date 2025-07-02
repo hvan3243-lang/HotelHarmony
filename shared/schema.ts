@@ -39,6 +39,7 @@ export const bookings = pgTable("bookings", {
   status: text("status").notNull().default("pending"), // pending, confirmed, cancelled, completed
   specialRequests: text("special_requests"),
   paymentIntentId: text("payment_intent_id"),
+  paymentMethod: text("payment_method"), // stripe, cash_on_arrival, e_wallet
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -139,6 +140,7 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   guests: true,
   totalPrice: true,
   specialRequests: true,
+  paymentMethod: true,
 }).extend({
   checkIn: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
   checkOut: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),

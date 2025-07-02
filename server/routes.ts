@@ -429,8 +429,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chat routes
   app.get("/api/chat/messages", authenticateToken, async (req: any, res: Response) => {
     try {
-      const messages = await storage.getChatMessages(req.user.id);
-      res.json(messages);
+      const { userId: targetUserId } = req.query;
+      
+      // If admin is requesting messages for a specific user
+      if (req.user.role === 'admin' && targetUserId) {
+        const messages = await storage.getChatMessages(parseInt(targetUserId as string));
+        res.json(messages);
+      } else {
+        // Regular user getting their own messages
+        const messages = await storage.getChatMessages(req.user.id);
+        res.json(messages);
+      }
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -490,6 +499,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Chat conversations error:", error);
       res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Export reports endpoint for admin
+  app.get("/api/admin/export/:type", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { type } = req.params;
+      const { format = 'csv', startDate, endDate } = req.query;
+
+      let data: any[] = [];
+      let filename = '';
+      let headers: string[] = [];
+
+      switch (type) {
+        case 'bookings':
+          const bookings = await storage.getBookings();
+          data = bookings.map(booking => ({
+            'Mã đặt phòng': booking.id,
+            'Khách hàng': `${booking.user.firstName} ${booking.user.lastName}`,
+            'Email': booking.user.email,
+            'Số điện thoại': booking.user.phone || '',
+            'Số phòng': booking.room.number,
+            'Loại phòng': booking.room.type,
+            'Ngày nhận': booking.checkIn,
+            'Ngày trả': booking.checkOut,
+            'Số khách': booking.guests,
+            'Tổng tiền': booking.totalPrice,
+            'Trạng thái': booking.status,
+            'Phương thức TT': booking.paymentMethod || '',
+            'Ngày tạo': booking.createdAt
+          }));
+          filename = `bookings_${new Date().toISOString().split('T')[0]}`;
+          headers = Object.keys(data[0] || {});
+          break;
+
+        case 'rooms':
+          const rooms = await storage.getRooms();
+          data = rooms.map(room => ({
+            'ID': room.id,
+            'Số phòng': room.number,
+            'Loại phòng': room.type,
+            'Giá': room.price,
+            'Sức chứa': room.capacity,
+            'Trạng thái': room.isAvailable ? 'Có sẵn' : 'Đã đặt',
+            'Mô tả': room.description || '',
+            'Tiện nghi': room.amenities?.join(', ') || '',
+            'Ngày tạo': room.createdAt
+          }));
+          filename = `rooms_${new Date().toISOString().split('T')[0]}`;
+          headers = Object.keys(data[0] || {});
+          break;
+
+        case 'revenue':
+          const allBookings = await storage.getBookings();
+          const revenueData = allBookings
+            .filter(b => b.status === 'confirmed')
+            .reduce((acc: any, booking) => {
+              const month = new Date(booking.createdAt).toISOString().slice(0, 7);
+              if (!acc[month]) {
+                acc[month] = {
+                  month,
+                  totalBookings: 0,
+                  totalRevenue: 0,
+                  averageBookingValue: 0
+                };
+              }
+              acc[month].totalBookings += 1;
+              acc[month].totalRevenue += parseFloat(booking.totalPrice);
+              return acc;
+            }, {});
+
+          data = Object.values(revenueData).map((item: any) => ({
+            'Tháng': item.month,
+            'Số booking': item.totalBookings,
+            'Doanh thu': item.totalRevenue,
+            'Giá trị TB/booking': Math.round(item.totalRevenue / item.totalBookings)
+          }));
+          filename = `revenue_${new Date().toISOString().split('T')[0]}`;
+          headers = Object.keys(data[0] || {});
+          break;
+
+        default:
+          return res.status(400).json({ message: 'Invalid report type' });
+      }
+
+      if (format === 'csv') {
+        // Generate CSV
+        const csvContent = [
+          headers.join(','),
+          ...data.map(row => 
+            headers.map(header => {
+              const value = row[header];
+              return typeof value === 'string' && value.includes(',') 
+                ? `"${value}"` 
+                : value;
+            }).join(',')
+          )
+        ].join('\n');
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+        res.send('\ufeff' + csvContent); // Add BOM for Excel compatibility
+      } else {
+        // Return JSON
+        res.json({
+          type,
+          data,
+          filename,
+          generatedAt: new Date().toISOString()
+        });
+      }
+    } catch (error: any) {
+      console.error("Export error:", error);
+      res.status(500).json({ message: "Lỗi xuất báo cáo: " + error.message });
     }
   });
 

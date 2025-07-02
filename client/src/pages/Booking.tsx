@@ -135,8 +135,8 @@ export default function Booking() {
         description: "Chúng tôi đã gửi email xác nhận cho bạn",
       });
 
-      // Redirect to checkout
-      setLocation(`/checkout/${booking.id}`);
+      // Redirect to payment method selection
+      setLocation(`/payment`);
     } catch (error: any) {
       toast({
         title: "Lỗi đặt phòng",
