@@ -121,6 +121,10 @@ export default function Admin() {
     queryKey: ['/api/blog'],
   });
 
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['/api/bookings'],
+  });
+
   // Forms
   const roomForm = useForm<RoomForm>({
     resolver: zodResolver(roomSchema),
@@ -355,11 +359,12 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
             <TabsTrigger value="rooms">Quản lý phòng</TabsTrigger>
-            <TabsTrigger value="services">Quản lý dịch vụ</TabsTrigger>
-            <TabsTrigger value="blog">Quản lý blog</TabsTrigger>
+            <TabsTrigger value="services">Dịch vụ</TabsTrigger>
+            <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -470,6 +475,115 @@ export default function Admin() {
                   </CardContent>
                 </Card>
               </div>
+            )}
+          </TabsContent>
+
+          {/* Bookings Tab */}
+          <TabsContent value="bookings" className="mt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Quản lý đặt phòng</h2>
+            </div>
+
+            {bookingsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center">
+                        <div className="space-y-2">
+                          <div className="h-4 bg-muted rounded w-32"></div>
+                          <div className="h-3 bg-muted rounded w-48"></div>
+                        </div>
+                        <div className="h-6 bg-muted rounded w-16"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (bookings as any[])?.length > 0 ? (
+              <div className="space-y-4">
+                {(bookings as any[]).map((booking: any) => (
+                  <motion.div
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-4">
+                              <h3 className="text-lg font-semibold">
+                                #{booking.id} - {booking.user?.firstName} {booking.user?.lastName}
+                              </h3>
+                              <Badge 
+                                variant={
+                                  booking.status === 'confirmed' ? 'default' :
+                                  booking.status === 'cancelled' ? 'destructive' :
+                                  'secondary'
+                                }
+                              >
+                                {booking.status === 'confirmed' ? 'Đã xác nhận' :
+                                 booking.status === 'cancelled' ? 'Đã hủy' :
+                                 booking.status === 'pending' ? 'Chờ xác nhận' : booking.status}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                              <div>
+                                <span className="font-medium">Phòng:</span> {booking.room?.type} - {booking.room?.number}
+                              </div>
+                              <div>
+                                <span className="font-medium">Check-in:</span> {new Date(booking.checkIn).toLocaleDateString('vi-VN')}
+                              </div>
+                              <div>
+                                <span className="font-medium">Check-out:</span> {new Date(booking.checkOut).toLocaleDateString('vi-VN')}
+                              </div>
+                              <div>
+                                <span className="font-medium">Khách:</span> {booking.guests}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="font-medium text-green-600">
+                                Tổng: {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
+                              </span>
+                              <span className="text-muted-foreground">
+                                Đặt ngày: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`HLX${booking.id}`);
+                                toast({
+                                  title: "Đã sao chép",
+                                  description: `Mã đặt phòng HLX${booking.id}`,
+                                });
+                              }}
+                            >
+                              Sao chép mã
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Calendar className="mx-auto mb-4 text-muted-foreground" size={48} />
+                  <h3 className="text-lg font-semibold mb-2">Chưa có đặt phòng nào</h3>
+                  <p className="text-muted-foreground">
+                    Các đặt phòng mới sẽ hiển thị ở đây
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
