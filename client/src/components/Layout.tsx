@@ -5,6 +5,7 @@ import { authManager } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { User } from "@shared/schema";
 import { Moon, Sun, Hotel, Menu, X } from "lucide-react";
+import { LiveChat } from "./LiveChat";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -137,6 +138,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main>{children}</main>
+      
+      {/* Live Chat Component */}
+      {user && <LiveChat isAdmin={user.role === 'admin'} />}
     </div>
   );
 }

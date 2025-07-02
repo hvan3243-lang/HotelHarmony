@@ -4,8 +4,10 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { insertUserSchema, insertRoomSchema, insertBookingSchema } from "@shared/schema";
+import { insertUserSchema, insertRoomSchema, insertBookingSchema, chatMessages, users } from "@shared/schema";
 import { sendBookingConfirmation } from "./services/sendgrid";
+import { db } from "./db";
+import { eq, desc, count } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -421,6 +423,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(recommendations.slice(0, 3));
     } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Chat routes
+  app.get("/api/chat/messages", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const messages = await storage.getChatMessages(req.user.id);
+      res.json(messages);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/chat/messages", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "Nội dung tin nhắn không được trống" });
+      }
+
+      const chatMessage = await storage.createChatMessage({
+        userId: req.user.id,
+        message,
+        isFromAdmin: req.user.role === 'admin'
+      });
+
+      res.json(chatMessage);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/chat/messages/read", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const { isFromAdmin } = req.body;
+      const success = await storage.markMessagesAsRead(req.user.id, isFromAdmin);
+      res.json({ success });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin chat routes - get all user conversations
+  app.get("/api/admin/chat/conversations", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      // Get all users who have sent messages
+      const result = await db.select({
+        userId: chatMessages.userId,
+        userName: users.firstName,
+        userLastName: users.lastName,
+        userEmail: users.email,
+        lastMessage: chatMessages.message,
+        lastMessageTime: chatMessages.createdAt,
+      })
+      .from(chatMessages)
+      .innerJoin(users, eq(chatMessages.userId, users.id))
+      .where(eq(chatMessages.isFromAdmin, false))
+      .groupBy(chatMessages.userId, users.firstName, users.lastName, users.email, chatMessages.message, chatMessages.createdAt)
+      .orderBy(desc(chatMessages.createdAt));
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Chat conversations error:", error);
       res.status(400).json({ message: error.message });
     }
   });

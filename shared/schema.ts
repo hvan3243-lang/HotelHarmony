@@ -103,6 +103,15 @@ export const employees = pgTable("employees", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  isFromAdmin: boolean("is_from_admin").default(false),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -179,6 +188,12 @@ export const insertEmployeeSchema = createInsertSchema(employees).pick({
   notes: true,
 });
 
+export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
+  userId: true,
+  message: true,
+  isFromAdmin: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
@@ -195,3 +210,5 @@ export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Customer = typeof customers.$inferSelect;
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Employee = typeof employees.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;

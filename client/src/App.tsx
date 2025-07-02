@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Layout } from "@/components/Layout";
-import { Chatbot } from "@/components/Chatbot";
 
 import Home from "@/pages/Home";
 import Booking from "@/pages/Booking";
@@ -44,7 +43,6 @@ function App() {
         <TooltipProvider>
           <Layout>
             <Router />
-            <Chatbot />
           </Layout>
           <Toaster />
         </TooltipProvider>

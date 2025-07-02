@@ -1,8 +1,8 @@
 import { 
-  users, rooms, bookings, services, customers, employees, invoices,
+  users, rooms, bookings, services, customers, employees, invoices, chatMessages,
   type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
   type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
-  type Invoice, type InsertInvoice
+  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, or } from "drizzle-orm";
@@ -38,6 +38,11 @@ export interface IStorage {
   createService(service: InsertService): Promise<Service>;
   updateService(id: number, updates: Partial<Service>): Promise<Service | undefined>;
   deleteService(id: number): Promise<boolean>;
+  
+  // Chat methods
+  getChatMessages(userId: number): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  markMessagesAsRead(userId: number, isFromAdmin?: boolean): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -353,6 +358,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteService(id: number): Promise<boolean> {
     const result = await db.delete(services).where(eq(services.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Chat methods
+  async getChatMessages(userId: number): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages).where(eq(chatMessages.userId, userId)).orderBy(chatMessages.createdAt);
+  }
+
+  async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+    const [message] = await db.insert(chatMessages).values(insertMessage).returning();
+    return message;
+  }
+
+  async markMessagesAsRead(userId: number, isFromAdmin?: boolean): Promise<boolean> {
+    const condition = isFromAdmin !== undefined 
+      ? and(eq(chatMessages.userId, userId), eq(chatMessages.isFromAdmin, isFromAdmin))
+      : eq(chatMessages.userId, userId);
+    
+    const result = await db.update(chatMessages).set({ isRead: true }).where(condition);
     return (result.rowCount || 0) > 0;
   }
 }
