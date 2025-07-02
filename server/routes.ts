@@ -45,10 +45,20 @@ const requireAdmin = (req: any, res: Response, next: any) => {
 
 // WebSocket connections để thông báo admin
 let adminClients: WebSocket[] = [];
+let allClients: WebSocket[] = [];
 
 // Function để gửi thông báo cho admin
 const notifyAdmin = (message: any) => {
   adminClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+};
+
+// Function để gửi thông báo cho tất cả client
+const broadcastToClients = (message: any) => {
+  allClients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(message));
     }
@@ -616,6 +626,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isFromAdmin
       });
 
+      // Send WebSocket notification for real-time updates
+      broadcastToClients({
+        type: 'new_message',
+        userId,
+        isFromAdmin,
+        message: chatMessage
+      });
+
       res.json(chatMessage);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -891,6 +909,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws: WebSocket) => {
     console.log('WebSocket client connected');
     
+    // Add to all clients list
+    allClients.push(ws);
+    
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message.toString());
@@ -905,6 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     ws.on('close', () => {
       adminClients = adminClients.filter(client => client !== ws);
+      allClients = allClients.filter(client => client !== ws);
       console.log('WebSocket client disconnected');
     });
   });

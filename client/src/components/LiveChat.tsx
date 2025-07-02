@@ -24,6 +24,7 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
   const [newMessage, setNewMessage] = useState("");
   const [conversations, setConversations] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = authManager.getUser();
@@ -45,7 +46,7 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
       }).then(res => res.json());
     },
     enabled: !!currentUserId && isOpen,
-    refetchInterval: 2000, // Refresh every 2 seconds for real-time updates
+    refetchInterval: 500, // Refresh every 0.5 seconds for real-time updates
   });
 
   // Fetch admin conversations
@@ -66,11 +67,15 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
     },
     onSuccess: () => {
       setNewMessage("");
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+      // Force immediate refresh of messages
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentUserId] });
+      queryClient.refetchQueries({ queryKey: ["/api/chat/messages", currentUserId] });
       if (isAdmin) {
         queryClient.invalidateQueries({ queryKey: ["/api/admin/chat/conversations"] });
+        queryClient.refetchQueries({ queryKey: ["/api/admin/chat/conversations"] });
       }
-      scrollToBottom();
+      // Scroll to bottom immediately
+      setTimeout(scrollToBottom, 100);
     },
     onError: (error: any) => {
       toast({
@@ -85,6 +90,55 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (isOpen && !wsRef.current) {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      try {
+        wsRef.current = new WebSocket(wsUrl);
+        
+        wsRef.current.onopen = () => {
+          console.log('WebSocket connected for chat');
+        };
+        
+        wsRef.current.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_message') {
+              // Refresh messages when new message arrives
+              queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentUserId] });
+              if (isAdmin) {
+                queryClient.invalidateQueries({ queryKey: ["/api/admin/chat/conversations"] });
+              }
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+        
+        wsRef.current.onclose = () => {
+          console.log('WebSocket disconnected');
+          wsRef.current = null;
+        };
+        
+        wsRef.current.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+      } catch (error) {
+        console.error('Error creating WebSocket connection:', error);
+      }
+    }
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [isOpen, currentUserId, queryClient, isAdmin]);
+
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
@@ -94,7 +148,31 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    sendMessageMutation.mutate(newMessage);
+    
+    const messageText = newMessage;
+    
+    // Optimistic update - show message immediately
+    const optimisticMessage = {
+      id: Date.now(), // Temporary ID
+      userId: user?.id || 0,
+      message: messageText,
+      isFromAdmin: isAdmin,
+      createdAt: new Date().toISOString(),
+      user: {
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || ''
+      }
+    };
+    
+    // Update the cache optimistically
+    queryClient.setQueryData(["/api/chat/messages", currentUserId], (oldData: any) => {
+      return [...(oldData || []), optimisticMessage];
+    });
+    
+    setNewMessage("");
+    setTimeout(scrollToBottom, 50);
+    
+    sendMessageMutation.mutate(messageText);
   };
 
   const formatTime = (date: string | Date) => {
