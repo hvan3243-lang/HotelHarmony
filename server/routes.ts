@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { insertUserSchema, insertRoomSchema, insertBookingSchema, chatMessages, users } from "@shared/schema";
+import { insertUserSchema, insertRoomSchema, insertBookingSchema, insertBlogPostSchema, chatMessages, users, type BlogPost } from "@shared/schema";
 import { sendBookingConfirmation } from "./services/sendgrid";
 import { db } from "./db";
 import { eq, desc, count } from "drizzle-orm";
@@ -666,6 +666,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Export error:", error);
       res.status(500).json({ message: "Lỗi xuất báo cáo: " + error.message });
+    }
+  });
+
+  // Blog posts API
+  app.get("/api/blog", async (req: Request, res: Response) => {
+    try {
+      const posts = await storage.getBlogPosts();
+      res.json(posts);
+    } catch (error: any) {
+      res.status(500).json({ message: "Lỗi lấy danh sách bài viết: " + error.message });
+    }
+  });
+
+  app.get("/api/blog/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getBlogPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Không tìm thấy bài viết" });
+      }
+      res.json(post);
+    } catch (error: any) {
+      res.status(500).json({ message: "Lỗi lấy bài viết: " + error.message });
+    }
+  });
+
+  app.post("/api/blog", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertBlogPostSchema.parse(req.body);
+      const post = await storage.createBlogPost(validatedData);
+      res.status(201).json(post);
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi tạo bài viết: " + error.message });
+    }
+  });
+
+  app.put("/api/blog/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const post = await storage.updateBlogPost(id, updates);
+      if (!post) {
+        return res.status(404).json({ message: "Không tìm thấy bài viết" });
+      }
+      res.json(post);
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi cập nhật bài viết: " + error.message });
+    }
+  });
+
+  app.delete("/api/blog/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBlogPost(id);
+      if (!success) {
+        return res.status(404).json({ message: "Không tìm thấy bài viết" });
+      }
+      res.json({ message: "Xóa bài viết thành công" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Lỗi xóa bài viết: " + error.message });
     }
   });
 

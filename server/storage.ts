@@ -1,8 +1,8 @@
 import { 
-  users, rooms, bookings, services, customers, employees, invoices, chatMessages,
+  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts,
   type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
   type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
-  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage
+  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, or } from "drizzle-orm";
@@ -43,6 +43,14 @@ export interface IStorage {
   getChatMessages(userId: number): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   markMessagesAsRead(userId: number, isFromAdmin?: boolean): Promise<boolean>;
+  
+  // Blog methods
+  getBlogPosts(): Promise<BlogPost[]>;
+  getBlogPost(id: number): Promise<BlogPost | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, updates: Partial<BlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -392,6 +400,39 @@ export class DatabaseStorage implements IStorage {
       : eq(chatMessages.userId, userId);
     
     const result = await db.update(chatMessages).set({ isRead: true }).where(condition);
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Blog methods
+  async getBlogPosts(): Promise<BlogPost[]> {
+    return await db.select().from(blogPosts).orderBy(blogPosts.createdAt);
+  }
+
+  async getBlogPost(id: number): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, id));
+    return post || undefined;
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, slug));
+    return post || undefined;
+  }
+
+  async createBlogPost(insertPost: InsertBlogPost): Promise<BlogPost> {
+    const [post] = await db.insert(blogPosts).values(insertPost).returning();
+    return post;
+  }
+
+  async updateBlogPost(id: number, updates: Partial<BlogPost>): Promise<BlogPost | undefined> {
+    const [post] = await db.update(blogPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post || undefined;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    const result = await db.delete(blogPosts).where(eq(blogPosts.id, id));
     return (result.rowCount || 0) > 0;
   }
 }

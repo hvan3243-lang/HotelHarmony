@@ -36,7 +36,7 @@ import { authManager } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Room, Service } from "@shared/schema";
+import { Room, Service, BlogPost } from "@shared/schema";
 import { useEffect } from "react";
 import { LiveChat } from "@/components/LiveChat";
 import { AdminNotifications } from "@/components/AdminNotifications";
@@ -98,6 +98,19 @@ export default function Admin() {
     isActive: true
   });
 
+  // Blog states
+  const [showBlogDialog, setShowBlogDialog] = useState(false);
+  const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
+  const [blogForm, setBlogForm] = useState({
+    title: "",
+    content: "",
+    excerpt: "",
+    author: "",
+    slug: "",
+    featuredImage: "",
+    published: false
+  });
+
   // Check if user is admin
   useEffect(() => {
     if (!authManager.isAuthenticated() || !authManager.isAdmin()) {
@@ -124,6 +137,10 @@ export default function Admin() {
 
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/services"],
+  });
+
+  const { data: blogPosts = [], isLoading: blogLoading } = useQuery({
+    queryKey: ["/api/blog"],
   });
 
   // Mutations
@@ -247,6 +264,66 @@ export default function Admin() {
     },
   });
 
+  // Blog mutations
+  const createBlogMutation = useMutation({
+    mutationFn: (blogData: any) => apiRequest("POST", "/api/blog", blogData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      setShowBlogDialog(false);
+      resetBlogForm();
+      toast({
+        title: "Thành công",
+        description: "Đã thêm bài viết mới",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể thêm bài viết",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateBlogMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiRequest("PUT", `/api/blog/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      setShowBlogDialog(false);
+      resetBlogForm();
+      setEditingBlogPost(null);
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật bài viết",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể cập nhật bài viết",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteBlogMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/blog/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      toast({
+        title: "Thành công",
+        description: "Đã xóa bài viết",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể xóa bài viết",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper functions
   const resetRoomForm = () => {
     setRoomForm({
@@ -268,6 +345,18 @@ export default function Admin() {
       price: "",
       category: "",
       isActive: true
+    });
+  };
+
+  const resetBlogForm = () => {
+    setBlogForm({
+      title: "",
+      content: "",
+      excerpt: "",
+      author: "",
+      slug: "",
+      featuredImage: "",
+      published: false
     });
   };
 
@@ -298,6 +387,20 @@ export default function Admin() {
     setShowServiceDialog(true);
   };
 
+  const handleEditBlogPost = (blogPost: BlogPost) => {
+    setEditingBlogPost(blogPost);
+    setBlogForm({
+      title: blogPost.title,
+      content: blogPost.content,
+      excerpt: blogPost.excerpt || "",
+      author: blogPost.author,
+      slug: blogPost.slug,
+      featuredImage: (blogPost as any).featuredImage || "",
+      published: blogPost.published || false
+    });
+    setShowBlogDialog(true);
+  };
+
   const handleRoomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const roomData = {
@@ -324,6 +427,19 @@ export default function Admin() {
       updateServiceMutation.mutate({ id: editingService.id, ...serviceData });
     } else {
       createServiceMutation.mutate(serviceData);
+    }
+  };
+
+  const handleBlogSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const blogData = {
+      ...blogForm,
+    };
+
+    if (editingBlogPost) {
+      updateBlogMutation.mutate({ id: editingBlogPost.id, ...blogData });
+    } else {
+      createBlogMutation.mutate(blogData);
     }
   };
 
@@ -1015,20 +1131,85 @@ export default function Admin() {
                     </CardTitle>
                     <p className="text-muted-foreground mt-1">Tạo và quản lý bài viết blog</p>
                   </div>
-                  <Button className="btn-primary hover-glow">
+                  <Button 
+                    className="btn-primary hover-glow"
+                    onClick={() => {
+                      setEditingBlogPost(null);
+                      resetBlogForm();
+                      setShowBlogDialog(true);
+                    }}
+                  >
                     <Plus className="mr-2" size={16} />
                     Thêm bài viết
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <PenTool className="mx-auto mb-4 text-muted-foreground" size={48} />
-                  <h3 className="text-lg font-semibold mb-2">Chức năng blog đang được phát triển</h3>
-                  <p className="text-muted-foreground">
-                    Sẽ có đầy đủ tính năng tạo, chỉnh sửa và quản lý bài viết blog sớm thôi!
-                  </p>
-                </div>
+                {blogLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="animate-pulse">
+                        <CardContent className="p-4">
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(blogPosts as BlogPost[]).map((post) => (
+                      <motion.div
+                        key={post.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group"
+                      >
+                        <Card className="card-hover h-full">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <Badge variant={post.published ? "default" : "secondary"} className="mb-2">
+                                {post.published ? "Đã xuất bản" : "Nháp"}
+                              </Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Edit size={14} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem 
+                                    onClick={() => handleEditBlogPost(post)}
+                                    className="cursor-pointer"
+                                  >
+                                    <Edit className="mr-2" size={14} />
+                                    Chỉnh sửa
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => deleteBlogMutation.mutate(post.id)}
+                                    className="cursor-pointer text-red-600"
+                                  >
+                                    <Trash2 className="mr-2" size={14} />
+                                    Xóa
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            <h3 className="font-semibold text-lg mb-2 line-clamp-2">{post.title}</h3>
+                            <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                              {post.excerpt || post.content.substring(0, 100) + "..."}
+                            </p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Tác giả: {post.author}</span>
+                              <span>{new Date(post.createdAt || "").toLocaleDateString("vi-VN")}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1207,6 +1388,123 @@ export default function Admin() {
                     ? "Đang lưu..." 
                     : editingService ? "Cập nhật" : "Thêm dịch vụ"
                   }
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Blog Dialog */}
+        <Dialog open={showBlogDialog} onOpenChange={setShowBlogDialog}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingBlogPost ? "Chỉnh sửa bài viết" : "Thêm bài viết mới"}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleBlogSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="blog-title">Tiêu đề bài viết</Label>
+                  <Input
+                    id="blog-title"
+                    value={blogForm.title}
+                    onChange={(e) => setBlogForm({...blogForm, title: e.target.value})}
+                    placeholder="Nhập tiêu đề bài viết"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="blog-author">Tác giả</Label>
+                  <Input
+                    id="blog-author"
+                    value={blogForm.author}
+                    onChange={(e) => setBlogForm({...blogForm, author: e.target.value})}
+                    placeholder="Tên tác giả"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="blog-slug">Slug URL</Label>
+                  <Input
+                    id="blog-slug"
+                    value={blogForm.slug}
+                    onChange={(e) => setBlogForm({...blogForm, slug: e.target.value})}
+                    placeholder="url-friendly-slug"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="blog-featured-image">Hình ảnh đại diện</Label>
+                  <Input
+                    id="blog-featured-image"
+                    value={blogForm.featuredImage}
+                    onChange={(e) => setBlogForm({...blogForm, featuredImage: e.target.value})}
+                    placeholder="URL hình ảnh"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="blog-excerpt">Tóm tắt</Label>
+                <Textarea
+                  id="blog-excerpt"
+                  value={blogForm.excerpt}
+                  onChange={(e) => setBlogForm({...blogForm, excerpt: e.target.value})}
+                  placeholder="Tóm tắt ngắn gọn về bài viết"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="blog-content">Nội dung bài viết</Label>
+                <Textarea
+                  id="blog-content"
+                  value={blogForm.content}
+                  onChange={(e) => setBlogForm({...blogForm, content: e.target.value})}
+                  placeholder="Viết nội dung bài viết của bạn..."
+                  rows={10}
+                  required
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="blog-published"
+                  checked={blogForm.published}
+                  onChange={(e) => setBlogForm({...blogForm, published: e.target.checked})}
+                  className="rounded"
+                />
+                <Label htmlFor="blog-published">Xuất bản ngay</Label>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowBlogDialog(false);
+                    resetBlogForm();
+                    setEditingBlogPost(null);
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={createBlogMutation.isPending || updateBlogMutation.isPending}
+                >
+                  {createBlogMutation.isPending || updateBlogMutation.isPending ? (
+                    "Đang xử lý..."
+                  ) : editingBlogPost ? (
+                    "Cập nhật bài viết"
+                  ) : (
+                    "Tạo bài viết"
+                  )}
                 </Button>
               </div>
             </form>
