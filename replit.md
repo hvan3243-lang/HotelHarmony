@@ -125,6 +125,8 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Implemented booking cancellation with smart refund policy (100% >48h, 50% 24-48h, 0% <24h)
 - July 02, 2025. Added detailed booking view dialog with complete information display for customers
 - July 02, 2025. Restructured admin interface to 3 tabs only: Dashboard, Quản lý phòng, Quản lý dịch vụ (removed unused pages)
+- July 02, 2025. Enhanced UI/UX with modern design: glass morphism effects, gradient backgrounds, improved animations and hover effects
+- July 02, 2025. Fixed authentication bug: password hashing now works correctly in createUser function, registration and login now work properly
 
 ## User Preferences
 
