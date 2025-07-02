@@ -6,9 +6,9 @@ import bcrypt from "bcrypt";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertUserSchema, insertRoomSchema, insertBookingSchema, insertBlogPostSchema, chatMessages, users, type BlogPost } from "@shared/schema";
+import { eq, desc, sql, count } from "drizzle-orm";
 import { sendBookingConfirmation } from "./services/sendgrid";
 import { db } from "./db";
-import { eq, desc, count } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -578,20 +578,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin chat routes - get all user conversations
   app.get("/api/admin/chat/conversations", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-      // Get all users who have sent messages
-      const result = await db.select({
+      // Get all users who have sent messages with their latest message
+      const allMessages = await db.select({
         userId: chatMessages.userId,
         userName: users.firstName,
         userLastName: users.lastName,
         userEmail: users.email,
-        lastMessage: chatMessages.message,
-        lastMessageTime: chatMessages.createdAt,
+        message: chatMessages.message,
+        createdAt: chatMessages.createdAt,
+        isFromAdmin: chatMessages.isFromAdmin
       })
       .from(chatMessages)
       .innerJoin(users, eq(chatMessages.userId, users.id))
-      .where(eq(chatMessages.isFromAdmin, false))
-      .groupBy(chatMessages.userId, users.firstName, users.lastName, users.email, chatMessages.message, chatMessages.createdAt)
       .orderBy(desc(chatMessages.createdAt));
+
+      // Group by user and get latest message for each user
+      const userConversations = new Map();
+      
+      for (const msg of allMessages) {
+        if (!userConversations.has(msg.userId)) {
+          userConversations.set(msg.userId, {
+            userId: msg.userId,
+            userName: msg.userName,
+            userLastName: msg.userLastName,
+            userEmail: msg.userEmail,
+            lastMessage: msg.message,
+            lastMessageTime: msg.createdAt,
+            unreadCount: 0 // We can implement this later
+          });
+        }
+      }
+
+      const result = Array.from(userConversations.values())
+        .sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
 
       res.json(result);
     } catch (error: any) {

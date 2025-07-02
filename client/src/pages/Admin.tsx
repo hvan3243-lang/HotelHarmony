@@ -641,7 +641,7 @@ export default function Admin() {
                           <div className="flex justify-between items-start">
                             <div>
                               <h4 className="font-medium">
-                                {conversation.user?.firstName} {conversation.user?.lastName}
+                                {conversation.userName} {conversation.userLastName}
                               </h4>
                               <p className="text-sm text-muted-foreground truncate">
                                 {conversation.lastMessage}
