@@ -27,7 +27,9 @@ import {
   XCircle,
   Clock,
   MessageCircle,
-  Settings
+  Settings,
+  PenTool,
+  ImagePlus
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { authManager } from "@/lib/auth";
@@ -38,6 +40,31 @@ import { Room, Service } from "@shared/schema";
 import { useEffect } from "react";
 import { LiveChat } from "@/components/LiveChat";
 import { AdminNotifications } from "@/components/AdminNotifications";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  LineElement,
+  PointElement,
+} from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  LineElement,
+  PointElement
+);
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -388,7 +415,7 @@ export default function Admin() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 size={16} />
               Dashboard
@@ -400,6 +427,10 @@ export default function Admin() {
             <TabsTrigger value="services" className="flex items-center gap-2">
               <Settings size={16} />
               Quản lý dịch vụ
+            </TabsTrigger>
+            <TabsTrigger value="blog" className="flex items-center gap-2">
+              <PenTool size={16} />
+              Quản lý blog
             </TabsTrigger>
           </TabsList>
 
@@ -510,13 +541,57 @@ export default function Admin() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-80 flex items-center justify-center bg-muted/20 rounded-lg">
-                      <div className="text-center">
-                        <BarChart3 className="mx-auto mb-4 text-muted-foreground" size={48} />
-                        <p className="text-muted-foreground">
-                          Biểu đồ doanh thu sẽ được hiển thị ở đây
-                        </p>
-                      </div>
+                    <div className="h-80">
+                      <Bar
+                        data={{
+                          labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                          datasets: [
+                            {
+                              label: 'Doanh thu (triệu VND)',
+                              data: [120, 150, 180, 220, 190, 250, 280, 300, 270, 320, 350, 380],
+                              backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                              borderColor: 'rgba(59, 130, 246, 1)',
+                              borderWidth: 2,
+                              borderRadius: 8,
+                              borderSkipped: false,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top' as const,
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                              titleColor: '#fff',
+                              bodyColor: '#fff',
+                              borderColor: 'rgba(59, 130, 246, 0.3)',
+                              borderWidth: 1,
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              grid: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                              },
+                              ticks: {
+                                callback: function(value) {
+                                  return value + 'M';
+                                },
+                              },
+                            },
+                            x: {
+                              grid: {
+                                display: false,
+                              },
+                            },
+                          },
+                        }}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -530,16 +605,214 @@ export default function Admin() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <Clock className="mr-2" size={20} />
-                      Hoạt động gần đây
+                      <Bed className="mr-2" size={20} />
+                      Phân bố loại phòng
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="text-center text-muted-foreground py-8">
-                        <Clock className="mx-auto mb-2" size={32} />
-                        <p>Chưa có hoạt động nào</p>
-                      </div>
+                    <div className="h-80">
+                      <Doughnut
+                        data={{
+                          labels: ['Phòng Standard', 'Phòng Deluxe', 'Phòng Suite', 'Phòng Presidential'],
+                          datasets: [
+                            {
+                              data: [35, 40, 20, 5],
+                              backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(239, 68, 68, 0.8)',
+                              ],
+                              borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(239, 68, 68, 1)',
+                              ],
+                              borderWidth: 2,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'bottom' as const,
+                              labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                  size: 12,
+                                },
+                              },
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                              titleColor: '#fff',
+                              bodyColor: '#fff',
+                              borderColor: 'rgba(59, 130, 246, 0.3)',
+                              borderWidth: 1,
+                              callbacks: {
+                                label: function(context) {
+                                  return context.label + ': ' + context.parsed + ' phòng';
+                                },
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Additional Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <TrendingUp className="mr-2" size={20} />
+                      Tỷ lệ đặt phòng
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <Line
+                        data={{
+                          labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                          datasets: [
+                            {
+                              label: 'Tỷ lệ đặt phòng (%)',
+                              data: [65, 72, 78, 85, 82, 88, 92, 95, 89, 93, 96, 98],
+                              borderColor: 'rgba(16, 185, 129, 1)',
+                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                              borderWidth: 3,
+                              fill: true,
+                              tension: 0.4,
+                              pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                              pointBorderColor: '#fff',
+                              pointBorderWidth: 2,
+                              pointRadius: 6,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top' as const,
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                              titleColor: '#fff',
+                              bodyColor: '#fff',
+                              borderColor: 'rgba(16, 185, 129, 0.3)',
+                              borderWidth: 1,
+                              callbacks: {
+                                label: function(context) {
+                                  return context.dataset.label + ': ' + context.parsed.y + '%';
+                                },
+                              },
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              max: 100,
+                              grid: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                              },
+                              ticks: {
+                                callback: function(value) {
+                                  return value + '%';
+                                },
+                              },
+                            },
+                            x: {
+                              grid: {
+                                display: false,
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="mr-2" size={20} />
+                      Khách hàng mới theo tháng
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                          datasets: [
+                            {
+                              label: 'Khách hàng mới',
+                              data: [45, 52, 61, 68, 58, 72, 85, 91, 78, 89, 95, 102],
+                              backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                              borderColor: 'rgba(245, 158, 11, 1)',
+                              borderWidth: 2,
+                              borderRadius: 6,
+                              borderSkipped: false,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top' as const,
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                              titleColor: '#fff',
+                              bodyColor: '#fff',
+                              borderColor: 'rgba(245, 158, 11, 0.3)',
+                              borderWidth: 1,
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              grid: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                              },
+                              ticks: {
+                                callback: function(value) {
+                                  return value + ' người';
+                                },
+                              },
+                            },
+                            x: {
+                              grid: {
+                                display: false,
+                              },
+                            },
+                          },
+                        }}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -729,6 +1002,37 @@ export default function Admin() {
               )}
             </div>
           </TabsContent>
+
+          {/* Blog Management Tab */}
+          <TabsContent value="blog" className="mt-6">
+            <Card className="card-enhanced">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <PenTool className="text-primary" />
+                      Quản lý Blog
+                    </CardTitle>
+                    <p className="text-muted-foreground mt-1">Tạo và quản lý bài viết blog</p>
+                  </div>
+                  <Button className="btn-primary hover-glow">
+                    <Plus className="mr-2" size={16} />
+                    Thêm bài viết
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <PenTool className="mx-auto mb-4 text-muted-foreground" size={48} />
+                  <h3 className="text-lg font-semibold mb-2">Chức năng blog đang được phát triển</h3>
+                  <p className="text-muted-foreground">
+                    Sẽ có đầy đủ tính năng tạo, chỉnh sửa và quản lý bài viết blog sớm thôi!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
 
         {/* Room Dialog */}

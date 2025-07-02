@@ -127,6 +127,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Restructured admin interface to 3 tabs only: Dashboard, Quản lý phòng, Quản lý dịch vụ (removed unused pages)
 - July 02, 2025. Enhanced UI/UX with modern design: glass morphism effects, gradient backgrounds, improved animations and hover effects
 - July 02, 2025. Fixed authentication bug: password hashing now works correctly in createUser function, registration and login now work properly
+- July 02, 2025. Added comprehensive data visualization to admin dashboard with Chart.js: revenue bar chart, room distribution doughnut chart, booking rate line chart, and new customers bar chart
 
 ## User Preferences
 
