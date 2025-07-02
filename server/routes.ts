@@ -338,6 +338,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Recommendations (simple implementation)
+  // Services routes
+  app.get("/api/services", async (req: Request, res: Response) => {
+    try {
+      const allServices = await storage.getServices();
+      res.json(allServices);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+
+  app.post("/api/services", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const service = await storage.createService(req.body);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ error: "Failed to create service" });
+    }
+  });
+
+  app.put("/api/services/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      const service = await storage.updateService(serviceId, req.body);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ error: "Failed to update service" });
+    }
+  });
+
+  app.delete("/api/services/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      const success = await storage.deleteService(serviceId);
+      if (!success) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json({ message: "Service deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ error: "Failed to delete service" });
+    }
+  });
+
   app.get("/api/recommendations", authenticateToken, async (req: any, res: Response) => {
     try {
       const user = await storage.getUser(req.user.id);

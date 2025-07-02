@@ -1,4 +1,9 @@
-import { users, rooms, bookings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking } from "@shared/schema";
+import { 
+  users, rooms, bookings, services, customers, employees, invoices,
+  type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
+  type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
+  type Invoice, type InsertInvoice
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -26,6 +31,13 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, updates: Partial<Booking>): Promise<Booking | undefined>;
   cancelBooking(id: number): Promise<boolean>;
+  
+  // Service methods
+  getServices(): Promise<Service[]>;
+  getService(id: number): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: number, updates: Partial<Service>): Promise<Service | undefined>;
+  deleteService(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -126,6 +138,59 @@ export class DatabaseStorage implements IStorage {
             specialRequests: "Late check-in preferred"
           });
         }
+
+        // Create sample Vietnamese hotel services
+        await db.insert(services).values({
+          name: "Dịch vụ giặt ủi",
+          description: "Giặt ủi quần áo khách hàng",
+          price: "50000",
+          category: "laundry"
+        });
+
+        await db.insert(services).values({
+          name: "Dịch vụ phòng 24/7",
+          description: "Gọi món ăn uống tại phòng",
+          price: "30000",
+          category: "room_service"
+        });
+
+        await db.insert(services).values({
+          name: "Massage & Spa",
+          description: "Dịch vụ massage thư giãn",
+          price: "300000",
+          category: "spa"
+        });
+
+        await db.insert(services).values({
+          name: "Đưa đón sân bay",
+          description: "Dịch vụ đưa đón khách từ/đến sân bay",
+          price: "200000",
+          category: "transport"
+        });
+
+        await db.insert(services).values({
+          name: "Tour du lịch",
+          description: "Hướng dẫn viên du lịch địa phương",
+          price: "500000",
+          category: "tour"
+        });
+
+        // Create sample customers
+        await db.insert(customers).values({
+          fullName: "Nguyễn Văn An",
+          idNumber: "001234567890",
+          phone: "0987654321",
+          email: "nguyenvanan@email.com",
+          address: "123 Đường ABC, Quận 1, TP.HCM"
+        });
+
+        await db.insert(customers).values({
+          fullName: "Trần Thị Bình",
+          idNumber: "001234567891",
+          phone: "0976543210",
+          email: "tranthibinh@email.com",
+          address: "456 Đường XYZ, Quận 3, TP.HCM"
+        });
       }
     } catch (error) {
       console.error("Error seeding data:", error);
@@ -263,6 +328,31 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(bookings)
       .set({ status: "cancelled" })
       .where(eq(bookings.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Service methods
+  async getServices(): Promise<Service[]> {
+    return await db.select().from(services);
+  }
+
+  async getService(id: number): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service || undefined;
+  }
+
+  async createService(insertService: InsertService): Promise<Service> {
+    const [service] = await db.insert(services).values(insertService).returning();
+    return service;
+  }
+
+  async updateService(id: number, updates: Partial<Service>): Promise<Service | undefined> {
+    const [service] = await db.update(services).set(updates).where(eq(services.id, id)).returning();
+    return service || undefined;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    const result = await db.delete(services).where(eq(services.id, id));
     return (result.rowCount || 0) > 0;
   }
 }

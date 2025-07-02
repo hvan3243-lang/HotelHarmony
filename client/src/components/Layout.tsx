@@ -26,7 +26,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Trang chủ" },
     { href: "/booking", label: "Đặt phòng" },
     ...(user ? [
-      { href: user.role === 'admin' ? "/admin" : "/customer", label: user.role === 'admin' ? "Quản lý" : "Tài khoản" }
+      ...(user.role === 'admin' ? [
+        { href: "/dashboard", label: "Dashboard" },
+        { href: "/admin", label: "Quản lý phòng" },
+        { href: "/services", label: "Quản lý dịch vụ" }
+      ] : [
+        { href: "/customer", label: "Tài khoản" }
+      ])
     ] : []),
   ];
 

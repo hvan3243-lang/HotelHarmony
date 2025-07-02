@@ -12,6 +12,8 @@ import Booking from "@/pages/Booking";
 import Auth from "@/pages/Auth";
 import Customer from "@/pages/Customer";
 import Admin from "@/pages/Admin";
+import Dashboard from "@/pages/Dashboard";
+import Services from "@/pages/Services";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
 
@@ -23,6 +25,8 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/customer" component={Customer} />
       <Route path="/admin" component={Admin} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/services" component={Services} />
       <Route path="/checkout/:bookingId" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
