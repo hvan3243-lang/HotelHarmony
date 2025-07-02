@@ -98,7 +98,10 @@ export class DatabaseStorage implements IStorage {
           price: "150.00",
           capacity: 2,
           amenities: ["wifi", "tv", "minibar"],
-          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          images: [
+            "https://images.unsplash.com/photo-1540518614846-7eded1dcaeb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+            "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+          ],
           description: "Comfortable standard room with modern amenities"
         }).returning();
 
@@ -109,7 +112,10 @@ export class DatabaseStorage implements IStorage {
           price: "250.00",
           capacity: 3,
           amenities: ["wifi", "tv", "minibar", "balcony", "room-service"],
-          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          images: [
+            "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+            "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+          ],
           description: "Spacious deluxe room with city view and premium amenities"
         }).returning();
 
@@ -120,7 +126,10 @@ export class DatabaseStorage implements IStorage {
           price: "400.00",
           capacity: 4,
           amenities: ["wifi", "tv", "minibar", "balcony", "room-service", "jacuzzi"],
-          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          images: [
+            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+            "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+          ],
           description: "Luxurious suite with separate living area and premium amenities"
         }).returning();
 
@@ -131,7 +140,10 @@ export class DatabaseStorage implements IStorage {
           price: "800.00", 
           capacity: 6,
           amenities: ["wifi", "tv", "minibar", "balcony", "room-service", "jacuzzi", "kitchen"],
-          images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
+          images: [
+            "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+            "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+          ],
           description: "Presidential suite with panoramic views and exclusive amenities"
         }).returning();
 
