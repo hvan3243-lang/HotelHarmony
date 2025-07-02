@@ -374,20 +374,95 @@ export default function PaymentMethod() {
 
                   {paymentMethod === "wallet" && (
                     <div className="space-y-4">
-                      <div className="p-4 bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg">
-                        <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
-                          Thanh toán ví điện tử:
-                        </h4>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">
-                          Bạn sẽ được chuyển đến ứng dụng ví để hoàn tất thanh toán
-                        </p>
+                      {/* Chọn ví điện tử */}
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className="border rounded-lg p-4 hover:bg-muted cursor-pointer transition-colors border-purple-200 bg-purple-50">
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                              <span className="text-pink-600 font-bold text-lg">M</span>
+                            </div>
+                            <span className="text-sm font-medium">MoMo</span>
+                          </div>
+                        </div>
+                        <div className="border rounded-lg p-4 hover:bg-muted cursor-pointer transition-colors">
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                              <span className="text-blue-600 font-bold text-lg">Z</span>
+                            </div>
+                            <span className="text-sm font-medium">ZaloPay</span>
+                          </div>
+                        </div>
+                        <div className="border rounded-lg p-4 hover:bg-muted cursor-pointer transition-colors">
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                              <span className="text-red-600 font-bold text-lg">V</span>
+                            </div>
+                            <span className="text-sm font-medium">ViettelPay</span>
+                          </div>
+                        </div>
                       </div>
+                      
+                      {/* QR Code Section */}
+                      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border text-center shadow-sm">
+                        <h3 className="font-semibold mb-4 text-lg">Quét mã QR để thanh toán</h3>
+                        <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center mb-4 p-4">
+                          <svg width="180" height="180" viewBox="0 0 180 180" className="fill-current">
+                            {/* QR Code Pattern */}
+                            <rect x="0" y="0" width="15" height="15" />
+                            <rect x="30" y="0" width="15" height="15" />
+                            <rect x="60" y="0" width="15" height="15" />
+                            <rect x="0" y="30" width="15" height="15" />
+                            <rect x="60" y="30" width="15" height="15" />
+                            <rect x="0" y="60" width="75" height="15" />
+                            
+                            <rect x="90" y="0" width="15" height="15" />
+                            <rect x="120" y="0" width="15" height="15" />
+                            <rect x="150" y="0" width="30" height="30" />
+                            <rect x="165" y="15" width="15" height="15" />
+                            <rect x="105" y="15" width="45" height="15" />
+                            <rect x="90" y="30" width="15" height="15" />
+                            <rect x="135" y="30" width="15" height="15" />
+                            <rect x="165" y="30" width="15" height="15" />
+                            
+                            <rect x="0" y="90" width="15" height="15" />
+                            <rect x="30" y="90" width="45" height="15" />
+                            <rect x="90" y="90" width="15" height="15" />
+                            <rect x="120" y="90" width="15" height="15" />
+                            <rect x="150" y="90" width="15" height="15" />
+                            
+                            <rect x="0" y="120" width="45" height="15" />
+                            <rect x="60" y="120" width="15" height="15" />
+                            <rect x="90" y="120" width="30" height="15" />
+                            <rect x="150" y="120" width="15" height="15" />
+                            
+                            <rect x="0" y="150" width="75" height="30" />
+                            <rect x="15" y="165" width="45" height="15" />
+                            <rect x="90" y="150" width="15" height="15" />
+                            <rect x="120" y="150" width="15" height="15" />
+                            <rect x="150" y="150" width="15" height="30" />
+                            <rect x="90" y="180" width="30" height="15" />
+                            <rect x="150" y="180" width="75" height="15" />
+                          </svg>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-lg font-semibold text-primary">
+                            Số tiền: {bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Mã đặt phòng: <span className="font-mono font-semibold">HLX{bookingData.id}</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Quét mã QR bằng ứng dụng ví điện tử để thanh toán
+                          </p>
+                        </div>
+                      </div>
+                      
                       <Button 
                         onClick={handleWalletPayment} 
                         className="w-full"
                         disabled={isProcessing}
                       >
-                        {isProcessing ? "Đang xử lý..." : "Thanh toán bằng ví điện tử"}
+                        {isProcessing ? "Đang xử lý..." : "Xác nhận đã thanh toán qua QR"}
                       </Button>
                     </div>
                   )}

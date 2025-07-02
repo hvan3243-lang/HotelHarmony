@@ -238,12 +238,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Không có quyền hủy đặt phòng này" });
       }
       
+      // Check if booking can be cancelled based on check-in date
+      const checkInDate = new Date(booking.checkIn);
+      const now = new Date();
+      const hoursUntilCheckIn = (checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      let refundAmount = 0;
+      let refundPercentage = 0;
+      
+      if (hoursUntilCheckIn > 48) {
+        // Full refund if cancelled more than 48 hours before check-in
+        refundAmount = parseFloat(booking.totalPrice);
+        refundPercentage = 100;
+      } else if (hoursUntilCheckIn > 24) {
+        // 50% refund if cancelled 24-48 hours before check-in
+        refundAmount = parseFloat(booking.totalPrice) * 0.5;
+        refundPercentage = 50;
+      }
+      // No refund if cancelled within 24 hours
+      
       const success = await storage.cancelBooking(parseInt(req.params.id));
       if (!success) {
         return res.status(404).json({ message: "Không thể hủy đặt phòng" });
       }
       
-      res.json({ message: "Hủy đặt phòng thành công" });
+      res.json({ 
+        message: "Hủy đặt phòng thành công",
+        refundAmount: refundAmount,
+        refundPercentage: refundPercentage,
+        originalAmount: parseFloat(booking.totalPrice)
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

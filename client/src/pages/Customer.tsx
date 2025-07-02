@@ -79,11 +79,23 @@ export default function Customer() {
   });
 
   const cancelBookingMutation = useMutation({
-    mutationFn: (bookingId: number) => apiRequest("PUT", `/api/bookings/${bookingId}/cancel`, {}),
-    onSuccess: () => {
+    mutationFn: async (bookingId: number) => {
+      const response = await apiRequest("PUT", `/api/bookings/${bookingId}/cancel`, {});
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      const { refundAmount, refundPercentage, originalAmount, message } = data;
+      
+      let description = message;
+      if (refundPercentage > 0) {
+        description += ` Hoàn tiền ${refundPercentage}%: ${refundAmount.toLocaleString('vi-VN')}đ`;
+      } else {
+        description += " (Không hoàn tiền do hủy trong vòng 24h)";
+      }
+      
       toast({
         title: "Hủy đặt phòng thành công",
-        description: "Đặt phòng đã được hủy",
+        description: description,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
     },
@@ -454,10 +466,94 @@ export default function Customer() {
                                     Phòng {booking.room.number} • {booking.room.amenities.slice(0, 2).join(", ")}
                                   </div>
                                   <div className="flex space-x-2">
-                                    <Button variant="outline" size="sm">
-                                      <Eye size={14} className="mr-1" />
-                                      Chi tiết
-                                    </Button>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                          <Eye size={14} className="mr-1" />
+                                          Chi tiết
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle>Chi tiết đặt phòng #HLX{booking.id}</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-6">
+                                          {/* Trạng thái */}
+                                          <div className="flex justify-between items-center">
+                                            <h3 className="text-lg font-semibold">Trạng thái đặt phòng</h3>
+                                            <Badge variant={getStatusBadge(booking.status).variant as any}>
+                                              {getStatusBadge(booking.status).label}
+                                            </Badge>
+                                          </div>
+                                          
+                                          {/* Thông tin phòng */}
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Loại phòng</Label>
+                                              <p className="text-lg font-semibold">{getRoomTypeLabel(booking.room.type)}</p>
+                                            </div>
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Số phòng</Label>
+                                              <p className="text-lg font-semibold">Phòng {booking.room.number}</p>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Thời gian */}
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Ngày nhận phòng</Label>
+                                              <p className="text-lg font-semibold">{formatDate(booking.checkIn)}</p>
+                                            </div>
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Ngày trả phòng</Label>
+                                              <p className="text-lg font-semibold">{formatDate(booking.checkOut)}</p>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Chi tiết booking */}
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Số khách</Label>
+                                              <p className="text-lg font-semibold flex items-center">
+                                                <Users size={16} className="mr-2" />
+                                                {booking.guests} người
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Tổng tiền</Label>
+                                              <p className="text-xl font-bold text-primary">{formatPrice(booking.totalPrice)}</p>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Tiện nghi */}
+                                          <div>
+                                            <Label className="text-sm font-medium text-muted-foreground">Tiện nghi phòng</Label>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                              {booking.room.amenities?.map((amenity, idx) => (
+                                                <Badge key={idx} variant="secondary">{amenity}</Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Yêu cầu đặc biệt */}
+                                          {booking.specialRequests && (
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Yêu cầu đặc biệt</Label>
+                                              <p className="mt-1 text-sm bg-muted p-3 rounded-md">{booking.specialRequests}</p>
+                                            </div>
+                                          )}
+                                          
+                                          {/* Mô tả phòng */}
+                                          {booking.room.description && (
+                                            <div>
+                                              <Label className="text-sm font-medium text-muted-foreground">Mô tả phòng</Label>
+                                              <p className="mt-1 text-sm text-muted-foreground">{booking.room.description}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                    
                                     {booking.status === 'pending' && (
                                       <Button 
                                         variant="destructive" 
