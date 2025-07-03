@@ -38,6 +38,8 @@ export default function Booking() {
   const [searchParams, setSearchParams] = useState({
     checkIn: "",
     checkOut: "",
+    checkInTime: "14:00",
+    checkOutTime: "12:00",
     guests: "2",
     roomType: "all"
   });
@@ -132,6 +134,8 @@ export default function Booking() {
         roomId: room.id,
         checkIn: searchParams.checkIn,
         checkOut: searchParams.checkOut,
+        checkInTime: searchParams.checkInTime,
+        checkOutTime: searchParams.checkOutTime,
         guests: parseInt(searchParams.guests),
         totalPrice: calculateTotalPrice(room).toString(),
         specialRequests: ""
@@ -223,7 +227,7 @@ export default function Booking() {
         >
           <Card className="card-enhanced glass backdrop-blur-lg">
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
                 <div>
                   <Label htmlFor="checkin">Ngày nhận phòng</Label>
                   <Input
@@ -235,6 +239,15 @@ export default function Booking() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="checkinTime">Giờ nhận</Label>
+                  <Input
+                    id="checkinTime"
+                    type="time"
+                    value={searchParams.checkInTime}
+                    onChange={(e) => setSearchParams({...searchParams, checkInTime: e.target.value})}
+                  />
+                </div>
+                <div>
                   <Label htmlFor="checkout">Ngày trả phòng</Label>
                   <Input
                     id="checkout"
@@ -242,6 +255,15 @@ export default function Booking() {
                     value={searchParams.checkOut}
                     onChange={(e) => setSearchParams({...searchParams, checkOut: e.target.value})}
                     min={searchParams.checkIn || new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="checkoutTime">Giờ trả</Label>
+                  <Input
+                    id="checkoutTime"
+                    type="time"
+                    value={searchParams.checkOutTime}
+                    onChange={(e) => setSearchParams({...searchParams, checkOutTime: e.target.value})}
                   />
                 </div>
                 <div>
@@ -539,6 +561,8 @@ export default function Booking() {
                 setSearchParams({
                   checkIn: "",
                   checkOut: "",
+                  checkInTime: "14:00",
+                  checkOutTime: "12:00",
                   guests: "2",
                   roomType: "all"
                 });

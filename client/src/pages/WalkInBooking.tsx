@@ -261,6 +261,20 @@ export default function WalkInBooking() {
     return nights * parseFloat(selectedRoom.price.replace(/[.,]/g, ''));
   };
 
+  const calculateStayInfo = () => {
+    if (!bookingForm.checkIn || !bookingForm.checkOut) return null;
+    const checkInDate = new Date(bookingForm.checkIn);
+    const checkOutDate = new Date(bookingForm.checkOut);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return {
+      nights,
+      checkInTime: bookingForm.checkInTime,
+      checkOutTime: bookingForm.checkOutTime,
+      isOvernightStay: nights >= 1
+    };
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + "đ";
   };
@@ -492,6 +506,9 @@ export default function WalkInBooking() {
                   <p className="text-sm text-blue-800">
                     🏨 <strong>Quy trình:</strong> Nhân viên chọn phòng trống phù hợp với yêu cầu của khách
                   </p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    💡 <strong>Ví dụ:</strong> Khách đặt 4:00 PM hôm nay đến 2:00 PM ngày mai = 1 đêm
+                  </p>
                 </div>
               </CardHeader>
               <CardContent>
@@ -513,6 +530,7 @@ export default function WalkInBooking() {
                       value={bookingForm.checkInTime}
                       onChange={(e) => setBookingForm(prev => ({ ...prev, checkInTime: e.target.value }))}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Mặc định: 14:00 (2:00 PM)</p>
                   </div>
                   <div>
                     <Label htmlFor="checkOut">Ngày trả phòng</Label>
@@ -531,6 +549,7 @@ export default function WalkInBooking() {
                       value={bookingForm.checkOutTime}
                       onChange={(e) => setBookingForm(prev => ({ ...prev, checkOutTime: e.target.value }))}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Mặc định: 12:00 (12:00 PM)</p>
                   </div>
                   <div>
                     <Label htmlFor="guests">Số khách</Label>
@@ -723,7 +742,17 @@ export default function WalkInBooking() {
                     <Separator />
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Thanh toán đầy đủ:</span>
-                      <span className="text-primary">{formatPrice(calculateTotalPrice())}</span>
+                      <div className="text-right">
+                        <span className="text-primary">{formatPrice(calculateTotalPrice())}</span>
+                        {(() => {
+                          const stayInfo = calculateStayInfo();
+                          return stayInfo ? (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {stayInfo.nights} đêm • {stayInfo.checkInTime} - {stayInfo.checkOutTime}
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
                     </div>
                     <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
                       💡 Khách đến trực tiếp cần thanh toán 100% ngay
