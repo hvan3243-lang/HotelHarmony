@@ -352,12 +352,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const { amount, bookingId } = req.body;
+      const { amount, bookingId, isDeposit } = req.body;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "vnd",
         metadata: {
           bookingId: bookingId.toString(),
+          isDeposit: isDeposit ? 'true' : 'false',
         },
       });
       
@@ -376,18 +377,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/confirm-payment", authenticateToken, async (req: Request, res: Response) => {
     try {
-      const { bookingId } = req.body;
+      const { bookingId, paymentMethod, isDeposit, paymentIntentId } = req.body;
       
-      // Update booking status to confirmed
-      const booking = await storage.updateBooking(bookingId, {
-        status: "confirmed",
-      });
+      // Determine payment status based on whether it's a deposit or full payment
+      const paymentStatus = isDeposit ? "deposit_paid" : "confirmed";
+      
+      // Update booking status
+      const updateData: any = {
+        status: paymentStatus,
+        paymentMethod: paymentMethod,
+      };
+      
+      if (paymentIntentId) {
+        updateData.paymentIntentId = paymentIntentId;
+      }
+      
+      const booking = await storage.updateBooking(bookingId, updateData);
       
       if (!booking) {
         return res.status(404).json({ message: "Không tìm thấy đặt phòng" });
       }
       
-      res.json({ message: "Thanh toán thành công", booking });
+      const message = isDeposit 
+        ? "Đặt cọc thành công! Vui lòng thanh toán 70% còn lại khi check-in."
+        : "Thanh toán thành công!";
+      
+      res.json({ message, booking });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

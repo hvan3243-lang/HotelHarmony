@@ -42,10 +42,12 @@ function StripePaymentForm({ bookingData, onPaymentSuccess }: PaymentFormProps) 
     setIsProcessing(true);
     
     try {
-      // Tạo payment intent
+      // Tạo payment intent cho đặt cọc 30%
+      const depositAmount = Math.round(parseFloat(bookingData.totalPrice) * 0.3);
       const response = await apiRequest("POST", "/api/create-payment-intent", {
-        amount: bookingData.totalPrice,
-        bookingId: bookingData.id
+        amount: depositAmount,
+        bookingId: bookingData.id,
+        isDeposit: true
       });
       
       const { clientSecret } = await response.json();
@@ -70,12 +72,13 @@ function StripePaymentForm({ bookingData, onPaymentSuccess }: PaymentFormProps) 
         await apiRequest("POST", "/api/confirm-payment", {
           bookingId: bookingData.id,
           paymentMethod: "stripe",
-          paymentIntentId: paymentIntent.id
+          paymentIntentId: paymentIntent.id,
+          isDeposit: true
         });
         
         toast({
-          title: "Thanh toán thành công!",
-          description: "Đặt phòng của bạn đã được xác nhận.",
+          title: "Đặt cọc thành công!",
+          description: "Bạn đã đặt cọc 30%. Vui lòng thanh toán 70% còn lại khi check-in.",
         });
         
         onPaymentSuccess();
@@ -216,18 +219,19 @@ export default function PaymentMethod() {
 
     setIsProcessing(true);
     try {
-      // Giả lập thanh toán ví điện tử
+      // Giả lập thanh toán ví điện tử cho đặt cọc 30%
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       await apiRequest("POST", "/api/confirm-payment", {
         bookingId: bookingData.id,
         paymentMethod: "e_wallet",
-        status: "confirmed"
+        status: "confirmed",
+        isDeposit: true
       });
       
       toast({
-        title: "Thanh toán ví thành công!",
-        description: `Đặt phòng đã được xác nhận. Mã đặt phòng: #HLX${bookingData.id}`,
+        title: "Đặt cọc ví thành công!",
+        description: `Bạn đã đặt cọc 30%. Vui lòng thanh toán 70% còn lại khi check-in. Mã đặt phòng: #HLX${bookingData.id}`,
       });
       
       // Xóa dữ liệu booking tạm thời
@@ -294,9 +298,19 @@ export default function PaymentMethod() {
                   <span>{bookingData.guests} người</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Tổng cộng:</span>
-                  <span className="text-primary">{bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Tổng cộng:</span>
+                    <span className="text-primary">{bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Đặt cọc (30%):</span>
+                    <span className="text-orange-600 font-semibold">{Math.round(parseFloat(bookingData.totalPrice) * 0.3).toLocaleString('vi-VN')} VNĐ</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Còn lại (70% - thanh toán khi check-in):</span>
+                    <span className="text-blue-600 font-semibold">{Math.round(parseFloat(bookingData.totalPrice) * 0.7).toLocaleString('vi-VN')} VNĐ</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -316,8 +330,8 @@ export default function PaymentMethod() {
                     <Label htmlFor="stripe" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <CreditCard className="text-blue-600" size={20} />
                       <div>
-                        <div className="font-semibold">Thẻ tín dụng/ghi nợ</div>
-                        <div className="text-sm text-muted-foreground">Visa, MasterCard, JCB</div>
+                        <div className="font-semibold">Thẻ tín dụng/ghi nợ (Đặt cọc 30%)</div>
+                        <div className="text-sm text-muted-foreground">Visa, MasterCard, JCB - Thanh toán 70% còn lại khi check-in</div>
                       </div>
                     </Label>
                     <Shield className="text-green-600" size={16} />
@@ -341,8 +355,8 @@ export default function PaymentMethod() {
                     <Label htmlFor="wallet" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <Wallet className="text-purple-600" size={20} />
                       <div>
-                        <div className="font-semibold">Ví điện tử</div>
-                        <div className="text-sm text-muted-foreground">MoMo, ZaloPay, ViettelPay</div>
+                        <div className="font-semibold">Ví điện tử (Đặt cọc 30%)</div>
+                        <div className="text-sm text-muted-foreground">MoMo, ZaloPay, ViettelPay - Thanh toán 70% còn lại khi check-in</div>
                       </div>
                     </Label>
                   </div>

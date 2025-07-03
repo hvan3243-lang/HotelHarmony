@@ -137,6 +137,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 02, 2025. Improved booking conflict prevention: system now blocks double booking by checking both confirmed and pending bookings, preventing multiple users from booking the same room simultaneously
 - July 03, 2025. Enhanced real-time chat system: reduced refresh interval to 0.5s, added optimistic updates for instant message display, implemented WebSocket notifications for real-time messaging
 - July 03, 2025. Added comprehensive image management system: admin can upload multiple room images via URL, customers can view image galleries with thumbnails and navigation, rooms display preview images in booking interface
+- July 03, 2025. Restructured payment system to deposit model: customers now pay 30% deposit at booking time and 70% remaining at check-in, added "deposit_paid" status, updated all interfaces to show deposit amounts and payment breakdown
 
 ## User Preferences
 

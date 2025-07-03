@@ -136,7 +136,8 @@ export default function Customer() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
-      pending: { variant: "default", label: "Đang chờ" },
+      pending: { variant: "outline", label: "Đang chờ" },
+      deposit_paid: { variant: "secondary", label: "Đã đặt cọc" },
       confirmed: { variant: "default", label: "Đã xác nhận" },
       completed: { variant: "default", label: "Đã hoàn thành" },
       cancelled: { variant: "destructive", label: "Đã hủy" },
@@ -391,6 +392,7 @@ export default function Customer() {
                         <SelectContent>
                           <SelectItem value="all">Tất cả</SelectItem>
                           <SelectItem value="pending">Đang chờ</SelectItem>
+                          <SelectItem value="deposit_paid">Đã đặt cọc</SelectItem>
                           <SelectItem value="confirmed">Đã xác nhận</SelectItem>
                           <SelectItem value="completed">Đã hoàn thành</SelectItem>
                           <SelectItem value="cancelled">Đã hủy</SelectItem>

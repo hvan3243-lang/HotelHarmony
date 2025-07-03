@@ -617,6 +617,7 @@ export default function Admin() {
                             labels: (chartData as any)?.bookingStatus?.map((item: any) => {
                               const statusNames: Record<string, string> = {
                                 'pending': 'Chờ xác nhận',
+                                'deposit_paid': 'Đã đặt cọc',
                                 'confirmed': 'Đã xác nhận',
                                 'completed': 'Hoàn thành',
                                 'cancelled': 'Đã hủy'
@@ -716,11 +717,13 @@ export default function Admin() {
                               <Badge 
                                 variant={
                                   booking.status === 'confirmed' ? 'default' :
+                                  booking.status === 'deposit_paid' ? 'secondary' :
                                   booking.status === 'cancelled' ? 'destructive' :
-                                  'secondary'
+                                  'outline'
                                 }
                               >
                                 {booking.status === 'confirmed' ? 'Đã xác nhận' :
+                                 booking.status === 'deposit_paid' ? 'Đã đặt cọc' :
                                  booking.status === 'cancelled' ? 'Đã hủy' :
                                  booking.status === 'pending' ? 'Chờ xác nhận' : booking.status}
                               </Badge>
