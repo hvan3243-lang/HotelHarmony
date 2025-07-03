@@ -1153,6 +1153,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
+  // Review & Rating System Routes
+  app.get("/api/reviews", async (req: Request, res: Response) => {
+    try {
+      const { roomId, userId, limit } = req.query;
+      const reviews = await storage.getReviews(
+        roomId ? parseInt(roomId as string) : undefined,
+        userId ? parseInt(userId as string) : undefined,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching reviews: " + error.message });
+    }
+  });
+
+  app.post("/api/reviews", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const reviewData = {
+        ...req.body,
+        userId: req.user.id,
+      };
+      
+      // Verify that user has completed this booking
+      const booking = await storage.getBooking(reviewData.bookingId);
+      if (!booking || booking.userId !== req.user.id || booking.status !== 'completed') {
+        return res.status(400).json({ 
+          message: "Bạn chỉ có thể đánh giá phòng sau khi hoàn thành lưu trú.",
+          code: "BOOKING_NOT_COMPLETED"
+        });
+      }
+      
+      const review = await storage.createReview(reviewData);
+      res.json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating review: " + error.message });
+    }
+  });
+
+  app.get("/api/rooms/:id/rating", async (req: Request, res: Response) => {
+    try {
+      const roomId = parseInt(req.params.id);
+      const rating = await storage.getRoomRating(roomId);
+      res.json(rating);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching room rating: " + error.message });
+    }
+  });
+
   // WebSocket server cho thông báo admin
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   

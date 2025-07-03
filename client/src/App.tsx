@@ -18,6 +18,7 @@ import Blog from "@/pages/Blog";
 import WalkInBooking from "@/pages/WalkInBooking";
 import CheckIn from "@/pages/CheckIn";
 import Settings from "@/pages/Settings";
+import ReviewForm from "@/pages/ReviewForm";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/walkin-booking" component={WalkInBooking} />
       <Route path="/checkin" component={CheckIn} />
       <Route path="/settings" component={Settings} />
+      <Route path="/review/:bookingId" component={ReviewForm} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,5 +1,5 @@
 import { 
-  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts, contactMessages,
+  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts, contactMessages, reviews,
   type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
   type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
   type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost,
@@ -588,6 +588,139 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       return false;
     }
+  }
+
+  // Review methods implementation
+  async getReviews(roomId?: number, userId?: number, limit?: number): Promise<any[]> {
+    try {
+      let baseQuery = db
+        .select({
+          id: reviews.id,
+          rating: reviews.rating,
+          comment: reviews.comment,
+          cleanliness: reviews.cleanliness,
+          service: reviews.service,
+          amenities: reviews.amenities,
+          valueForMoney: reviews.valueForMoney,
+          location: reviews.location,
+          wouldRecommend: reviews.wouldRecommend,
+          guestType: reviews.guestType,
+          stayPurpose: reviews.stayPurpose,
+          createdAt: reviews.createdAt,
+          userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          roomNumber: rooms.number,
+          roomType: rooms.type,
+        })
+        .from(reviews)
+        .leftJoin(users, eq(reviews.userId, users.id))
+        .leftJoin(rooms, eq(reviews.roomId, rooms.id));
+
+      // Apply filters
+      if (roomId && userId) {
+        baseQuery = baseQuery.where(and(eq(reviews.roomId, roomId), eq(reviews.userId, userId)));
+      } else if (roomId) {
+        baseQuery = baseQuery.where(eq(reviews.roomId, roomId));
+      } else if (userId) {
+        baseQuery = baseQuery.where(eq(reviews.userId, userId));
+      }
+
+      // Apply ordering
+      baseQuery = baseQuery.orderBy(desc(reviews.createdAt));
+
+      // Apply limit
+      if (limit) {
+        baseQuery = baseQuery.limit(limit);
+      }
+
+      return await baseQuery;
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      return [];
+    }
+  }
+
+  async createReview(review: any): Promise<any> {
+    try {
+      const [newReview] = await db
+        .insert(reviews)
+        .values({
+          userId: review.userId,
+          roomId: review.roomId,
+          bookingId: review.bookingId,
+          rating: review.rating,
+          comment: review.comment,
+          cleanliness: review.cleanliness,
+          service: review.service,
+          amenities: review.amenities,
+          valueForMoney: review.valueForMoney,
+          location: review.location,
+          wouldRecommend: review.wouldRecommend,
+          guestType: review.guestType,
+          stayPurpose: review.stayPurpose,
+        })
+        .returning();
+      return newReview;
+    } catch (error) {
+      console.error("Error creating review:", error);
+      throw error;
+    }
+  }
+
+  async getRoomRating(roomId: number): Promise<{ averageRating: number; totalReviews: number }> {
+    try {
+      const [result] = await db
+        .select({
+          averageRating: sql<number>`COALESCE(AVG(${reviews.rating}), 0)`,
+          totalReviews: sql<number>`COUNT(${reviews.id})`,
+        })
+        .from(reviews)
+        .where(eq(reviews.roomId, roomId));
+
+      return {
+        averageRating: Number(result.averageRating.toFixed(1)),
+        totalReviews: Number(result.totalReviews),
+      };
+    } catch (error) {
+      console.error("Error fetching room rating:", error);
+      return { averageRating: 0, totalReviews: 0 };
+    }
+  }
+
+  // Stub implementations for other methods
+  async getLoyaltyData(userId: number): Promise<any> {
+    return { points: 0, level: "Bronze", totalEarned: 0 };
+  }
+
+  async getPointTransactions(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async updateLoyaltyPoints(userId: number, points: number, type: 'earned' | 'redeemed', description: string): Promise<void> {
+    // Stub implementation
+  }
+
+  async getPromotionalCodes(): Promise<any[]> {
+    return [];
+  }
+
+  async getAvailablePromotionalCodes(userLevel?: string): Promise<any[]> {
+    return [];
+  }
+
+  async validatePromotionalCode(code: string, amount: number): Promise<any> {
+    return null;
+  }
+
+  async createPromotionalCode(code: any): Promise<any> {
+    return null;
+  }
+
+  async updatePromotionalCode(id: number, updates: any): Promise<any> {
+    return null;
+  }
+
+  async searchRooms(filters: any): Promise<any[]> {
+    return [];
   }
 }
 

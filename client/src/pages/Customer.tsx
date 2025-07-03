@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, Crown, Calendar, Bed, Users, Eye, X, Edit, Plus, Heart, Phone, Mail } from "lucide-react";
+import { User, Crown, Calendar, Bed, Users, Eye, X, Edit, Plus, Heart, Phone, Mail, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { authManager } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -592,6 +592,19 @@ export default function Customer() {
                                         Hủy
                                       </Button>
                                     )}
+                                    
+                                    {booking.status === 'completed' && (
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => setLocation(`/review/${booking.id}`)}
+                                        className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 hover:from-yellow-400/20 hover:to-orange-400/20 border-yellow-400/30"
+                                      >
+                                        <Star size={14} className="mr-1" />
+                                        Đánh giá
+                                      </Button>
+                                    )}
+                                    
                                     <Button 
                                       variant="ghost" 
                                       size="sm"

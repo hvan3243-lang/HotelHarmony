@@ -147,6 +147,25 @@ export const blogPosts = pgTable("blog_posts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  roomId: integer("room_id").references(() => rooms.id).notNull(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  cleanliness: integer("cleanliness").notNull(), // 1-5 stars
+  service: integer("service").notNull(), // 1-5 stars
+  amenities: integer("amenities").notNull(), // 1-5 stars
+  valueForMoney: integer("value_for_money").notNull(), // 1-5 stars
+  location: integer("location").notNull(), // 1-5 stars
+  wouldRecommend: boolean("would_recommend").default(true),
+  guestType: text("guest_type").default("leisure"), // leisure, business, family, couple
+  stayPurpose: text("stay_purpose"), // vacation, business, event, other
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -258,6 +277,24 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).pick({
   readTime: true,
 });
 
+export const insertReviewSchema = createInsertSchema(reviews).pick({
+  userId: true,
+  roomId: true,
+  bookingId: true,
+  rating: true,
+  comment: true,
+  cleanliness: true,
+  service: true,
+  amenities: true,
+  valueForMoney: true,
+  location: true,
+  wouldRecommend: true,
+  guestType: true,
+  stayPurpose: true,
+});
+
+
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
@@ -280,18 +317,10 @@ export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
 
-// Review & Rating System
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  roomId: integer("room_id").references(() => rooms.id).notNull(),
-  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
-  rating: integer("rating").notNull(), // 1-5 stars
-  title: varchar("title", { length: 255 }),
-  comment: text("comment"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+
 
 // Loyalty Program
 export const loyaltyPoints = pgTable("loyalty_points", {
@@ -342,14 +371,6 @@ export const promotionalCodeUsage = pgTable("promotional_code_usage", {
 });
 
 // Insert schemas for new tables
-export const insertReviewSchema = createInsertSchema(reviews).pick({
-  userId: true,
-  roomId: true,
-  bookingId: true,
-  rating: true,
-  title: true,
-  comment: true,
-});
 
 export const insertLoyaltyPointsSchema = createInsertSchema(loyaltyPoints).pick({
   userId: true,
