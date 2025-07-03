@@ -34,6 +34,8 @@ export const bookings = pgTable("bookings", {
   roomId: integer("room_id").references(() => rooms.id).notNull(),
   checkIn: timestamp("check_in").notNull(),
   checkOut: timestamp("check_out").notNull(),
+  checkInTime: text("check_in_time").default("14:00"), // Default check-in time 2:00 PM
+  checkOutTime: text("check_out_time").default("12:00"), // Default check-out time 12:00 PM
   guests: integer("guests").notNull(),
   totalPrice: decimal("total_price", { precision: 15, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, deposit_paid, confirmed, cancelled, completed
@@ -169,6 +171,8 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   roomId: true,
   checkIn: true,
   checkOut: true,
+  checkInTime: true,
+  checkOutTime: true,
   guests: true,
   totalPrice: true,
   specialRequests: true,

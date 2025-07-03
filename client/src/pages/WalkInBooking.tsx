@@ -39,6 +39,8 @@ interface CustomerForm {
 interface BookingForm {
   checkIn: string;
   checkOut: string;
+  checkInTime: string;
+  checkOutTime: string;
   guests: number;
   specialRequests: string;
 }
@@ -77,6 +79,8 @@ export default function WalkInBooking() {
   const [bookingForm, setBookingForm] = useState<BookingForm>({
     checkIn: new Date().toISOString().split('T')[0],
     checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    checkInTime: "14:00",
+    checkOutTime: "12:00",
     guests: 1,
     specialRequests: ""
   });
@@ -175,6 +179,8 @@ export default function WalkInBooking() {
         roomId: selectedRoom!.id,
         checkIn: bookingForm.checkIn,
         checkOut: bookingForm.checkOut,
+        checkInTime: bookingForm.checkInTime,
+        checkOutTime: bookingForm.checkOutTime,
         guests: bookingForm.guests,
         specialRequests: bookingForm.specialRequests,
         totalPrice: calculateTotalPrice().toString()
@@ -227,6 +233,8 @@ export default function WalkInBooking() {
       setBookingForm({
         checkIn: new Date().toISOString().split('T')[0],
         checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        checkInTime: "14:00",
+        checkOutTime: "12:00",
         guests: 1,
         specialRequests: ""
       });
@@ -487,7 +495,7 @@ export default function WalkInBooking() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <Label htmlFor="checkIn">Ngày nhận phòng</Label>
                     <Input
@@ -498,12 +506,30 @@ export default function WalkInBooking() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="checkInTime">Giờ nhận phòng</Label>
+                    <Input
+                      id="checkInTime"
+                      type="time"
+                      value={bookingForm.checkInTime}
+                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkInTime: e.target.value }))}
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="checkOut">Ngày trả phòng</Label>
                     <Input
                       id="checkOut"
                       type="date"
                       value={bookingForm.checkOut}
                       onChange={(e) => setBookingForm(prev => ({ ...prev, checkOut: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="checkOutTime">Giờ trả phòng</Label>
+                    <Input
+                      id="checkOutTime"
+                      type="time"
+                      value={bookingForm.checkOutTime}
+                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkOutTime: e.target.value }))}
                     />
                   </div>
                   <div>

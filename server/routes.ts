@@ -1011,13 +1011,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bookings/walkin", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const { customerId, checkIn, checkOut, ...bookingData } = req.body;
+      const { customerId, checkIn, checkOut, checkInTime, checkOutTime, ...bookingData } = req.body;
       
       const booking = await storage.createBooking({
         ...bookingData,
         userId: customerId,
         checkIn: new Date(checkIn),
         checkOut: new Date(checkOut),
+        checkInTime: checkInTime || "14:00",
+        checkOutTime: checkOutTime || "12:00",
         status: "pending"
       });
       

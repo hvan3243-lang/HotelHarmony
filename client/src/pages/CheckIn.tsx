@@ -227,10 +227,12 @@ export default function CheckIn() {
                                   <div>
                                     <span className="font-medium text-muted-foreground">Check-in:</span>
                                     <p>{formatDate(booking.checkIn)}</p>
+                                    {booking.checkInTime && <p className="text-sm text-muted-foreground">Giờ: {booking.checkInTime}</p>}
                                   </div>
                                   <div>
                                     <span className="font-medium text-muted-foreground">Check-out:</span>
                                     <p>{formatDate(booking.checkOut)}</p>
+                                    {booking.checkOutTime && <p className="text-sm text-muted-foreground">Giờ: {booking.checkOutTime}</p>}
                                   </div>
                                   <div>
                                     <span className="font-medium text-muted-foreground">Khách:</span>
@@ -355,10 +357,12 @@ export default function CheckIn() {
                     <div>
                       <span className="font-medium text-muted-foreground">Check-in:</span>
                       <p>{formatDate(selectedBooking.checkIn)}</p>
+                      {selectedBooking.checkInTime && <p className="text-sm text-muted-foreground">Giờ: {selectedBooking.checkInTime}</p>}
                     </div>
                     <div>
                       <span className="font-medium text-muted-foreground">Check-out:</span>
                       <p>{formatDate(selectedBooking.checkOut)}</p>
+                      {selectedBooking.checkOutTime && <p className="text-sm text-muted-foreground">Giờ: {selectedBooking.checkOutTime}</p>}
                     </div>
                   </div>
                 </div>

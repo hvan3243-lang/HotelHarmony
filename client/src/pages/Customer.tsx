@@ -462,10 +462,16 @@ export default function Customer() {
                                   <div>
                                     <Label className="text-sm text-muted-foreground">Check-in</Label>
                                     <p className="font-medium">{formatDate(booking.checkIn)}</p>
+                                    {booking.checkInTime && (
+                                      <p className="text-sm text-muted-foreground">Giờ: {booking.checkInTime}</p>
+                                    )}
                                   </div>
                                   <div>
                                     <Label className="text-sm text-muted-foreground">Check-out</Label>
                                     <p className="font-medium">{formatDate(booking.checkOut)}</p>
+                                    {booking.checkOutTime && (
+                                      <p className="text-sm text-muted-foreground">Giờ: {booking.checkOutTime}</p>
+                                    )}
                                   </div>
                                   <div>
                                     <Label className="text-sm text-muted-foreground">Khách</Label>

@@ -815,9 +815,11 @@ export default function Admin() {
                               </div>
                               <div>
                                 <span className="font-medium">Check-in:</span> {new Date(booking.checkIn).toLocaleDateString('vi-VN')}
+                                {booking.checkInTime && <span className="ml-2 text-muted-foreground">({booking.checkInTime})</span>}
                               </div>
                               <div>
                                 <span className="font-medium">Check-out:</span> {new Date(booking.checkOut).toLocaleDateString('vi-VN')}
+                                {booking.checkOutTime && <span className="ml-2 text-muted-foreground">({booking.checkOutTime})</span>}
                               </div>
                               <div>
                                 <span className="font-medium">Khách:</span> {booking.guests}
