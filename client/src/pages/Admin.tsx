@@ -817,8 +817,8 @@ export default function Admin() {
                               </div>
                               
                               {/* Payment Status */}
-                              <div className="bg-slate-50 p-3 rounded-lg border">
-                                <div className="text-sm font-medium mb-2">Trạng thái thanh toán:</div>
+                              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div className="text-sm font-medium mb-2 text-gray-800">Trạng thái thanh toán:</div>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                   {booking.status === 'pending' && (
                                     <div className="text-orange-600">
@@ -845,7 +845,7 @@ export default function Admin() {
                                       <span className="font-medium">Hoàn thành:</span> {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
                                     </div>
                                   )}
-                                  <div className="text-muted-foreground">
+                                  <div className="text-slate-600">
                                     <span className="font-medium">Phương thức:</span> {
                                       booking.paymentMethod === 'stripe' ? 'Thẻ tín dụng' :
                                       booking.paymentMethod === 'cash_on_arrival' ? 'Tiền mặt' :
