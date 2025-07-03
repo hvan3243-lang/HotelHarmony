@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Clock,
   MessageCircle,
+  CheckCircle,
   Send
 } from 'lucide-react';
 
@@ -256,6 +257,15 @@ export default function Admin() {
     }
   });
 
+  const confirmBookingMutation = useMutation({
+    mutationFn: (bookingId: number) => apiRequest('PUT', `/api/bookings/${bookingId}/confirm`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({ title: 'Thành công', description: 'Đặt phòng đã được xác nhận' });
+    }
+  });
+
   const createBlogMutation = useMutation({
     mutationFn: (data: BlogForm) => apiRequest('POST', '/api/blog', data),
     onSuccess: () => {
@@ -337,6 +347,10 @@ export default function Admin() {
       published: blogPost.published || false
     });
     setIsBlogDialogOpen(true);
+  };
+
+  const confirmBooking = (bookingId: number) => {
+    confirmBookingMutation.mutate(bookingId);
   };
 
   const onRoomSubmit = (data: RoomForm) => {
@@ -754,6 +768,26 @@ export default function Admin() {
                           </div>
                           
                           <div className="flex items-center gap-2">
+                            {booking.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                onClick={() => confirmBooking(booking.id)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="mr-1 h-4 w-4" />
+                                Xác nhận
+                              </Button>
+                            )}
+                            {booking.status === 'deposit_paid' && (
+                              <Button
+                                size="sm"
+                                onClick={() => confirmBooking(booking.id)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <CheckCircle className="mr-1 h-4 w-4" />
+                                Xác nhận nhận phòng
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"

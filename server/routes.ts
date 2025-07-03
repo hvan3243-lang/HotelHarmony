@@ -345,6 +345,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/bookings/:id/confirm", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Không tìm thấy đặt phòng" });
+      }
+      
+      // Update booking status to confirmed
+      const newStatus = booking.status === 'pending' ? 'deposit_paid' : 'confirmed';
+      const updatedBooking = await storage.updateBooking(bookingId, {
+        status: newStatus
+      });
+      
+      if (!updatedBooking) {
+        return res.status(500).json({ message: "Không thể cập nhật trạng thái đặt phòng" });
+      }
+      
+      res.json({ 
+        message: "Xác nhận đặt phòng thành công",
+        booking: updatedBooking
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi xác nhận đặt phòng: " + error.message });
+    }
+  });
+
   // Stripe payment routes
   app.post("/api/create-payment-intent", authenticateToken, async (req: Request, res: Response) => {
     if (!stripe) {
