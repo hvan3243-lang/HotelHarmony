@@ -89,7 +89,7 @@ export default function WalkInBooking() {
   const queryClient = useQueryClient();
 
   // Get available rooms based on dates
-  const { data: availableRooms = [], isLoading: roomsLoading } = useQuery({
+  const { data: roomData, isLoading: roomsLoading } = useQuery({
     queryKey: ["/api/rooms/available", bookingForm.checkIn, bookingForm.checkOut],
     queryFn: async () => {
       const response = await apiRequest("POST", "/api/rooms/check-availability", {
@@ -100,6 +100,8 @@ export default function WalkInBooking() {
     },
     enabled: !!bookingForm.checkIn && !!bookingForm.checkOut && step === 2,
   });
+
+  const availableRooms = roomData?.availableRooms || [];
 
   // Check if customer exists
   const checkCustomerMutation = useMutation({
@@ -526,8 +528,16 @@ export default function WalkInBooking() {
                   </div>
                 ) : availableRooms.length === 0 ? (
                   <div className="text-center py-8">
-                    <AlertCircle className="mx-auto mb-4 text-muted-foreground" size={48} />
-                    <p className="text-muted-foreground">Không có phòng trống trong thời gian này</p>
+                    <AlertCircle className="mx-auto mb-4 text-orange-500" size={48} />
+                    <h3 className="font-semibold text-lg mb-2">Không có phòng trống</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Không có phòng nào trống trong thời gian từ {formatDate(bookingForm.checkIn)} đến {formatDate(bookingForm.checkOut)}
+                    </p>
+                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                      <p className="text-sm text-orange-800">
+                        💡 <strong>Gợi ý:</strong> Thử chọn ngày khác hoặc kiểm tra lại ngày đã đặt
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid gap-4">
