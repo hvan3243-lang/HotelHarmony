@@ -696,6 +696,55 @@ export default function Admin() {
               <h2 className="text-2xl font-bold">Quản lý đặt phòng</h2>
             </div>
 
+            {/* Payment Statistics */}
+            {(bookings as any[])?.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {(bookings as any[]).filter((b: any) => b.status === 'pending').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Chờ thanh toán</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {(bookings as any[]).filter((b: any) => b.status === 'deposit_paid').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Đã đặt cọc</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {(bookings as any[]).filter((b: any) => b.status === 'confirmed').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-800">
+                        {(bookings as any[])
+                          .filter((b: any) => b.status === 'confirmed' || b.status === 'completed')
+                          .reduce((sum: number, b: any) => sum + parseFloat(b.totalPrice), 0)
+                          .toLocaleString('vi-VN')}đ
+                      </div>
+                      <div className="text-sm text-muted-foreground">Doanh thu</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {bookingsLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -757,36 +806,95 @@ export default function Admin() {
                                 <span className="font-medium">Khách:</span> {booking.guests}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 text-sm">
-                              <span className="font-medium text-green-600">
-                                Tổng: {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
-                              </span>
-                              <span className="text-muted-foreground">
-                                Đặt ngày: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
-                              </span>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-4 text-sm">
+                                <span className="font-medium text-green-600">
+                                  Tổng: {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
+                                </span>
+                                <span className="text-muted-foreground">
+                                  Đặt ngày: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                                </span>
+                              </div>
+                              
+                              {/* Payment Status */}
+                              <div className="bg-slate-50 p-3 rounded-lg border">
+                                <div className="text-sm font-medium mb-2">Trạng thái thanh toán:</div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  {booking.status === 'pending' && (
+                                    <div className="text-orange-600">
+                                      <span className="font-medium">Chưa thanh toán:</span> 0đ / {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
+                                    </div>
+                                  )}
+                                  {booking.status === 'deposit_paid' && (
+                                    <>
+                                      <div className="text-green-600">
+                                        <span className="font-medium">Đã đặt cọc (30%):</span> {(parseFloat(booking.totalPrice) * 0.3).toLocaleString('vi-VN')}đ
+                                      </div>
+                                      <div className="text-orange-600">
+                                        <span className="font-medium">Còn lại:</span> {(parseFloat(booking.totalPrice) * 0.7).toLocaleString('vi-VN')}đ
+                                      </div>
+                                    </>
+                                  )}
+                                  {booking.status === 'confirmed' && (
+                                    <div className="text-green-600">
+                                      <span className="font-medium">Đã thanh toán đầy đủ:</span> {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
+                                    </div>
+                                  )}
+                                  {booking.status === 'completed' && (
+                                    <div className="text-blue-600">
+                                      <span className="font-medium">Hoàn thành:</span> {parseFloat(booking.totalPrice).toLocaleString('vi-VN')}đ
+                                    </div>
+                                  )}
+                                  <div className="text-muted-foreground">
+                                    <span className="font-medium">Phương thức:</span> {
+                                      booking.paymentMethod === 'stripe' ? 'Thẻ tín dụng' :
+                                      booking.paymentMethod === 'cash_on_arrival' ? 'Tiền mặt' :
+                                      booking.paymentMethod === 'e_wallet' ? 'Ví điện tử' :
+                                      booking.paymentMethod || 'Chưa xác định'
+                                    }
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           
                           <div className="flex items-center gap-2">
                             {booking.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => confirmBooking(booking.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <CheckCircle className="mr-1 h-4 w-4" />
-                                Xác nhận
-                              </Button>
+                              <>
+                                <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                  ⚠️ Chưa thanh toán
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  onClick={() => confirmBooking(booking.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                  disabled
+                                  title="Khách hàng cần thanh toán trước khi xác nhận"
+                                >
+                                  <CheckCircle className="mr-1 h-4 w-4" />
+                                  Chờ thanh toán
+                                </Button>
+                              </>
                             )}
                             {booking.status === 'deposit_paid' && (
-                              <Button
-                                size="sm"
-                                onClick={() => confirmBooking(booking.id)}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                <CheckCircle className="mr-1 h-4 w-4" />
-                                Xác nhận nhận phòng
-                              </Button>
+                              <>
+                                <Badge variant="secondary" className="text-green-600">
+                                  ✅ Đã đặt cọc
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  onClick={() => confirmBooking(booking.id)}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  <CheckCircle className="mr-1 h-4 w-4" />
+                                  Xác nhận nhận phòng
+                                </Button>
+                              </>
+                            )}
+                            {booking.status === 'confirmed' && (
+                              <Badge variant="default" className="bg-green-600">
+                                ✅ Đã xác nhận
+                              </Badge>
                             )}
                             <Button
                               variant="outline"

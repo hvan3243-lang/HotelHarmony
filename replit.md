@@ -140,6 +140,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 03, 2025. Restructured payment system to deposit model: customers now pay 30% deposit at booking time and 70% remaining at check-in, added "deposit_paid" status, updated all interfaces to show deposit amounts and payment breakdown
 - July 03, 2025. Added walk-in booking system: comprehensive 3-step process for front desk staff to handle customers arriving directly at hotel, includes customer verification, room selection, and mandatory 100% payment (no deposit option for walk-in customers)
 - July 03, 2025. Optimized walk-in system for staff workflow: added clear instructions that front desk staff handle entire booking process for walk-in customers, added dedicated Walk-in tab in admin interface for easy access
+- July 03, 2025. Enhanced booking management with payment transparency: admin can now see detailed payment status (pending/deposit paid/confirmed), payment amounts breakdown (30% deposit vs remaining 70%), payment methods, and visual indicators to track customer payment progress before room confirmation
 
 ## User Preferences
 
