@@ -167,8 +167,8 @@ export default function WalkInBooking() {
     },
     onSuccess: () => {
       toast({
-        title: "Thanh toán thành công",
-        description: "Đặt phòng đã được xác nhận!",
+        title: "Thanh toán đầy đủ thành công",
+        description: "Đặt phòng walk-in đã được xác nhận và khách có thể nhận phòng ngay!",
       });
       // Reset form
       setStep(1);
@@ -634,8 +634,11 @@ export default function WalkInBooking() {
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-semibold">
-                      <span>Tổng cộng:</span>
+                      <span>Thanh toán đầy đủ:</span>
                       <span className="text-primary">{formatPrice(calculateTotalPrice())}</span>
+                    </div>
+                    <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                      💡 Khách đến trực tiếp cần thanh toán 100% ngay
                     </div>
                   </div>
                 </div>
@@ -673,7 +676,10 @@ export default function WalkInBooking() {
                 </div>
 
                 <div className="space-y-4">
-                  <p className="font-medium">Chọn hình thức thanh toán:</p>
+                  <p className="font-medium">Chọn phương thức thanh toán:</p>
+                  <p className="text-sm text-muted-foreground bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    💡 Khách đến trực tiếp cần thanh toán đầy đủ ngay
+                  </p>
                   
                   <div className="space-y-3">
                     <Button
@@ -683,22 +689,28 @@ export default function WalkInBooking() {
                       variant="outline"
                     >
                       <CreditCard className="mr-2" size={16} />
-                      Thanh toán đầy đủ ngay ({formatPrice(calculateTotalPrice())})
+                      Tiền mặt ({formatPrice(calculateTotalPrice())})
                     </Button>
                     
                     <Button
-                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "cash", paymentType: "deposit" })}
+                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "card", paymentType: "full" })}
                       disabled={completePaymentMutation.isPending}
                       className="w-full justify-start"
                       variant="outline"
                     >
-                      <Clock className="mr-2" size={16} />
-                      Đặt cọc 30% ({formatPrice(Math.round(calculateTotalPrice() * 0.3))})
+                      <CreditCard className="mr-2" size={16} />
+                      Thẻ tín dụng/ghi nợ ({formatPrice(calculateTotalPrice())})
                     </Button>
-                  </div>
-                  
-                  <div className="text-xs text-muted-foreground">
-                    * Đặt cọc: Khách thanh toán 70% còn lại khi check-out
+
+                    <Button
+                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "transfer", paymentType: "full" })}
+                      disabled={completePaymentMutation.isPending}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <CreditCard className="mr-2" size={16} />
+                      Chuyển khoản ({formatPrice(calculateTotalPrice())})
+                    </Button>
                   </div>
                 </div>
 

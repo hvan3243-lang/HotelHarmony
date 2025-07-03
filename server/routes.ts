@@ -968,10 +968,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { bookingId, paymentMethod, paymentType, amount } = req.body;
       
-      const status = paymentType === 'full' ? 'confirmed' : 'deposit_paid';
+      // Walk-in customers must pay full amount
+      if (paymentType !== 'full') {
+        return res.status(400).json({ message: "Khách đến trực tiếp cần thanh toán đầy đủ" });
+      }
       
       const booking = await storage.updateBooking(bookingId, {
-        status,
+        status: 'confirmed',
         paymentMethod
       });
       
@@ -980,7 +983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({ 
-        message: paymentType === 'full' ? "Thanh toán đầy đủ thành công" : "Đặt cọc thành công",
+        message: "Thanh toán đầy đủ thành công - Đặt phòng đã được xác nhận",
         booking 
       });
     } catch (error: any) {
