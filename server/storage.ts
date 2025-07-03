@@ -51,6 +51,26 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, updates: Partial<BlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
+
+  // Review methods
+  getReviews(roomId?: number, userId?: number, limit?: number): Promise<any[]>;
+  createReview(review: any): Promise<any>;
+  getRoomRating(roomId: number): Promise<{ averageRating: number; totalReviews: number }>;
+
+  // Loyalty methods
+  getLoyaltyData(userId: number): Promise<any>;
+  getPointTransactions(userId: number): Promise<any[]>;
+  updateLoyaltyPoints(userId: number, points: number, type: 'earned' | 'redeemed', description: string): Promise<void>;
+
+  // Promotional code methods
+  getPromotionalCodes(): Promise<any[]>;
+  getAvailablePromotionalCodes(userLevel?: string): Promise<any[]>;
+  validatePromotionalCode(code: string, amount: number): Promise<any>;
+  createPromotionalCode(code: any): Promise<any>;
+  updatePromotionalCode(id: number, updates: any): Promise<any>;
+
+  // Advanced search
+  searchRooms(filters: any): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {

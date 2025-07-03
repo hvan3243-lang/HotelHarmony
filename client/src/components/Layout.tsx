@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { User } from "@shared/schema";
 import { Moon, Sun, Hotel, Menu, X } from "lucide-react";
 import { LiveChat } from "./LiveChat";
+// import { LanguageSwitcher } from "./LanguageSwitcher";
+// import { useTranslation } from "@/lib/i18n";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -23,6 +25,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.location.href = "/";
   };
 
+  // const { t } = useTranslation();
+
   const navItems = [
     { href: "/", label: "Trang chủ" },
     { href: "/booking", label: "Đặt phòng" },
@@ -30,9 +34,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/contact", label: "Liên hệ" },
     ...(user ? [
       ...(user.role === 'admin' ? [
-        { href: "/admin", label: "Admin" }
+        { href: "/admin", label: "Quản trị" }
       ] : [
-        { href: "/customer", label: "Tài khoản" }
+        { href: "/customer", label: "Khách hàng" }
       ])
     ] : []),
   ];
@@ -71,6 +75,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Language Switcher */}
+              {/* <LanguageSwitcher /> */}
+              
               {/* Dark Mode Toggle */}
               <Button
                 variant="outline"

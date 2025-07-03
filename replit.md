@@ -143,6 +143,7 @@ HotelLux is a full-stack hotel management application built with React, TypeScri
 - July 03, 2025. Enhanced booking management with payment transparency: admin can now see detailed payment status (pending/deposit paid/confirmed), payment amounts breakdown (30% deposit vs remaining 70%), payment methods, and visual indicators to track customer payment progress before room confirmation
 - July 03, 2025. Fixed payment display accuracy: QR code and payment interface now correctly show 30% deposit amount instead of full room price, with clear breakdown showing remaining 70% for check-in payment
 - July 03, 2025. Updated QR code image: replaced placeholder QR with custom pr.png image from client/src/assets, removed overlay text for cleaner display
+- July 03, 2025. Implemented comprehensive feature enhancement package: Review & Rating System with 5-star ratings and detailed comments, Loyalty Program with Bronze/Silver/Gold/Platinum levels and point redemption, Promotional Code system with admin management and validation, Advanced Search with amenity filters and price ranges, Enhanced Email Templates with modern responsive design, and Multi-language Support (Vietnamese/English) with persistent language preferences
 
 ## User Preferences
 

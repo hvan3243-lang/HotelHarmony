@@ -17,6 +17,7 @@ import Contact from "@/pages/Contact";
 import Blog from "@/pages/Blog";
 import WalkInBooking from "@/pages/WalkInBooking";
 import CheckIn from "@/pages/CheckIn";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/walkin-booking" component={WalkInBooking} />
       <Route path="/checkin" component={CheckIn} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -248,3 +248,121 @@ export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+// Review & Rating System
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  roomId: integer("room_id").references(() => rooms.id).notNull(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title", { length: 255 }),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Loyalty Program
+export const loyaltyPoints = pgTable("loyalty_points", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  points: integer("points").default(0).notNull(),
+  totalEarned: integer("total_earned").default(0).notNull(),
+  level: varchar("level", { length: 50 }).default("Bronze").notNull(), // Bronze, Silver, Gold, Platinum
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const pointTransactions = pgTable("point_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  type: varchar("type", { length: 20 }).notNull(), // "earned", "redeemed"
+  points: integer("points").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Promotional Codes
+export const promotionalCodes = pgTable("promotional_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  discountType: varchar("discount_type", { length: 20 }).notNull(), // "percentage", "fixed"
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  minAmount: decimal("min_amount", { precision: 10, scale: 2 }).default("0"),
+  maxDiscount: decimal("max_discount", { precision: 10, scale: 2 }),
+  usageLimit: integer("usage_limit"),
+  usedCount: integer("used_count").default(0),
+  validFrom: timestamp("valid_from").notNull(),
+  validTo: timestamp("valid_to").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const promotionalCodeUsage = pgTable("promotional_code_usage", {
+  id: serial("id").primaryKey(),
+  codeId: integer("code_id").references(() => promotionalCodes.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertReviewSchema = createInsertSchema(reviews).pick({
+  userId: true,
+  roomId: true,
+  bookingId: true,
+  rating: true,
+  title: true,
+  comment: true,
+});
+
+export const insertLoyaltyPointsSchema = createInsertSchema(loyaltyPoints).pick({
+  userId: true,
+  points: true,
+  totalEarned: true,
+  level: true,
+});
+
+export const insertPointTransactionSchema = createInsertSchema(pointTransactions).pick({
+  userId: true,
+  bookingId: true,
+  type: true,
+  points: true,
+  description: true,
+});
+
+export const insertPromotionalCodeSchema = createInsertSchema(promotionalCodes).pick({
+  code: true,
+  name: true,
+  description: true,
+  discountType: true,
+  discountValue: true,
+  minAmount: true,
+  maxDiscount: true,
+  usageLimit: true,
+  validFrom: true,
+  validTo: true,
+  isActive: true,
+});
+
+export const insertPromotionalCodeUsageSchema = createInsertSchema(promotionalCodeUsage).pick({
+  codeId: true,
+  userId: true,
+  bookingId: true,
+  discountAmount: true,
+});
+
+// Types for new tables
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+export type InsertLoyaltyPoints = z.infer<typeof insertLoyaltyPointsSchema>;
+export type LoyaltyPoints = typeof loyaltyPoints.$inferSelect;
+export type InsertPointTransaction = z.infer<typeof insertPointTransactionSchema>;
+export type PointTransaction = typeof pointTransactions.$inferSelect;
+export type InsertPromotionalCode = z.infer<typeof insertPromotionalCodeSchema>;
+export type PromotionalCode = typeof promotionalCodes.$inferSelect;
+export type InsertPromotionalCodeUsage = z.infer<typeof insertPromotionalCodeUsageSchema>;
+export type PromotionalCodeUsage = typeof promotionalCodeUsage.$inferSelect;
