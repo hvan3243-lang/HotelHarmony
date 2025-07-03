@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search, 
   Filter, 
@@ -21,7 +22,9 @@ import {
   Calendar,
   MapPin,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X,
+  ImageIcon
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
@@ -40,6 +43,9 @@ export default function Booking() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryRoom, setGalleryRoom] = useState<Room | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const roomsPerPage = 6;
 
   // Load saved room data from localStorage if coming from customer page
@@ -77,6 +83,28 @@ export default function Booking() {
     const checkOut = new Date(searchParams.checkOut);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     return nights * parseFloat(room.price.replace(/[.,]/g, ''));
+  };
+
+  const openGallery = (room: Room, startIndex = 0) => {
+    setGalleryRoom(room);
+    setCurrentImageIndex(startIndex);
+    setGalleryOpen(true);
+  };
+
+  const nextImage = () => {
+    if (galleryRoom && galleryRoom.images) {
+      setCurrentImageIndex((prev) => 
+        prev === galleryRoom.images!.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (galleryRoom && galleryRoom.images) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? galleryRoom.images!.length - 1 : prev - 1
+      );
+    }
   };
 
   const handleBookRoom = async (room: Room) => {
@@ -331,12 +359,40 @@ export default function Booking() {
                 className="group"
               >
                 <Card className="card-enhanced hover-grow overflow-hidden h-full">
-                  {/* Room Image Placeholder */}
-                  <div className={`relative h-48 gradient-bg-${(index % 5) + 1} flex items-center justify-center`}>
-                    <div className="text-white text-center animate-float">
-                      <Bed className="mx-auto mb-2" size={32} />
-                      <span className="text-lg font-semibold">Phòng {room.number}</span>
-                    </div>
+                  {/* Room Image Gallery */}
+                  <div 
+                    className="relative h-48 overflow-hidden group/image cursor-pointer"
+                    onClick={() => room.images && room.images.length > 0 && openGallery(room, 0)}
+                  >
+                    {room.images && room.images.length > 0 ? (
+                      <>
+                        <img
+                          src={room.images[0]}
+                          alt={`Phòng ${room.number}`}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                          }}
+                        />
+                        {room.images.length > 1 && (
+                          <div className="absolute top-3 left-3 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+                            1/{room.images.length}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute bottom-3 left-3 text-white opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex items-center">
+                          <ImageIcon size={16} className="mr-2" />
+                          <span className="text-sm font-medium">Xem thêm ảnh</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className={`relative h-48 gradient-bg-${(index % 5) + 1} flex items-center justify-center`}>
+                        <div className="text-white text-center animate-float">
+                          <Bed className="mx-auto mb-2" size={32} />
+                          <span className="text-lg font-semibold">Phòng {room.number}</span>
+                        </div>
+                      </div>
+                    )}
                     <Badge className="absolute top-3 right-3 glass backdrop-blur-lg text-white">
                       {getRoomTypeLabel(room.type)}
                     </Badge>
@@ -494,6 +550,84 @@ export default function Booking() {
           </motion.div>
         )}
       </div>
+
+      {/* Image Gallery Dialog */}
+      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+        <DialogContent className="max-w-4xl h-[80vh] p-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="flex items-center justify-between">
+              <span>Hình ảnh phòng {galleryRoom?.number}</span>
+              <div className="text-sm text-muted-foreground">
+                {galleryRoom?.images && `${currentImageIndex + 1}/${galleryRoom.images.length}`}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {galleryRoom?.images && galleryRoom.images.length > 0 && (
+            <div className="relative flex-1 flex items-center justify-center bg-black/5">
+              {/* Main Image */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                <img
+                  src={galleryRoom.images[currentImageIndex]}
+                  alt={`Phòng ${galleryRoom.number} - Ảnh ${currentImageIndex + 1}`}
+                  className="max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                  }}
+                />
+                
+                {/* Navigation Arrows */}
+                {galleryRoom.images.length > 1 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      onClick={prevImage}
+                    >
+                      <ChevronLeft size={24} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      onClick={nextImage}
+                    >
+                      <ChevronRight size={24} />
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              {/* Thumbnail Strip */}
+              {galleryRoom.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 p-2 rounded-lg max-w-full overflow-x-auto">
+                  {galleryRoom.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
+                        index === currentImageIndex 
+                          ? 'border-white opacity-100' 
+                          : 'border-transparent opacity-60 hover:opacity-80'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80';
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

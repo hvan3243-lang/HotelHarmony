@@ -1046,6 +1046,66 @@ export default function Admin() {
                           )}
                         />
                       </div>
+                      
+                      {/* Image Upload Section */}
+                      <FormField
+                        control={roomForm.control}
+                        name="images"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Hình ảnh phòng</FormLabel>
+                            <FormControl>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-1 gap-2">
+                                  {field.value?.map((image: string, index: number) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                      <Input
+                                        value={image}
+                                        onChange={(e) => {
+                                          const newImages = [...(field.value || [])];
+                                          newImages[index] = e.target.value;
+                                          field.onChange(newImages);
+                                        }}
+                                        placeholder="URL hình ảnh (ví dụ: https://images.unsplash.com/...)"
+                                        className="flex-1"
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const newImages = field.value?.filter((_: string, i: number) => i !== index) || [];
+                                          field.onChange(newImages);
+                                        }}
+                                      >
+                                        <Trash2 size={14} />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentImages = field.value || [];
+                                    field.onChange([...currentImages, ""]);
+                                  }}
+                                >
+                                  <Plus size={14} className="mr-2" />
+                                  Thêm ảnh
+                                </Button>
+                                <div className="text-sm text-muted-foreground">
+                                  <p>Gợi ý: Sử dụng ảnh từ Unsplash.com cho chất lượng tốt</p>
+                                  <p>Ví dụ: https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80</p>
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
                       <FormField
                         control={roomForm.control}
                         name="description"
@@ -1092,7 +1152,26 @@ export default function Admin() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Card className="hover:shadow-lg transition-shadow">
+                    <Card className="hover:shadow-lg transition-shadow overflow-hidden">
+                      {/* Room Image Preview */}
+                      {room.images && room.images.length > 0 && (
+                        <div className="h-48 relative overflow-hidden">
+                          <img
+                            src={room.images[0]}
+                            alt={`Phòng ${room.number}`}
+                            className="w-full h-full object-cover transition-transform hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                            }}
+                          />
+                          {room.images.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                              +{room.images.length - 1} ảnh
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div>
@@ -1128,6 +1207,11 @@ export default function Admin() {
                           {room.description && (
                             <p className="text-sm text-muted-foreground">
                               {room.description}
+                            </p>
+                          )}
+                          {room.images && room.images.length > 0 && (
+                            <p className="text-xs text-green-600 font-medium">
+                              ✓ {room.images.length} hình ảnh
                             </p>
                           )}
                         </div>
