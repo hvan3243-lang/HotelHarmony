@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { authManager } from "@/lib/auth";
 import type { Room, User as UserType } from "@shared/schema";
 
 interface CustomerForm {
@@ -42,7 +44,28 @@ interface BookingForm {
 }
 
 export default function WalkInBooking() {
+  const [, setLocation] = useLocation();
   const [step, setStep] = useState(1); // 1: Customer Info, 2: Room Selection, 3: Payment
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!authManager.isAuthenticated() || !authManager.isAdmin()) {
+      setLocation("/auth");
+      return;
+    }
+  }, [setLocation]);
+
+  // Don't render if not authenticated
+  if (!authManager.isAuthenticated() || !authManager.isAdmin()) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p>Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
   const [customerForm, setCustomerForm] = useState<CustomerForm>({
     firstName: "",
     lastName: "",

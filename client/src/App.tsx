@@ -31,7 +31,7 @@ function Router() {
       <Route path="/payment" component={PaymentMethod} />
       <Route path="/contact" component={Contact} />
       <Route path="/blog" component={Blog} />
-      <Route path="/walkin" component={WalkInBooking} />
+      <Route path="/walkin-booking" component={WalkInBooking} />
       <Route path="/checkin" component={CheckIn} />
       <Route component={NotFound} />
     </Switch>
