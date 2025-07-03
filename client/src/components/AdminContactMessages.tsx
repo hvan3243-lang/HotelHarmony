@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ContactMessage {
   id: number;
@@ -61,17 +62,9 @@ export function AdminContactMessages() {
 
   const fetchMessages = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/contact-messages', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
-      }
+      const response = await apiRequest('GET', '/api/admin/contact-messages');
+      const data = await response.json();
+      setMessages(data);
     } catch (error) {
       toast({
         title: "Lỗi tải tin nhắn",
@@ -94,14 +87,8 @@ export function AdminContactMessages() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/contact-messages/${messageId}/respond`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ response: responseText }),
+      const response = await apiRequest('POST', `/api/admin/contact-messages/${messageId}/respond`, {
+        response: responseText
       });
 
       if (response.ok) {
@@ -128,14 +115,8 @@ export function AdminContactMessages() {
 
   const handleStatusChange = async (messageId: number, newStatus: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/contact-messages/${messageId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
+      const response = await apiRequest('PUT', `/api/admin/contact-messages/${messageId}/status`, {
+        status: newStatus
       });
 
       if (response.ok) {
