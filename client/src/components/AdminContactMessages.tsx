@@ -18,7 +18,8 @@ import {
   User,
   Filter,
   Search,
-  Calendar
+  Calendar,
+  Trash2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -128,6 +129,30 @@ export function AdminContactMessages() {
     } catch (error) {
       toast({
         title: "Lỗi cập nhật trạng thái",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (messageId: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa tin nhắn này không?")) {
+      return;
+    }
+
+    try {
+      const response = await apiRequest('DELETE', `/api/admin/contact-messages/${messageId}`);
+
+      if (response.ok) {
+        toast({
+          title: "Xóa tin nhắn thành công",
+          description: "Tin nhắn đã được xóa khỏi hệ thống",
+        });
+        fetchMessages();
+      }
+    } catch (error) {
+      toast({
+        title: "Lỗi xóa tin nhắn",
+        description: "Không thể xóa tin nhắn này",
         variant: "destructive",
       });
     }
@@ -384,6 +409,15 @@ export function AdminContactMessages() {
                         )}
                       </DialogContent>
                     </Dialog>
+                    
+                    <Button
+                      variant="destructive"
+                      className="h-8 px-3"
+                      onClick={() => handleDelete(message.id)}
+                    >
+                      <Trash2 className="mr-2" size={16} />
+                      Xóa
+                    </Button>
                     
                     <Select 
                       value={message.status} 

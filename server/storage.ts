@@ -79,6 +79,7 @@ export interface IStorage {
   createContactMessage(message: any): Promise<any>;
   updateContactMessage(id: number, updates: any): Promise<any>;
   respondToContactMessage(id: number, response: string, adminId: number): Promise<any>;
+  deleteContactMessage(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -576,6 +577,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(contactMessages.id, id))
       .returning();
     return message;
+  }
+
+  async deleteContactMessage(id: number): Promise<boolean> {
+    try {
+      await db
+        .delete(contactMessages)
+        .where(eq(contactMessages.id, id));
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 

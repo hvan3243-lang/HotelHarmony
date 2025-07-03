@@ -267,6 +267,15 @@ export default function Admin() {
     }
   });
 
+  const deleteBookingMutation = useMutation({
+    mutationFn: (bookingId: number) => apiRequest('DELETE', `/api/bookings/${bookingId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({ title: 'Thành công', description: 'Đặt phòng đã được xóa' });
+    }
+  });
+
   const createBlogMutation = useMutation({
     mutationFn: (data: BlogForm) => apiRequest('POST', '/api/blog', data),
     onSuccess: () => {
@@ -352,6 +361,12 @@ export default function Admin() {
 
   const confirmBooking = (bookingId: number) => {
     confirmBookingMutation.mutate(bookingId);
+  };
+
+  const deleteBooking = (bookingId: number) => {
+    if (confirm("Bạn có chắc chắn muốn xóa đặt phòng này không?")) {
+      deleteBookingMutation.mutate(bookingId);
+    }
   };
 
   const onRoomSubmit = (data: RoomForm) => {
@@ -910,6 +925,14 @@ export default function Admin() {
                               }}
                             >
                               Sao chép mã
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteBooking(booking.id)}
+                            >
+                              <Trash2 className="mr-1 h-4 w-4" />
+                              Xóa
                             </Button>
                           </div>
                         </div>

@@ -373,6 +373,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/bookings/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Không tìm thấy đặt phòng" });
+      }
+      
+      const deleted = await storage.cancelBooking(bookingId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Không thể xóa đặt phòng" });
+      }
+      
+      res.json({ 
+        message: "Xóa đặt phòng thành công",
+        success: true
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi xóa đặt phòng: " + error.message });
+    }
+  });
+
   // Stripe payment routes
   app.post("/api/create-payment-intent", authenticateToken, async (req: Request, res: Response) => {
     if (!stripe) {
@@ -1106,6 +1130,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedMessage);
     } catch (error: any) {
       res.status(500).json({ message: "Error updating contact message status: " + error.message });
+    }
+  });
+
+  app.delete("/api/admin/contact-messages/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      
+      const deleted = await storage.deleteContactMessage(messageId);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error deleting contact message: " + error.message });
     }
   });
 
