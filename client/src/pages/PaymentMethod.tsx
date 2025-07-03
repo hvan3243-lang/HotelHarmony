@@ -321,11 +321,20 @@ export default function PaymentMethod() {
             <Card>
               <CardHeader>
                 <CardTitle>Phương thức thanh toán</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Đang chọn: <strong>{paymentMethod === 'stripe' ? 'Thẻ tín dụng' : paymentMethod === 'cash' ? 'Thanh toán khi nhận phòng' : 'Ví điện tử'}</strong>
+                </div>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => {
+                  console.log('Payment method changed to:', value);
+                  setPaymentMethod(value);
+                }}>
                   {/* Thanh toán thẻ */}
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                  <div 
+                    className={`flex items-center space-x-2 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === 'stripe' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => setPaymentMethod('stripe')}
+                  >
                     <RadioGroupItem value="stripe" id="stripe" />
                     <Label htmlFor="stripe" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <CreditCard className="text-blue-600" size={20} />
@@ -338,7 +347,10 @@ export default function PaymentMethod() {
                   </div>
 
                   {/* Thanh toán khi nhận phòng */}
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                  <div 
+                    className={`flex items-center space-x-2 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === 'cash' ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => setPaymentMethod('cash')}
+                  >
                     <RadioGroupItem value="cash" id="cash" />
                     <Label htmlFor="cash" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <MapPin className="text-green-600" size={20} />
@@ -350,7 +362,10 @@ export default function PaymentMethod() {
                   </div>
 
                   {/* Ví điện tử */}
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                  <div 
+                    className={`flex items-center space-x-2 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => setPaymentMethod('wallet')}
+                  >
                     <RadioGroupItem value="wallet" id="wallet" />
                     <Label htmlFor="wallet" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <Wallet className="text-purple-600" size={20} />
