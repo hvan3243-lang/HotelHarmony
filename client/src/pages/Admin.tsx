@@ -398,9 +398,10 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
+            <TabsTrigger value="walkin">Walk-in</TabsTrigger>
             <TabsTrigger value="chat">Tin nhắn</TabsTrigger>
             <TabsTrigger value="rooms">Phòng</TabsTrigger>
             <TabsTrigger value="services">Dịch vụ</TabsTrigger>
@@ -931,6 +932,52 @@ export default function Admin() {
                 )}
               </div>
             </div>
+          </TabsContent>
+
+          {/* Walk-in Tab */}
+          <TabsContent value="walkin" className="mt-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-2">Đặt phòng Walk-in</h2>
+              <p className="text-muted-foreground">
+                Xử lý đặt phòng cho khách hàng đến trực tiếp tại khách sạn
+              </p>
+            </div>
+
+            <Card>
+              <CardContent className="p-8">
+                <div className="text-center space-y-6">
+                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="w-8 h-8 text-blue-600" />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Bắt đầu đặt phòng Walk-in</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Nhấn nút bên dưới để bắt đầu quy trình đặt phòng cho khách hàng đến trực tiếp
+                    </p>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-2">Quy trình Walk-in:</h4>
+                    <div className="text-sm text-blue-700 space-y-1">
+                      <p>1. 📋 Nhập thông tin khách hàng</p>
+                      <p>2. 🏨 Chọn phòng trống phù hợp</p>
+                      <p>3. 💳 Thu tiền và xác nhận (100% thanh toán)</p>
+                      <p>4. ✅ Khách nhận phòng ngay</p>
+                    </div>
+                  </div>
+
+                  <Button 
+                    size="lg" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => window.open('/walkin-booking', '_blank')}
+                  >
+                    <Users className="mr-2" size={20} />
+                    Bắt đầu đặt phòng Walk-in
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Rooms Tab */}

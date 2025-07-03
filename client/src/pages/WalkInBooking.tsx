@@ -267,9 +267,9 @@ export default function WalkInBooking() {
           <Card className="shadow-lg">
             <CardContent className="p-8">
               <div className="text-center">
-                <h1 className="text-3xl font-bold mb-2">Đặt Phòng Trực Tiếp</h1>
+                <h1 className="text-3xl font-bold mb-2">Đặt Phòng Walk-in</h1>
                 <p className="text-muted-foreground">
-                  Xử lý đặt phòng cho khách hàng đến trực tiếp tại khách sạn
+                  👨‍💼 Nhân viên lễ tân đặt phòng cho khách hàng đến trực tiếp
                 </p>
               </div>
             </CardContent>
@@ -324,6 +324,11 @@ export default function WalkInBooking() {
                   <UserPlus className="mr-2" size={20} />
                   Thông tin khách hàng
                 </CardTitle>
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    📋 <strong>Hướng dẫn:</strong> Nhân viên lễ tân nhập thông tin khách hàng đến trực tiếp
+                  </p>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Email check */}
@@ -431,6 +436,11 @@ export default function WalkInBooking() {
                   <Calendar className="mr-2" size={20} />
                   Chi tiết đặt phòng
                 </CardTitle>
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    🏨 <strong>Quy trình:</strong> Nhân viên chọn phòng trống phù hợp với yêu cầu của khách
+                  </p>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4">
@@ -665,6 +675,11 @@ export default function WalkInBooking() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Chọn phương thức thanh toán</DialogTitle>
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  💳 <strong>Bước cuối:</strong> Nhân viên thu tiền từ khách và xác nhận thanh toán
+                </p>
+              </div>
             </DialogHeader>
             
             {createdBooking && (
