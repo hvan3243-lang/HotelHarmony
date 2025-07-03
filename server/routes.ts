@@ -916,6 +916,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Walk-in booking APIs
+  app.get("/api/customers/check", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.query;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      const customer = await storage.getUserByEmail(email as string);
+      res.json({
+        exists: !!customer,
+        customer: customer || null
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Lỗi kiểm tra khách hàng: " + error.message });
+    }
+  });
+
+  app.post("/api/customers/walkin", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const hashedPassword = await bcrypt.hash("123456", 10); // Default password
+      const userData = insertUserSchema.parse({
+        ...req.body,
+        password: hashedPassword,
+        role: "customer"
+      });
+      const user = await storage.createUser(userData);
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi tạo khách hàng: " + error.message });
+    }
+  });
+
+  app.post("/api/bookings/walkin", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { customerId, ...bookingData } = req.body;
+      const booking = await storage.createBooking({
+        ...bookingData,
+        userId: customerId,
+        status: "pending"
+      });
+      res.json(booking);
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi tạo đặt phòng: " + error.message });
+    }
+  });
+
+  app.post("/api/walkin-payment", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { bookingId, paymentMethod, paymentType, amount } = req.body;
+      
+      const status = paymentType === 'full' ? 'confirmed' : 'deposit_paid';
+      
+      const booking = await storage.updateBooking(bookingId, {
+        status,
+        paymentMethod
+      });
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Không tìm thấy đặt phòng" });
+      }
+      
+      res.json({ 
+        message: paymentType === 'full' ? "Thanh toán đầy đủ thành công" : "Đặt cọc thành công",
+        booking 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi xử lý thanh toán: " + error.message });
+    }
+  });
+
+  app.post("/api/checkin-payment", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { bookingId, paymentMethod } = req.body;
+      
+      const booking = await storage.updateBooking(bookingId, {
+        status: 'confirmed',
+        paymentMethod: paymentMethod
+      });
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Không tìm thấy đặt phòng" });
+      }
+      
+      res.json({ 
+        message: "Check-in thành công",
+        booking 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: "Lỗi check-in: " + error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server cho thông báo admin

@@ -15,6 +15,8 @@ import Checkout from "@/pages/Checkout";
 import PaymentMethod from "@/pages/PaymentMethod";
 import Contact from "@/pages/Contact";
 import Blog from "@/pages/Blog";
+import WalkInBooking from "@/pages/WalkInBooking";
+import CheckIn from "@/pages/CheckIn";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +31,8 @@ function Router() {
       <Route path="/payment" component={PaymentMethod} />
       <Route path="/contact" component={Contact} />
       <Route path="/blog" component={Blog} />
+      <Route path="/walkin" component={WalkInBooking} />
+      <Route path="/checkin" component={CheckIn} />
       <Route component={NotFound} />
     </Switch>
   );
