@@ -461,10 +461,13 @@ export default function PaymentMethod() {
                         <div className="space-y-3">
                           <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border border-red-200 dark:border-red-800">
                             <p className="text-red-800 dark:text-red-200 font-medium">
-                              Chuyển khoản: <span className="font-bold">{bookingData.totalPrice?.toLocaleString('vi-VN')} VNĐ</span>
+                              Chuyển khoản: <span className="font-bold">{Math.round(parseFloat(bookingData.totalPrice) * 0.3).toLocaleString('vi-VN')} VNĐ</span>
                             </p>
                             <p className="text-red-700 dark:text-red-300 text-sm">
                               Tài khoản: DANG VAN HOANG - 0389597728
+                            </p>
+                            <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                              (Đặt cọc 30% - còn lại 70% thanh toán khi check-in)
                             </p>
                           </div>
                           <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
