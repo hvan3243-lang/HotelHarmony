@@ -57,6 +57,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
 import type { Room, Service, BlogPost } from '@shared/schema';
+import { AdminContactMessages } from '@/components/AdminContactMessages';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
@@ -412,11 +413,12 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="bookings">Đặt phòng</TabsTrigger>
             <TabsTrigger value="walkin">Walk-in</TabsTrigger>
             <TabsTrigger value="chat">Tin nhắn</TabsTrigger>
+            <TabsTrigger value="contact">Liên hệ</TabsTrigger>
             <TabsTrigger value="rooms">Phòng</TabsTrigger>
             <TabsTrigger value="services">Dịch vụ</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
@@ -1074,6 +1076,11 @@ export default function Admin() {
                 )}
               </div>
             </div>
+          </TabsContent>
+
+          {/* Contact Messages Tab */}
+          <TabsContent value="contact" className="mt-6">
+            <AdminContactMessages />
           </TabsContent>
 
           {/* Walk-in Tab */}

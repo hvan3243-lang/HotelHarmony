@@ -48,23 +48,41 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Tin nhắn đã được gửi!",
+          description: "Chúng tôi sẽ phản hồi bạn trong vòng 24 giờ.",
+        });
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          category: "",
+          message: "",
+          preferredContact: "email"
+        });
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
       toast({
-        title: "Tin nhắn đã được gửi!",
-        description: "Chúng tôi sẽ phản hồi bạn trong vòng 24 giờ.",
+        title: "Lỗi gửi tin nhắn",
+        description: "Vui lòng thử lại sau hoặc liên hệ trực tiếp qua điện thoại.",
+        variant: "destructive",
       });
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        category: "",
-        message: "",
-        preferredContact: "email"
-      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   const contactInfo = [

@@ -1052,6 +1052,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contact Messages API
+  app.post("/api/contact", async (req: Request, res: Response) => {
+    try {
+      const contactData = req.body;
+      const message = await storage.createContactMessage(contactData);
+      res.json(message);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating contact message: " + error.message });
+    }
+  });
+
+  app.get("/api/admin/contact-messages", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const messages = await storage.getContactMessages();
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching contact messages: " + error.message });
+    }
+  });
+
+  app.get("/api/admin/contact-messages/:id", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const message = await storage.getContactMessage(parseInt(req.params.id));
+      if (!message) {
+        return res.status(404).json({ message: "Contact message not found" });
+      }
+      res.json(message);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching contact message: " + error.message });
+    }
+  });
+
+  app.post("/api/admin/contact-messages/:id/respond", authenticateToken, requireAdmin, async (req: any, res: Response) => {
+    try {
+      const { response } = req.body;
+      const messageId = parseInt(req.params.id);
+      const adminId = req.user.id;
+
+      const updatedMessage = await storage.respondToContactMessage(messageId, response, adminId);
+      res.json(updatedMessage);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error responding to contact message: " + error.message });
+    }
+  });
+
+  app.put("/api/admin/contact-messages/:id/status", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { status } = req.body;
+      const messageId = parseInt(req.params.id);
+      
+      const updatedMessage = await storage.updateContactMessage(messageId, { status });
+      res.json(updatedMessage);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error updating contact message status: " + error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server cho thông báo admin

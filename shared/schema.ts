@@ -113,6 +113,22 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  category: varchar("category", { length: 50 }).notNull(),
+  subject: varchar("subject", { length: 255 }),
+  message: text("message").notNull(),
+  preferredContact: varchar("preferred_contact", { length: 20 }).default("email"),
+  status: varchar("status", { length: 20 }).default("pending"), // pending, responded, closed
+  adminResponse: text("admin_response"),
+  respondedBy: integer("responded_by").references(() => users.id),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const blogPosts = pgTable("blog_posts", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -215,6 +231,16 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   isFromAdmin: true,
 });
 
+export const insertContactMessageSchema = createInsertSchema(contactMessages).pick({
+  name: true,
+  email: true,
+  phone: true,
+  category: true,
+  subject: true,
+  message: true,
+  preferredContact: true,
+});
+
 export const insertBlogPostSchema = createInsertSchema(blogPosts).pick({
   title: true,
   slug: true,
@@ -246,6 +272,8 @@ export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Employee = typeof employees.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
 

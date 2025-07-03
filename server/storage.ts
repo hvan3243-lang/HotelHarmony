@@ -1,11 +1,12 @@
 import { 
-  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts,
+  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts, contactMessages,
   type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
   type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
-  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost
+  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost,
+  type ContactMessage, type InsertContactMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, or, sql, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, or, sql, inArray, desc } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -71,6 +72,13 @@ export interface IStorage {
 
   // Advanced search
   searchRooms(filters: any): Promise<any[]>;
+
+  // Contact messages
+  getContactMessages(): Promise<any[]>;
+  getContactMessage(id: number): Promise<any>;
+  createContactMessage(message: any): Promise<any>;
+  updateContactMessage(id: number, updates: any): Promise<any>;
+  respondToContactMessage(id: number, response: string, adminId: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -478,6 +486,96 @@ export class DatabaseStorage implements IStorage {
   async deleteBlogPost(id: number): Promise<boolean> {
     const result = await db.delete(blogPosts).where(eq(blogPosts.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  // Contact Messages Methods
+  async getContactMessages(): Promise<any[]> {
+    const messages = await db
+      .select({
+        id: contactMessages.id,
+        name: contactMessages.name,
+        email: contactMessages.email,
+        phone: contactMessages.phone,
+        category: contactMessages.category,
+        subject: contactMessages.subject,
+        message: contactMessages.message,
+        preferredContact: contactMessages.preferredContact,
+        status: contactMessages.status,
+        adminResponse: contactMessages.adminResponse,
+        respondedBy: contactMessages.respondedBy,
+        respondedAt: contactMessages.respondedAt,
+        createdAt: contactMessages.createdAt,
+        respondedByUser: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(contactMessages)
+      .leftJoin(users, eq(contactMessages.respondedBy, users.id))
+      .orderBy(desc(contactMessages.createdAt));
+    
+    return messages;
+  }
+
+  async getContactMessage(id: number): Promise<any> {
+    const [message] = await db
+      .select({
+        id: contactMessages.id,
+        name: contactMessages.name,
+        email: contactMessages.email,
+        phone: contactMessages.phone,
+        category: contactMessages.category,
+        subject: contactMessages.subject,
+        message: contactMessages.message,
+        preferredContact: contactMessages.preferredContact,
+        status: contactMessages.status,
+        adminResponse: contactMessages.adminResponse,
+        respondedBy: contactMessages.respondedBy,
+        respondedAt: contactMessages.respondedAt,
+        createdAt: contactMessages.createdAt,
+        respondedByUser: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        }
+      })
+      .from(contactMessages)
+      .leftJoin(users, eq(contactMessages.respondedBy, users.id))
+      .where(eq(contactMessages.id, id));
+    
+    return message;
+  }
+
+  async createContactMessage(insertMessage: any): Promise<any> {
+    const [message] = await db
+      .insert(contactMessages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+
+  async updateContactMessage(id: number, updates: any): Promise<any> {
+    const [message] = await db
+      .update(contactMessages)
+      .set(updates)
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return message;
+  }
+
+  async respondToContactMessage(id: number, response: string, adminId: number): Promise<any> {
+    const [message] = await db
+      .update(contactMessages)
+      .set({
+        adminResponse: response,
+        respondedBy: adminId,
+        respondedAt: new Date(),
+        status: 'responded'
+      })
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return message;
   }
 }
 
