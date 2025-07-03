@@ -142,12 +142,31 @@ export default function WalkInBooking() {
       if (customerExists) {
         customerId = customerExists.id;
       } else {
-        const customerResponse = await apiRequest("POST", "/api/customers/walkin", {
-          ...customerForm,
-          role: "customer"
-        });
-        const customer = await customerResponse.json();
-        customerId = customer.id;
+        // Check if customer exists first
+        const checkResponse = await apiRequest("GET", `/api/customers/check?email=${customerForm.email}`);
+        const checkResult = await checkResponse.json();
+        
+        if (checkResult.exists) {
+          customerId = checkResult.customer.id;
+        } else {
+          try {
+            const customerResponse = await apiRequest("POST", "/api/customers/walkin", {
+              ...customerForm,
+              role: "customer"
+            });
+            const customer = await customerResponse.json();
+            customerId = customer.id;
+          } catch (createError: any) {
+            // If creation fails due to duplicate, try to get existing customer
+            const fallbackResponse = await apiRequest("GET", `/api/customers/check?email=${customerForm.email}`);
+            const fallbackResult = await fallbackResponse.json();
+            if (fallbackResult.exists) {
+              customerId = fallbackResult.customer.id;
+            } else {
+              throw createError;
+            }
+          }
+        }
       }
 
       // Then create booking

@@ -936,6 +936,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers/walkin", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
+      // Check if customer already exists
+      const existingCustomer = await storage.getUserByEmail(req.body.email);
+      if (existingCustomer) {
+        const { password, ...customerWithoutPassword } = existingCustomer;
+        return res.json(customerWithoutPassword);
+      }
+
       const hashedPassword = await bcrypt.hash("123456", 10); // Default password
       const userData = insertUserSchema.parse({
         ...req.body,
@@ -952,12 +959,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bookings/walkin", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const { customerId, ...bookingData } = req.body;
+      const { customerId, checkIn, checkOut, ...bookingData } = req.body;
+      
       const booking = await storage.createBooking({
         ...bookingData,
         userId: customerId,
+        checkIn: new Date(checkIn),
+        checkOut: new Date(checkOut),
         status: "pending"
       });
+      
       res.json(booking);
     } catch (error: any) {
       res.status(400).json({ message: "Lỗi tạo đặt phòng: " + error.message });
