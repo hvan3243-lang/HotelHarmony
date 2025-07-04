@@ -146,6 +146,8 @@ export interface Translations {
       suite: string;
       presidential: string;
     };
+    featured: string;
+    featuredDescription: string;
   };
 
   // Reviews
@@ -249,7 +251,6 @@ export interface Translations {
     rewards: string;
     personalInfo: string;
     contactInfo: string;
-    updateProfile: string;
     changePassword: string;
     notifications: string;
     privacy: string;
@@ -258,6 +259,9 @@ export interface Translations {
     memberSince: string;
     vipStatus: string;
     recommendations: string;
+    vip: string;
+    editProfile: string;
+    updateProfile: string;
   };
 
   // Contact
@@ -432,6 +436,8 @@ const vi: Translations = {
       suite: "Suite",
       presidential: "Tổng thống",
     },
+    featured: "Phòng nổi bật",
+    featuredDescription: "Khám phá những phòng nghỉ sang trọng nhất của chúng tôi",
   },
 
   reviews: {
@@ -531,13 +537,15 @@ const vi: Translations = {
     rewards: "Phần thưởng",
     personalInfo: "Thông tin cá nhân",
     contactInfo: "Thông tin liên hệ",
-    updateProfile: "Cập nhật hồ sơ",
     changePassword: "Đổi mật khẩu",
     notifications: "Thông báo",
     privacy: "Quyền riêng tư",
-    totalBookings: "Tổng đặt phòng",
-    completedStays: "Lần nghỉ dưỡng",
+    totalBookings: "đặt phòng",
+    completedStays: "lần lưu trú",
     memberSince: "Tham gia",
+    vip: "Khách hàng VIP",
+    editProfile: "Chỉnh sửa thông tin",
+    updateProfile: "Cập nhật thông tin cá nhân",
     vipStatus: "Trạng thái VIP",
     recommendations: "Gợi ý",
   },
@@ -711,6 +719,8 @@ const en: Translations = {
       suite: "Suite",
       presidential: "Presidential",
     },
+    featured: "Featured Rooms",
+    featuredDescription: "Discover our most luxurious accommodations",
   },
 
   reviews: {
@@ -810,15 +820,17 @@ const en: Translations = {
     rewards: "Rewards",
     personalInfo: "Personal Information",
     contactInfo: "Contact Information",
-    updateProfile: "Update Profile",
     changePassword: "Change Password",
     notifications: "Notifications",
     privacy: "Privacy",
-    totalBookings: "Total Bookings",
-    completedStays: "Completed Stays",
+    totalBookings: "bookings",
+    completedStays: "stays",
     memberSince: "Member Since",
     vipStatus: "VIP Status",
     recommendations: "Recommendations",
+    vip: "VIP Customer",
+    editProfile: "Edit Profile",
+    updateProfile: "Update Personal Information",
   },
 
   contact: {

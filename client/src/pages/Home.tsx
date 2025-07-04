@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [searchData, setSearchData] = useState({
     checkIn: "",
     checkOut: "",
@@ -99,10 +101,10 @@ export default function Home() {
           className="relative z-10 text-center px-4 max-w-4xl mx-auto"
         >
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-float">
-            Chào mừng đến với <span className="text-gradient-3 animate-glow">HotelLux</span>
+            {t('auth.welcomeMessage')} <span className="text-gradient-3 animate-glow">HotelLux</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-white/90 font-medium">
-            Trải nghiệm nghỉ dưỡng đẳng cấp với dịch vụ hoàn hảo
+            {t('nav.home')} - {t('rooms.title')}
           </p>
           
           {/* Search Box */}
@@ -114,7 +116,7 @@ export default function Home() {
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div className="text-left">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ngày nhận phòng</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('booking.checkIn')}</label>
                 <input
                   type="date"
                   value={searchData.checkIn}
@@ -123,7 +125,7 @@ export default function Home() {
                 />
               </div>
               <div className="text-left">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ngày trả phòng</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('booking.checkOut')}</label>
                 <input
                   type="date"
                   value={searchData.checkOut}
@@ -132,23 +134,23 @@ export default function Home() {
                 />
               </div>
               <div className="text-left">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Số khách</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('booking.guests')}</label>
                 <select
                   value={searchData.guests}
                   onChange={(e) => setSearchData({...searchData, guests: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
-                  <option value="1">1 khách</option>
-                  <option value="2">2 khách</option>
-                  <option value="3">3 khách</option>
-                  <option value="4">4 khách</option>
-                  <option value="5">5+ khách</option>
+                  <option value="1">1 {t('booking.guest')}</option>
+                  <option value="2">2 {t('booking.guest')}</option>
+                  <option value="3">3 {t('booking.guest')}</option>
+                  <option value="4">4 {t('booking.guest')}</option>
+                  <option value="5">5+ {t('booking.guest')}</option>
                 </select>
               </div>
               <Link href="/booking">
                 <Button size="lg" className="w-full btn-primary hover-glow">
                   <Search className="mr-2" size={20} />
-                  Tìm phòng
+                  {t('booking.searchRooms')}
                 </Button>
               </Link>
             </div>
@@ -165,8 +167,8 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4">Phòng nổi bật</h2>
-            <p className="text-xl text-muted-foreground">Khám phá những phòng nghỉ sang trọng nhất của chúng tôi</p>
+            <h2 className="text-4xl font-bold mb-4">{t('rooms.featured')}</h2>
+            <p className="text-xl text-muted-foreground">{t('rooms.featuredDescription')}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

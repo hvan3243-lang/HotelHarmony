@@ -17,8 +17,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useRouter } from "wouter";
 import { User as UserType, Booking, Room } from "@shared/schema";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Customer() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -136,11 +138,11 @@ export default function Customer() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
-      pending: { variant: "outline", label: "Đang chờ" },
-      deposit_paid: { variant: "secondary", label: "Đã đặt cọc" },
-      confirmed: { variant: "default", label: "Đã xác nhận" },
-      completed: { variant: "default", label: "Đã hoàn thành" },
-      cancelled: { variant: "destructive", label: "Đã hủy" },
+      pending: { variant: "outline", label: t('booking.status.pending') },
+      deposit_paid: { variant: "secondary", label: t('booking.status.deposit_paid') },
+      confirmed: { variant: "default", label: t('booking.status.confirmed') },
+      completed: { variant: "default", label: t('booking.status.completed') },
+      cancelled: { variant: "destructive", label: t('booking.status.cancelled') },
     };
     return variants[status] || { variant: "secondary", label: status };
   };
@@ -214,11 +216,11 @@ export default function Customer() {
                       {user.isVip && (
                         <Badge className="bg-amber-100 text-amber-800 border-amber-200">
                           <Crown size={14} className="mr-1" />
-                          Khách hàng VIP
+                          {t('customer.vip')}
                         </Badge>
                       )}
                       <Badge variant="secondary">
-                        {totalBookings} đặt phòng
+                        {totalBookings} {t('customer.totalBookings')}
                       </Badge>
                     </div>
                   </div>
@@ -227,12 +229,12 @@ export default function Customer() {
                   <DialogTrigger asChild>
                     <Button>
                       <Edit size={16} className="mr-2" />
-                      Chỉnh sửa thông tin
+                      {t('customer.editProfile')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Cập nhật thông tin cá nhân</DialogTitle>
+                      <DialogTitle>{t('customer.updateProfile')}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
