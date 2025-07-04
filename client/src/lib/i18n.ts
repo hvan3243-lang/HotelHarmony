@@ -46,6 +46,16 @@ export interface Translations {
     fullKitchen: string;
     balcony: string;
     service24h: string;
+    wifiDesc: string;
+    parking: string;
+    parkingDesc: string;
+    restaurant: string;
+    restaurantDesc: string;
+    concierge: string;
+    conciergeDesc: string;
+    bookToday: string;
+    specialOffer: string;
+    discountUpTo: string;
   };
 
   // Navigation
@@ -349,6 +359,16 @@ const vi: Translations = {
     fullKitchen: "Bếp đầy đủ",
     balcony: "Ban công rộng",
     service24h: "Dịch vụ 24/7",
+    wifiDesc: "Internet tốc độ cao trong toàn bộ khách sạn",
+    parking: "Đỗ xe miễn phí",
+    parkingDesc: "Bãi đỗ xe an toàn và rộng rãi",
+    restaurant: "Nhà hàng 5 sao",
+    restaurantDesc: "Ẩm thực đa dạng phục vụ 24/7",
+    concierge: "Dịch vụ concierge",
+    conciergeDesc: "Hỗ trợ khách hàng chuyên nghiệp",
+    bookToday: "Đặt phòng ngay hôm nay",
+    specialOffer: "Nhận ưu đãi đặc biệt khi đặt phòng trực tiếp qua website",
+    discountUpTo: "Giảm giá lên đến",
   },
 
   nav: {
@@ -642,6 +662,16 @@ const en: Translations = {
     fullKitchen: "Full Kitchen",
     balcony: "Large Balcony",
     service24h: "24/7 Service",
+    wifiDesc: "High-speed internet throughout the hotel",
+    parking: "Free Parking",
+    parkingDesc: "Safe and spacious parking area",
+    restaurant: "5-Star Restaurant",
+    restaurantDesc: "Diverse cuisine served 24/7",
+    concierge: "Concierge Service",
+    conciergeDesc: "Professional customer support",
+    bookToday: "Book Today",
+    specialOffer: "Get special offers when booking directly through our website",
+    discountUpTo: "Discount up to",
   },
 
   nav: {

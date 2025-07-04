@@ -63,23 +63,23 @@ export default function Home() {
   const services = [
     {
       icon: Wifi,
-      title: "Wifi miễn phí",
-      description: "Internet tốc độ cao trong toàn bộ khách sạn"
+      title: t('common.wifi'),
+      description: t('common.wifiDesc')
     },
     {
       icon: Car,
-      title: "Đỗ xe miễn phí",
-      description: "Bãi đỗ xe an toàn và rộng rãi"
+      title: t('common.parking'),
+      description: t('common.parkingDesc')
     },
     {
       icon: Coffee,
-      title: "Nhà hàng 5 sao",
-      description: "Ẩm thực đa dạng phục vụ 24/7"
+      title: t('common.restaurant'),
+      description: t('common.restaurantDesc')
     },
     {
       icon: Users,
-      title: "Dịch vụ concierge",
-      description: "Hỗ trợ khách hàng chuyên nghiệp"
+      title: t('common.concierge'),
+      description: t('common.conciergeDesc')
     }
   ];
 
@@ -208,7 +208,7 @@ export default function Home() {
                       </div>
                       <Link href="/booking">
                         <Button className="btn-secondary hover-glow group-hover:shadow-lg transition-all">
-                          Đặt ngay
+                          {t('booking.bookNow')}
                           <ChevronRight className="ml-1" size={16} />
                         </Button>
                       </Link>
@@ -309,13 +309,13 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="gradient-bg-1 rounded-2xl p-8 text-white glass hover-glow"
             >
-              <h3 className="text-2xl font-bold mb-4 animate-fadeInUp">Đặt phòng ngay hôm nay</h3>
+              <h3 className="text-2xl font-bold mb-4 animate-fadeInUp">{t('common.bookToday')}</h3>
               <p className="mb-6 text-white/90">
-                Nhận ưu đãi đặc biệt khi đặt phòng trực tiếp qua website
+                {t('common.specialOffer')}
               </p>
               <div className="space-y-4">
                 <div className="flex items-center justify-between animate-slideInLeft">
-                  <span>Giảm giá lên đến:</span>
+                  <span>{t('common.discountUpTo')}:</span>
                   <span className="text-2xl font-bold text-yellow-300 animate-glow">20%</span>
                 </div>
                 <div className="flex items-center justify-between animate-slideInLeft">
@@ -329,7 +329,7 @@ export default function Home() {
                 <Link href="/booking">
                   <Button className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold mt-4 btn-glow hover-scale">
                     <Calendar className="mr-2" size={20} />
-                    Đặt phòng ngay
+                    {t('booking.bookNow')}
                   </Button>
                 </Link>
               </div>
