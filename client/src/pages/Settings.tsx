@@ -19,7 +19,7 @@ import {
   Star
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTranslation, useLanguageStore, type Language } from "@/lib/i18n";
+import { useTranslation, useLanguageStore } from "@/lib/i18n";
 import { useTheme } from "@/components/ThemeProvider";
 import { authManager } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -33,14 +33,14 @@ interface UserSettings {
   lastName: string;
   phone: string;
   preferences: string[];
-  language: Language;
+  language: string;
   emailNotifications: boolean;
   pushNotifications: boolean;
   marketingEmails: boolean;
 }
 
 export default function Settings() {
-  const { t, language } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const { setLanguage } = useLanguageStore();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
@@ -52,7 +52,7 @@ export default function Settings() {
     lastName: "",
     phone: "",
     preferences: [],
-    language: language,
+    language: currentLanguage,
     emailNotifications: true,
     pushNotifications: true,
     marketingEmails: false,
@@ -67,7 +67,7 @@ export default function Settings() {
         lastName: currentUser.lastName,
         phone: currentUser.phone || "",
         preferences: currentUser.preferences || [],
-        language: (currentUser.language as Language) || language,
+        language: currentLanguage,
         emailNotifications: true,
         pushNotifications: true,
         marketingEmails: false,
@@ -102,7 +102,7 @@ export default function Settings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleLanguageChange = (newLanguage: Language) => {
+  const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     handleSettingChange("language", newLanguage);
   };

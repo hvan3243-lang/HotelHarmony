@@ -931,6 +931,7 @@ export const useLanguageStore = create<LanguageStore>()(
     {
       name: 'hotellux-language',
       version: 1,
+      partialize: (state) => ({ currentLanguage: state.currentLanguage }),
     }
   )
 );
