@@ -6,17 +6,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
-import { useLanguageStore, type Language } from "@/lib/i18n";
-
-const languages = [
-  { code: 'vi' as Language, name: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'en' as Language, name: 'English', flag: '🇺🇸' },
-];
+import { useLanguageStore, languages } from "@/lib/i18n";
 
 export function LanguageSwitcher() {
-  const { language, setLanguage } = useLanguageStore();
+  const { currentLanguage, setLanguage } = useLanguageStore();
 
-  const currentLanguage = languages.find(lang => lang.code === language);
+  const currentLang = languages.find(lang => lang.code === currentLanguage);
 
   return (
     <DropdownMenu>
@@ -31,11 +26,11 @@ export function LanguageSwitcher() {
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className={`cursor-pointer ${language === lang.code ? 'bg-accent' : ''}`}
+            className={`cursor-pointer ${currentLanguage === lang.code ? 'bg-accent' : ''}`}
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.name}
-            {language === lang.code && (
+            {currentLanguage === lang.code && (
               <span className="ml-auto text-xs text-muted-foreground">✓</span>
             )}
           </DropdownMenuItem>

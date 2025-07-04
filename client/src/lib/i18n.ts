@@ -894,8 +894,12 @@ export const useLanguageStore = create<LanguageStore>()(
       currentLanguage: "vi", // Default to Vietnamese
       
       setLanguage: (language: string) => {
+        console.log('Setting language to:', language);
         if (languages.find(l => l.code === language)) {
           set({ currentLanguage: language });
+          console.log('Language set successfully to:', language);
+        } else {
+          console.log('Language not found:', language);
         }
       },
 
@@ -903,7 +907,10 @@ export const useLanguageStore = create<LanguageStore>()(
         const { currentLanguage } = get();
         const translation = translations[currentLanguage];
         
-        if (!translation) return key;
+        if (!translation) {
+          console.log('Translation not found for language:', currentLanguage);
+          return key;
+        }
         
         // Navigate through nested object using dot notation
         const keys = key.split('.');
@@ -913,6 +920,7 @@ export const useLanguageStore = create<LanguageStore>()(
           if (value && typeof value === 'object' && k in value) {
             value = value[k];
           } else {
+            console.log('Translation key not found:', key, 'for language:', currentLanguage);
             return key; // Return key if translation not found
           }
         }
