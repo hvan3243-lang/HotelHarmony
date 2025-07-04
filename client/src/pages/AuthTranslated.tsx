@@ -16,22 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
 
-// Schema functions that use translation
-const createLoginSchema = (t: (key: string) => string) => z.object({
-  email: z.string().email(t('auth.invalidEmail')),
-  password: z.string().min(6, t('auth.passwordRequired')),
-  rememberMe: z.boolean().optional(),
-});
-
-const createRegisterSchema = (t: (key: string) => string) => z.object({
-  firstName: z.string().min(1, t('auth.nameRequired')),
-  lastName: z.string().min(1, t('auth.nameRequired')),
-  email: z.string().email(t('auth.invalidEmail')),
-  phone: z.string().min(10, t('auth.phoneRequired')),
-  password: z.string().min(6, t('auth.passwordRequired')),
-  preferences: z.array(z.string()).optional(),
-});
-
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,8 +25,20 @@ export default function Auth() {
   const { t } = useTranslation();
 
   // Create schemas with translations
-  const loginSchema = createLoginSchema(t);
-  const registerSchema = createRegisterSchema(t);
+  const loginSchema = z.object({
+    email: z.string().email(t('auth.invalidEmail')),
+    password: z.string().min(6, t('auth.passwordRequired')),
+    rememberMe: z.boolean().optional(),
+  });
+
+  const registerSchema = z.object({
+    firstName: z.string().min(1, t('auth.nameRequired')),
+    lastName: z.string().min(1, t('auth.nameRequired')),
+    email: z.string().email(t('auth.invalidEmail')),
+    phone: z.string().min(10, t('auth.phoneRequired')),
+    password: z.string().min(6, t('auth.passwordRequired')),
+    preferences: z.array(z.string()).optional(),
+  });
 
   type LoginForm = z.infer<typeof loginSchema>;
   type RegisterForm = z.infer<typeof registerSchema>;
@@ -69,10 +65,10 @@ export default function Auth() {
   });
 
   const preferences = [
-    "view biển",
-    "view núi", 
+    t('rooms.roomType.deluxe'),
+    t('rooms.amenities'), 
     "spa & wellness",
-    "sang trọng",
+    t('rooms.roomType.suite'),
   ];
 
   const handleLogin = async (data: LoginForm) => {
@@ -84,8 +80,8 @@ export default function Auth() {
       authManager.login(result.user, result.token);
       
       toast({
-        title: "Đăng nhập thành công",
-        description: `Chào mừng ${result.user.firstName}!`,
+        title: t('auth.loginSuccess'),
+        description: `${t('auth.welcomeMessage')} ${result.user.firstName}!`,
       });
 
       // Redirect based on user role
@@ -96,8 +92,8 @@ export default function Auth() {
       }
     } catch (error: any) {
       toast({
-        title: "Đăng nhập thất bại",
-        description: error.message || "Email hoặc mật khẩu không đúng",
+        title: t('auth.loginFailed'),
+        description: error.message || t('auth.invalidCredentials'),
         variant: "destructive",
       });
     } finally {
@@ -114,15 +110,15 @@ export default function Auth() {
       authManager.login(result.user, result.token);
       
       toast({
-        title: "Đăng ký thành công",
-        description: "Chào mừng bạn đến với HotelLux!",
+        title: t('auth.registerSuccess'),
+        description: t('auth.welcomeMessage'),
       });
 
       setLocation("/");
     } catch (error: any) {
       toast({
-        title: "Đăng ký thất bại",
-        description: error.message || "Có lỗi xảy ra khi đăng ký",
+        title: t('auth.registerFailed'),
+        description: error.message || t('auth.emailExists'),
         variant: "destructive",
       });
     } finally {
@@ -131,24 +127,27 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <Card className="shadow-2xl">
-          <CardHeader className="text-center pb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                <Hotel className="text-primary-foreground" size={32} />
-              </div>
-            </div>
-            <CardTitle className="text-3xl font-bold text-primary">
-              HotelLux
+        <Card className="glass border-primary/20 shadow-2xl">
+          <CardHeader className="text-center pb-4">
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="flex items-center justify-center mb-4"
+            >
+              <Hotel size={40} className="text-primary mr-3 animate-float" />
+              <h1 className="text-3xl font-bold text-gradient">HotelLux</h1>
+            </motion.div>
+            <CardTitle className="text-xl font-semibold">
+              {isLogin ? t('auth.login') : t('auth.register')}
             </CardTitle>
-            <p className="text-muted-foreground">
-              {isLogin ? "Đăng nhập để tiếp tục" : "Tạo tài khoản mới"}
+            <p className="text-muted-foreground text-sm bg-primary/5 px-4 py-2 rounded">
+              {isLogin ? t('auth.loginToContinue') : t('auth.createAccount')}
             </p>
           </CardHeader>
 
@@ -164,7 +163,7 @@ export default function Auth() {
                 >
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t('auth.email')}</Label>
                       <Input
                         id="email"
                         type="email"
@@ -179,7 +178,7 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <Label htmlFor="password">Mật khẩu</Label>
+                      <Label htmlFor="password">{t('auth.password')}</Label>
                       <div className="relative">
                         <Input
                           id="password"
@@ -190,11 +189,15 @@ export default function Auth() {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                       {loginForm.formState.errors.password && (
@@ -211,11 +214,11 @@ export default function Auth() {
                           {...loginForm.register("rememberMe")}
                         />
                         <Label htmlFor="rememberMe" className="text-sm">
-                          Ghi nhớ đăng nhập
+                          {t('auth.rememberMe')}
                         </Label>
                       </div>
                       <Button variant="link" className="p-0 h-auto text-sm">
-                        Quên mật khẩu?
+                        {t('auth.forgotPassword')}
                       </Button>
                     </div>
 
@@ -225,22 +228,18 @@ export default function Auth() {
                       ) : (
                         <LogIn className="mr-2" size={16} />
                       )}
-                      Đăng nhập
+                      {t('auth.login')}
                     </Button>
                   </form>
 
                   <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-background text-muted-foreground">
-                        Hoặc
-                      </span>
+                    <Separator />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="bg-background px-2 text-muted-foreground text-sm">hoặc</span>
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full" disabled>
+                  <Button variant="outline" className="w-full">
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                       <path
                         fill="currentColor"
@@ -263,13 +262,13 @@ export default function Auth() {
                   </Button>
 
                   <div className="text-center">
-                    <span className="text-muted-foreground">Chưa có tài khoản? </span>
+                    <span className="text-muted-foreground">{t('auth.noAccount')} </span>
                     <Button
                       variant="link"
                       className="p-0 h-auto font-medium"
                       onClick={() => setIsLogin(false)}
                     >
-                      Đăng ký ngay
+                      {t('auth.register')}
                     </Button>
                   </div>
                 </motion.div>
@@ -284,7 +283,7 @@ export default function Auth() {
                   <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="firstName">Họ</Label>
+                        <Label htmlFor="firstName">{t('auth.firstName')}</Label>
                         <Input
                           id="firstName"
                           placeholder="Nguyễn"
@@ -297,7 +296,7 @@ export default function Auth() {
                         )}
                       </div>
                       <div>
-                        <Label htmlFor="lastName">Tên</Label>
+                        <Label htmlFor="lastName">{t('auth.lastName')}</Label>
                         <Input
                           id="lastName"
                           placeholder="Văn A"
@@ -312,11 +311,11 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t('auth.email')}</Label>
                       <Input
                         id="email"
                         type="email"
-                        placeholder="example@email.com"
+                        placeholder="user@example.com"
                         {...registerForm.register("email")}
                       />
                       {registerForm.formState.errors.email && (
@@ -327,11 +326,11 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <Label htmlFor="phone">Số điện thoại</Label>
+                      <Label htmlFor="phone">{t('auth.phone')}</Label>
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="0123456789"
+                        placeholder="+84 123 456 789"
                         {...registerForm.register("phone")}
                       />
                       {registerForm.formState.errors.phone && (
@@ -342,7 +341,7 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <Label htmlFor="password">Mật khẩu</Label>
+                      <Label htmlFor="password">{t('auth.password')}</Label>
                       <div className="relative">
                         <Input
                           id="password"
@@ -353,11 +352,15 @@ export default function Auth() {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                       {registerForm.formState.errors.password && (
@@ -368,26 +371,16 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <Label className="text-base font-medium">Sở thích nghỉ dưỡng</Label>
-                      <div className="grid grid-cols-2 gap-2 mt-3">
-                        {preferences.map((preference) => (
-                          <div key={preference} className="flex items-center space-x-2">
+                      <Label>{t('auth.preferences')}</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {preferences.map((preference, index) => (
+                          <div key={index} className="flex items-center space-x-2">
                             <Checkbox
-                              id={preference}
+                              id={`preference-${index}`}
                               value={preference}
-                              onCheckedChange={(checked) => {
-                                const currentPrefs = registerForm.getValues("preferences") || [];
-                                if (checked) {
-                                  registerForm.setValue("preferences", [...currentPrefs, preference]);
-                                } else {
-                                  registerForm.setValue(
-                                    "preferences",
-                                    currentPrefs.filter((p) => p !== preference)
-                                  );
-                                }
-                              }}
+                              {...registerForm.register("preferences")}
                             />
-                            <Label htmlFor={preference} className="text-sm capitalize">
+                            <Label htmlFor={`preference-${index}`} className="text-sm capitalize">
                               {preference}
                             </Label>
                           </div>
@@ -401,18 +394,18 @@ export default function Auth() {
                       ) : (
                         <UserPlus className="mr-2" size={16} />
                       )}
-                      Đăng ký
+                      {t('auth.register')}
                     </Button>
                   </form>
 
                   <div className="text-center">
-                    <span className="text-muted-foreground">Đã có tài khoản? </span>
+                    <span className="text-muted-foreground">{t('auth.haveAccount')} </span>
                     <Button
                       variant="link"
                       className="p-0 h-auto font-medium"
                       onClick={() => setIsLogin(true)}
                     >
-                      Đăng nhập ngay
+                      {t('auth.login')}
                     </Button>
                   </div>
                 </motion.div>

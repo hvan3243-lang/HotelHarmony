@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation, useParams } from "wouter";
 import { authManager } from "@/lib/auth";
+import { useTranslation } from "@/lib/i18n";
 
 interface ReviewFormData {
   rating: number;
@@ -66,6 +67,7 @@ export default function ReviewForm() {
   const { bookingId } = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Check authentication
   useEffect(() => {
@@ -129,8 +131,8 @@ export default function ReviewForm() {
     mutationFn: (data: any) => apiRequest("POST", "/api/reviews", data),
     onSuccess: () => {
       toast({
-        title: "Đánh giá thành công",
-        description: "Cảm ơn bạn đã chia sẻ trải nghiệm tại khách sạn",
+        title: t('reviews.reviewSuccess'),
+        description: t('auth.welcomeMessage'),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reviews"] });
@@ -138,8 +140,8 @@ export default function ReviewForm() {
     },
     onError: (error: any) => {
       toast({
-        title: "Lỗi khi gửi đánh giá",
-        description: error.message || "Vui lòng thử lại",
+        title: t('reviews.reviewFailed'),
+        description: error.message || t('error.tryAgain'),
         variant: "destructive",
       });
     },

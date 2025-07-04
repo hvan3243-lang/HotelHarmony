@@ -8,7 +8,7 @@ import { Layout } from "@/components/Layout";
 
 import Home from "@/pages/Home";
 import Booking from "@/pages/Booking";
-import Auth from "@/pages/Auth";
+import Auth from "@/pages/AuthTranslated";
 import Customer from "@/pages/Customer";
 import Admin from "@/pages/Admin";
 import Checkout from "@/pages/Checkout";

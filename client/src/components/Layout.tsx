@@ -6,8 +6,8 @@ import { useState, useEffect } from "react";
 import { User } from "@shared/schema";
 import { Moon, Sun, Hotel, Menu, X } from "lucide-react";
 import { LiveChat } from "./LiveChat";
-// import { LanguageSwitcher } from "./LanguageSwitcher";
-// import { useTranslation } from "@/lib/i18n";
+import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from "@/lib/i18n";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -25,18 +25,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.location.href = "/";
   };
 
-  // const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const navItems = [
-    { href: "/", label: "Trang chủ" },
-    { href: "/booking", label: "Đặt phòng" },
-    { href: "/blog", label: "Blog" },
-    { href: "/contact", label: "Liên hệ" },
+    { href: "/", label: t('nav.home') },
+    { href: "/booking", label: t('nav.booking') },
+    { href: "/blog", label: t('nav.blog') },
+    { href: "/contact", label: t('nav.contact') },
     ...(user ? [
       ...(user.role === 'admin' ? [
-        { href: "/admin", label: "Quản trị" }
+        { href: "/admin", label: t('nav.admin') }
       ] : [
-        { href: "/customer", label: "Khách hàng" }
+        { href: "/customer", label: t('nav.customer') }
       ])
     ] : []),
   ];
@@ -75,8 +75,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Language Switcher */}
-              {/* <LanguageSwitcher /> */}
+              {/* Language Selector */}
+              <LanguageSelector />
               
               {/* Dark Mode Toggle */}
               <Button
@@ -95,13 +95,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {user.firstName} {user.lastName}
                   </span>
                   <Button variant="outline" onClick={handleLogout} className="hover-glow">
-                    Đăng xuất
+                    {t('nav.logout')}
                   </Button>
                 </div>
               ) : (
                 <Link href="/auth">
                   <Button className="btn-primary hover-glow">
-                    Đăng nhập
+                    {t('nav.login')}
                   </Button>
                 </Link>
               )}
@@ -135,7 +135,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
                 {user && (
                   <Button variant="outline" onClick={handleLogout} className="w-full justify-start">
-                    Đăng xuất
+                    {t('nav.logout')}
                   </Button>
                 )}
               </nav>
