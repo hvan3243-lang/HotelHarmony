@@ -98,14 +98,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
+      console.log('Login request body:', req.body);
       const { email, password } = req.body;
       
+      if (!email || !password) {
+        console.log('Missing email or password');
+        return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
+      }
+      
       const user = await storage.getUserByEmail(email);
+      console.log('User found:', user ? 'Yes' : 'No');
+      
       if (!user) {
         return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
       }
       
       const validPassword = await bcrypt.compare(password, user.password);
+      console.log('Password valid:', validPassword);
+      
       if (!validPassword) {
         return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
       }
@@ -120,6 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ user: userWithoutPassword, token });
     } catch (error: any) {
+      console.error('Login error:', error);
       res.status(400).json({ message: error.message });
     }
   });
