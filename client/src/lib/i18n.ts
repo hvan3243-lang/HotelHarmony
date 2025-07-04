@@ -38,6 +38,14 @@ export interface Translations {
     confirm: string;
     yes: string;
     no: string;
+    wifi: string;
+    ac: string;
+    oceanView: string;
+    livingRoom: string;
+    bedrooms: string;
+    fullKitchen: string;
+    balcony: string;
+    service24h: string;
   };
 
   // Navigation
@@ -333,6 +341,14 @@ const vi: Translations = {
     confirm: "Xác nhận",
     yes: "Có",
     no: "Không",
+    wifi: "Wifi miễn phí",
+    ac: "Điều hòa",
+    oceanView: "View biển",
+    livingRoom: "Phòng khách riêng",
+    bedrooms: "2 phòng ngủ",
+    fullKitchen: "Bếp đầy đủ",
+    balcony: "Ban công rộng",
+    service24h: "Dịch vụ 24/7",
   },
 
   nav: {
@@ -618,6 +634,14 @@ const en: Translations = {
     confirm: "Confirm",
     yes: "Yes",
     no: "No",
+    wifi: "Free WiFi",
+    ac: "Air Conditioning",
+    oceanView: "Ocean View",
+    livingRoom: "Private Living Room",
+    bedrooms: "2 Bedrooms",
+    fullKitchen: "Full Kitchen",
+    balcony: "Large Balcony",
+    service24h: "24/7 Service",
   },
 
   nav: {

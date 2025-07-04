@@ -21,8 +21,6 @@ export default function LanguageSelector({
   showText = false 
 }: LanguageSelectorProps) {
   const { t, currentLang, setLanguage, languages } = useTranslation();
-  
-  console.log('LanguageSelector: Current language:', currentLang?.code);
 
   return (
     <DropdownMenu>

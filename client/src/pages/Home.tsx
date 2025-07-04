@@ -30,31 +30,31 @@ export default function Home() {
   const featuredRooms = [
     {
       id: 1,
-      name: "Phòng Deluxe",
+      name: t('rooms.roomType.deluxe'),
       type: "deluxe",
       price: "1,500,000",
       image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      amenities: ["Wifi miễn phí", "Điều hòa", "TV LCD", "Minibar"],
+      amenities: [t('common.wifi'), t('common.ac'), "TV LCD", "Minibar"],
       rating: 4.8,
       reviews: 124
     },
     {
       id: 2,
-      name: "Phòng Suite",
+      name: t('rooms.roomType.suite'),
       type: "suite", 
       price: "2,800,000",
       image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      amenities: ["View biển", "Jacuzzi", "Phòng khách riêng", "Butler"],
+      amenities: [t('common.oceanView'), "Jacuzzi", t('common.livingRoom'), "Butler"],
       rating: 4.9,
       reviews: 89
     },
     {
       id: 3,
-      name: "Phòng Presidential",
+      name: t('rooms.roomType.presidential'),
       type: "presidential",
       price: "5,000,000", 
       image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      amenities: ["2 phòng ngủ", "Bếp đầy đủ", "Ban công rộng", "Dịch vụ 24/7"],
+      amenities: [t('common.bedrooms'), t('common.fullKitchen'), t('common.balcony'), t('common.service24h')],
       rating: 5.0,
       reviews: 45
     }
