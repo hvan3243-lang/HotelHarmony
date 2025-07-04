@@ -294,23 +294,7 @@ export interface Translations {
     requiredField: string;
     invalidFormat: string;
     tryAgain: string;
-  };
 
-  // Success messages
-  success: {
-    saved: string;
-    updated: string;
-    deleted: string;
-    created: string;
-    sent: string;
-    confirmed: string;
-    cancelled: string;
-    completed: string;
-  };
-}
-
-// Vietnamese translations
-const vi: Translations = {
   common: {
     loading: "Đang tải...",
     error: "Lỗi",
