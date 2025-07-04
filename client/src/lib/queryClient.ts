@@ -22,6 +22,8 @@ export async function apiRequest(
   
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    console.log('No token found when making API request to:', url);
   }
 
   const res = await fetch(url, {
