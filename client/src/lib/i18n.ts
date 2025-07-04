@@ -94,7 +94,9 @@ export interface Translations {
     checkInTime: string;
     checkOutTime: string;
     guests: string;
+    guest: string;
     roomType: string;
+    searchRooms: string;
     totalPrice: string;
     bookNow: string;
     bookingConfirmed: string;
@@ -384,7 +386,9 @@ const vi: Translations = {
     checkInTime: "Giờ nhận phòng",
     checkOutTime: "Giờ trả phòng",
     guests: "Số khách",
+    guest: "Khách",
     roomType: "Loại phòng",
+    searchRooms: "Tìm phòng",
     totalPrice: "Tổng tiền",
     bookNow: "Đặt ngay",
     bookingConfirmed: "Đặt phòng thành công",
@@ -667,7 +671,9 @@ const en: Translations = {
     checkInTime: "Check-in Time",
     checkOutTime: "Check-out Time",
     guests: "Guests",
+    guest: "Guest",
     roomType: "Room Type",
+    searchRooms: "Search Rooms",
     totalPrice: "Total Price",
     bookNow: "Book Now",
     bookingConfirmed: "Booking confirmed",
@@ -894,12 +900,8 @@ export const useLanguageStore = create<LanguageStore>()(
       currentLanguage: "vi", // Default to Vietnamese
       
       setLanguage: (language: string) => {
-        console.log('Setting language to:', language);
         if (languages.find(l => l.code === language)) {
           set({ currentLanguage: language });
-          console.log('Language set successfully to:', language);
-        } else {
-          console.log('Language not found:', language);
         }
       },
 
@@ -908,7 +910,6 @@ export const useLanguageStore = create<LanguageStore>()(
         const translation = translations[currentLanguage];
         
         if (!translation) {
-          console.log('Translation not found for language:', currentLanguage);
           return key;
         }
         
@@ -920,7 +921,6 @@ export const useLanguageStore = create<LanguageStore>()(
           if (value && typeof value === 'object' && k in value) {
             value = value[k];
           } else {
-            console.log('Translation key not found:', key, 'for language:', currentLanguage);
             return key; // Return key if translation not found
           }
         }
