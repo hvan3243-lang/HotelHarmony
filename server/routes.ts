@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import session from "express-session";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertUserSchema, insertRoomSchema, insertBookingSchema, insertBlogPostSchema, chatMessages, users, type BlogPost } from "@shared/schema";
@@ -11,6 +14,12 @@ import { sendBookingConfirmation } from "./services/sendgrid";
 import { db } from "./db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+  console.warn('⚠ Google OAuth: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not configured - Google login will be disabled');
+}
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -70,6 +79,69 @@ const broadcastToClients = (message: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Session configuration
+  app.use(session({
+    secret: JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Passport serialization
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: any, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  });
+
+  // Google OAuth Strategy
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: "/api/auth/google/callback"
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user exists with Google email
+        let user = await storage.getUserByEmail(profile.emails?.[0]?.value || '');
+        
+        if (!user) {
+          // Create new user from Google profile
+          const userData = {
+            email: profile.emails?.[0]?.value || '',
+            password: '', // No password for Google users
+            firstName: profile.name?.givenName || '',
+            lastName: profile.name?.familyName || '',
+            phone: null,
+            role: 'customer' as const,
+            preferences: [],
+            isVip: false
+          };
+          
+          user = await storage.createUser(userData);
+        }
+        
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
+    }));
+  }
+
   // Auth routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
@@ -134,6 +206,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message });
     }
   });
+
+  // Google OAuth routes
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+    app.get("/api/auth/google", 
+      passport.authenticate("google", { scope: ["profile", "email"] })
+    );
+
+    app.get("/api/auth/google/callback",
+      passport.authenticate("google", { failureRedirect: "/login" }),
+      async (req: any, res: Response) => {
+        try {
+          const user = req.user;
+          
+          // Generate JWT token for consistency with regular login
+          const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+          );
+          
+          // Store token in frontend (you can redirect with token as query param)
+          res.redirect(`/?token=${token}&user=${encodeURIComponent(JSON.stringify({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }))}`);
+        } catch (error) {
+          console.error('Google OAuth callback error:', error);
+          res.redirect('/login?error=oauth_error');
+        }
+      }
+    );
+  }
 
   app.get("/api/auth/me", authenticateToken, async (req: any, res: Response) => {
     try {

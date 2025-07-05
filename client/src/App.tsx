@@ -1,6 +1,8 @@
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
+import { authManager } from "@/lib/auth";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -22,6 +24,28 @@ import ReviewForm from "@/pages/ReviewForm";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const userParam = urlParams.get('user');
+    
+    if (token && userParam) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userParam));
+        authManager.login(user, token);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Refresh page to update auth state
+        window.location.reload();
+      } catch (error) {
+        console.error('Error processing Google OAuth callback:', error);
+      }
+    }
+  }, []);
+
   return (
     <Switch>
       <Route path="/" component={Home} />

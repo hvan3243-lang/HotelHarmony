@@ -102,6 +102,7 @@ export interface Translations {
     noAccount: string;
     loginToContinue: string;
     preferences: string;
+    loginWithGoogle: string;
   };
 
   // Booking
@@ -413,6 +414,7 @@ const vi: Translations = {
     noAccount: "Chưa có tài khoản?",
     loginToContinue: "Đăng nhập để tiếp tục",
     preferences: "Sở thích",
+    loginWithGoogle: "Đăng nhập với Google",
   },
 
   booking: {
@@ -716,6 +718,7 @@ const en: Translations = {
     noAccount: "Don't have an account?",
     loginToContinue: "Login to continue",
     preferences: "Preferences",
+    loginWithGoogle: "Login with Google",
   },
 
   booking: {
