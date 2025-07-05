@@ -1,9 +1,10 @@
 import { 
-  users, rooms, bookings, services, customers, employees, invoices, chatMessages, blogPosts, contactMessages, reviews,
+  users, rooms, bookings, services, chatMessages, blogPosts, contactMessages, reviews,
+  loyaltyPoints, pointTransactions, promotionalCodes,
   type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking,
-  type Service, type InsertService, type Customer, type InsertCustomer, type Employee, type InsertEmployee,
-  type Invoice, type InsertInvoice, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost,
-  type ContactMessage, type InsertContactMessage
+  type Service, type InsertService, type ChatMessage, type InsertChatMessage, type BlogPost, type InsertBlogPost,
+  type ContactMessage, type InsertContactMessage, type Review, type InsertReview, type LoyaltyPoints,
+  type PointTransaction, type PromotionalCode, type InsertPromotionalCode
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, or, sql, inArray, desc } from "drizzle-orm";
