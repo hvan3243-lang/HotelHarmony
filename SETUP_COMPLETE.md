@@ -3,10 +3,9 @@
 ## Files Created
 
 ✅ **`.env.example`** - Template for environment variables
-✅ **`GOOGLE_OAUTH_SETUP.md`** - Google OAuth configuration guide
-✅ **`ENVIRONMENT_SETUP.md`** - Complete environment variables setup
 ✅ **`generate-secrets.js`** - Script to generate secure JWT and session secrets
 ✅ **`database_export_complete.sql`** - Complete database with all tables and data
+✅ **`POSTGRESQL_LOCAL_SETUP.md`** - Local PostgreSQL setup guide
 
 ## Quick Start
 
@@ -92,8 +91,6 @@ psql -U postgres -d hotellux -f database_export_complete.sql
 
 ## Support Files
 
-📋 **GOOGLE_OAUTH_SETUP.md** - Step-by-step Google OAuth setup
-📋 **ENVIRONMENT_SETUP.md** - Detailed environment configuration
 📋 **POSTGRESQL_LOCAL_SETUP.md** - Local PostgreSQL setup guide
 
 ## Troubleshooting
