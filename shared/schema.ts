@@ -1,218 +1,288 @@
-import { mysqlTable, text, int, boolean, timestamp, decimal, json, varchar } from "drizzle-orm/mysql-core";
-import { createInsertSchema } from "drizzle-zod";
+import {
+  datetime,
+  decimal,
+  int,
+  longtext,
+  mysqlTable,
+  text,
+  timestamp,
+  tinyint,
+  varchar,
+} from "drizzle-orm/mysql-core";
 import { z } from "zod";
 
-export const users = mysqlTable("users", {
+export const blogPosts = mysqlTable("blog_posts", {
   id: int("id").primaryKey().autoincrement(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  phone: text("phone"),
-  role: text("role").notNull().default("customer"), // customer, admin
-  preferences: json("preferences").$type<string[]>().default([]),
-  isVip: boolean("is_vip").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const rooms = mysqlTable("rooms", {
-  id: int("id").primaryKey().autoincrement(),
-  number: text("number").notNull().unique(),
-  type: text("type").notNull(), // standard, deluxe, suite, presidential
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  capacity: int("capacity").notNull(),
-  amenities: json("amenities").$type<string[]>().default([]),
-  images: json("images").$type<string[]>().default([]),
-  status: text("status").notNull().default("available"), // available, occupied, maintenance
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  excerpt: text("excerpt"),
+  content: longtext("content").notNull(),
+  author: varchar("author", { length: 100 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  tags: longtext("tags").default("[]"),
+  image: varchar("image", { length: 255 }),
+  published: tinyint("published").default(0),
+  read_time: int("read_time").default(5),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const bookings = mysqlTable("bookings", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("user_id").notNull(),
-  roomId: int("room_id").notNull(),
-  checkIn: timestamp("check_in").notNull(),
-  checkOut: timestamp("check_out").notNull(),
-  checkInTime: text("check_in_time").default("14:00"),
-  checkOutTime: text("check_out_time").default("12:00"),
+  user_id: int("user_id"),
+  room_id: int("room_id"),
+  check_in: datetime("check_in").notNull(),
+  check_out: datetime("check_out").notNull(),
   guests: int("guests").notNull(),
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
-  depositAmount: decimal("deposit_amount", { precision: 10, scale: 2 }).notNull(),
-  remainingAmount: decimal("remaining_amount", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").notNull().default("pending"), // pending, deposit_paid, confirmed, cancelled, completed
-  paymentMethod: text("payment_method").default("credit_card"), // credit_card, qr_code, cash
-  paymentIntentId: text("payment_intent_id"),
-  specialRequests: text("special_requests"),
-  createdAt: timestamp("created_at").defaultNow(),
+  total_amount: decimal("total_amount", { precision: 10, scale: 2 }),
+  total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default("pending"),
+  special_requests: text("special_requests"),
+  payment_intent_id: varchar("payment_intent_id", { length: 255 }),
+  payment_method: varchar("payment_method", { length: 100 }),
+  check_in_time: varchar("check_in_time", { length: 10 }).default("14:00"),
+  check_out_time: varchar("check_out_time", { length: 10 }).default("12:00"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  deposit_amount: decimal("deposit_amount", { precision: 10, scale: 2 }),
+  remaining_amount: decimal("remaining_amount", { precision: 10, scale: 2 }),
 });
 
-export const services = mysqlTable("services", {
+export const bookingServices = mysqlTable("booking_services", {
   id: int("id").primaryKey().autoincrement(),
-  name: text("name").notNull(),
-  description: text("description"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  category: text("category").notNull(), // spa, restaurant, transportation, etc.
-  available: boolean("available").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  booking_id: int("booking_id"),
+  service_id: int("service_id"),
+  quantity: int("quantity").default(1),
+  total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const chatMessages = mysqlTable("chat_messages", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("user_id").notNull(),
+  user_id: int("user_id"),
   message: text("message").notNull(),
-  isFromAdmin: boolean("is_from_admin").default(false),
-  isRead: boolean("is_read").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const blogPosts = mysqlTable("blog_posts", {
-  id: int("id").primaryKey().autoincrement(),
-  title: text("title").notNull(),
-  slug: text("slug").notNull().unique(),
-  content: text("content").notNull(),
-  excerpt: text("excerpt"),
-  imageUrl: text("image_url"),
-  published: boolean("published").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  is_from_admin: tinyint("is_from_admin"),
+  is_read: tinyint("is_read").default(0),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const contactMessages = mysqlTable("contact_messages", {
   id: int("id").primaryKey().autoincrement(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  subject: text("subject").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  category: varchar("category", { length: 100 }).notNull(),
+  subject: varchar("subject", { length: 255 }),
   message: text("message").notNull(),
-  status: text("status").notNull().default("new"), // new, in_progress, resolved
-  response: text("response"),
-  respondedBy: int("responded_by"),
-  respondedAt: timestamp("responded_at"),
-  createdAt: timestamp("created_at").defaultNow(),
+  preferred_contact: varchar("preferred_contact", { length: 20 }).default(
+    "email"
+  ),
+  status: varchar("status", { length: 20 }).default("pending"),
+  admin_response: text("admin_response"),
+  responded_by: int("responded_by"),
+  responded_at: timestamp("responded_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const reviews = mysqlTable("reviews", {
+export const customers = mysqlTable("customers", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("user_id").notNull(),
-  roomId: int("room_id").notNull(),
-  bookingId: int("booking_id").notNull(),
-  rating: int("rating").notNull(), // 1-5 stars
-  comment: text("comment"),
-  createdAt: timestamp("created_at").defaultNow(),
+  full_name: varchar("full_name", { length: 255 }).notNull(),
+  id_number: varchar("id_number", { length: 50 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  address: text("address"),
+  date_of_birth: datetime("date_of_birth"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const employees = mysqlTable("employees", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id"),
+  employee_code: varchar("employee_code", { length: 50 }).notNull(),
+  department: varchar("department", { length: 100 }),
+  position: varchar("position", { length: 100 }).notNull(),
+  salary: decimal("salary", { precision: 10, scale: 2 }),
+  start_date: datetime("start_date").notNull(),
+  end_date: datetime("end_date"),
+  status: varchar("status", { length: 50 }).default("active"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const invoices = mysqlTable("invoices", {
+  id: int("id").primaryKey().autoincrement(),
+  booking_id: int("booking_id"),
+  invoice_number: varchar("invoice_number", { length: 100 }).notNull(),
+  room_total: decimal("room_total", { precision: 10, scale: 2 }).notNull(),
+  services_total: decimal("services_total", {
+    precision: 10,
+    scale: 2,
+  }).default(0.0),
+  tax_amount: decimal("tax_amount", { precision: 10, scale: 2 }).default(0.0),
+  total_amount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  payment_method: varchar("payment_method", { length: 50 }),
+  payment_status: varchar("payment_status", { length: 50 }).default("unpaid"),
+  paid_amount: decimal("paid_amount", { precision: 10, scale: 2 }).default(0.0),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const loyaltyPoints = mysqlTable("loyalty_points", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("user_id").notNull(),
-  points: int("points").notNull().default(0),
-  level: text("level").notNull().default("Bronze"), // Bronze, Silver, Gold, Platinum
-  totalEarned: int("total_earned").notNull().default(0),
-  totalRedeemed: int("total_redeemed").notNull().default(0),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  user_id: int("user_id"),
+  points: int("points").default(0),
+  total_earned: int("total_earned").default(0),
+  level: varchar("level", { length: 20 }).default("Bronze"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const pointTransactions = mysqlTable("point_transactions", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("user_id").notNull(),
-  points: int("points").notNull(), // positive for earned, negative for redeemed
-  type: text("type").notNull(), // earned, redeemed
-  description: text("description").notNull(),
-  bookingId: int("booking_id"),
-  createdAt: timestamp("created_at").defaultNow(),
+  user_id: int("user_id"),
+  booking_id: int("booking_id"),
+  type: varchar("type", { length: 20 }).notNull(),
+  points: int("points").notNull(),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const promotionalCodes = mysqlTable("promotional_codes", {
   id: int("id").primaryKey().autoincrement(),
-  code: text("code").notNull().unique(),
+  code: varchar("code", { length: 50 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  discountType: text("discount_type").notNull(), // percentage, fixed
-  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
-  minAmount: decimal("min_amount", { precision: 10, scale: 2 }).default("0"),
-  maxDiscount: decimal("max_discount", { precision: 10, scale: 2 }),
-  userLevel: text("user_level"), // Bronze, Silver, Gold, Platinum, null for all
-  usageLimit: int("usage_limit"),
-  usedCount: int("used_count").default(0),
-  validFrom: timestamp("valid_from").notNull(),
-  validTo: timestamp("valid_to").notNull(),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  discount_type: varchar("discount_type", { length: 20 }).notNull(),
+  discount_value: decimal("discount_value", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
+  min_amount: decimal("min_amount", { precision: 10, scale: 2 }).default(0.0),
+  max_discount: decimal("max_discount", { precision: 10, scale: 2 }),
+  usage_limit: int("usage_limit"),
+  used_count: int("used_count").default(0),
+  valid_from: datetime("valid_from").notNull(),
+  valid_to: datetime("valid_to").notNull(),
+  is_active: tinyint("is_active").default(1),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Insert Schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
+export const promotionalCodeUsage = mysqlTable("promotional_code_usage", {
+  id: int("id").primaryKey().autoincrement(),
+  code_id: int("code_id"),
+  user_id: int("user_id"),
+  booking_id: int("booking_id"),
+  discount_amount: decimal("discount_amount", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertRoomSchema = createInsertSchema(rooms).omit({
-  id: true,
-  createdAt: true,
+export const reviews = mysqlTable("reviews", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id"),
+  room_id: int("room_id"),
+  booking_id: int("booking_id"),
+  rating: int("rating").notNull(),
+  title: varchar("title", { length: 255 }),
+  comment: text("comment"),
+  cleanliness: int("cleanliness").default(5),
+  service: int("service").default(5),
+  amenities: int("amenities").default(5),
+  value_for_money: int("value_for_money").default(5),
+  location: int("location").default(5),
+  would_recommend: tinyint("would_recommend").default(1),
+  guest_type: varchar("guest_type", { length: 50 }).default("Individual"),
+  stay_purpose: varchar("stay_purpose", { length: 50 }).default("Leisure"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertBookingSchema = createInsertSchema(bookings).omit({
-  id: true,
-  createdAt: true,
+export const rooms = mysqlTable("rooms", {
+  id: int("id").primaryKey().autoincrement(),
+  number: varchar("number", { length: 20 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  capacity: int("capacity").notNull(),
+  amenities: longtext("amenities").default("[]"),
+  images: longtext("images").default("[]"),
+  status: varchar("status", { length: 50 }).default("available"),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertServiceSchema = createInsertSchema(services).omit({
-  id: true,
-  createdAt: true,
+export const services = mysqlTable("services", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  is_active: tinyint("is_active").default(1),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
-  id: true,
-  createdAt: true,
+export const users = mysqlTable("users", {
+  id: int("id").primaryKey().autoincrement(),
+  email: varchar("email", { length: 255 }).notNull(),
+  password: varchar("password", { length: 255 }).notNull(),
+  first_name: varchar("first_name", { length: 100 }).notNull(),
+  last_name: varchar("last_name", { length: 100 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  role: varchar("role", { length: 50 }).default("customer"),
+  preferences: longtext("preferences").default("[]"),
+  is_vip: tinyint("is_vip").default(0),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertBlogPostSchema = z.object({
+  title: z.string().min(1),
+  slug: z.string().min(1),
+  excerpt: z.string().optional(),
+  content: z.string().min(1),
+  author: z.string().min(1),
+  category: z.string().min(1),
+  tags: z.string().optional(),
+  image: z.string().optional(),
+  published: z.number().optional(),
+  read_time: z.number().optional(),
 });
 
-export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
-  id: true,
-  createdAt: true,
-  respondedAt: true,
+export const insertBookingSchema = z.object({
+  userId: z.number(),
+  roomId: z.number(),
+  checkIn: z.string(),
+  checkOut: z.string(),
+  guests: z.number(),
+  totalAmount: z.string().optional(),
+  totalPrice: z.string(),
+  status: z.string().optional(),
+  specialRequests: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  checkInTime: z.string().optional(),
+  checkOutTime: z.string().optional(),
+  depositAmount: z.string().optional(),
+  remainingAmount: z.string().optional(),
 });
 
-export const insertReviewSchema = createInsertSchema(reviews).omit({
-  id: true,
-  createdAt: true,
+export const insertRoomSchema = z.object({
+  number: z.string().min(1),
+  type: z.string().min(1),
+  price: z.string().min(1),
+  capacity: z.number().min(1),
+  amenities: z.string().optional(),
+  images: z.string().optional(),
+  status: z.string().optional(),
+  description: z.string().optional(),
 });
 
-export const insertPromotionalCodeSchema = createInsertSchema(promotionalCodes).omit({
-  id: true,
-  createdAt: true,
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  phone: z.string().optional(),
+  role: z.string().optional(),
+  preferences: z.string().optional(),
+  isVip: z.boolean().optional(),
 });
-
-// Types
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
-export type Room = typeof rooms.$inferSelect;
-export type InsertRoom = z.infer<typeof insertRoomSchema>;
-
-export type Booking = typeof bookings.$inferSelect;
-export type InsertBooking = z.infer<typeof insertBookingSchema>;
-
-export type Service = typeof services.$inferSelect;
-export type InsertService = z.infer<typeof insertServiceSchema>;
-
-export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
-
-export type BlogPost = typeof blogPosts.$inferSelect;
-export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
-
-export type ContactMessage = typeof contactMessages.$inferSelect;
-export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
-
-export type Review = typeof reviews.$inferSelect;
-export type InsertReview = z.infer<typeof insertReviewSchema>;
-
-export type LoyaltyPoints = typeof loyaltyPoints.$inferSelect;
-export type PointTransaction = typeof pointTransactions.$inferSelect;
-
-export type PromotionalCode = typeof promotionalCodes.$inferSelect;
-export type InsertPromotionalCode = z.infer<typeof insertPromotionalCodeSchema>;

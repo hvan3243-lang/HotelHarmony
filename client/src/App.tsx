@@ -1,47 +1,52 @@
-import { Switch, Route } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { queryClient } from "./lib/queryClient";
-import { authManager } from "@/lib/auth";
+import { Layout } from "@/components/Layout";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Layout } from "@/components/Layout";
+import { authManager } from "@/lib/auth";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Route, Switch } from "wouter";
+import { queryClient } from "./lib/queryClient";
 
-import Home from "@/pages/Home";
-import Booking from "@/pages/Booking";
-import Auth from "@/pages/AuthTranslated";
-import Customer from "@/pages/Customer";
+import { WebsiteChatbot } from "@/components/WebsiteChatbot";
 import Admin from "@/pages/Admin";
-import Checkout from "@/pages/Checkout";
-import PaymentMethod from "@/pages/PaymentMethod";
-import Contact from "@/pages/Contact";
+import Auth from "@/pages/AuthTranslated";
 import Blog from "@/pages/Blog";
-import WalkInBooking from "@/pages/WalkInBooking";
+import Booking from "@/pages/Booking";
 import CheckIn from "@/pages/CheckIn";
-import Settings from "@/pages/Settings";
+import Checkout from "@/pages/Checkout";
+import Contact from "@/pages/Contact";
+import Customer from "@/pages/Customer";
+import Home from "@/pages/Home";
+import PaymentMethod from "@/pages/PaymentMethod";
 import ReviewForm from "@/pages/ReviewForm";
+import Settings from "@/pages/Settings";
+import WalkInBooking from "@/pages/WalkInBooking";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   // Handle Google OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const userParam = urlParams.get('user');
-    
+    const token = urlParams.get("token");
+    const userParam = urlParams.get("user");
+
     if (token && userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
         authManager.login(user, token);
-        
+
         // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+
         // Refresh page to update auth state
         window.location.reload();
       } catch (error) {
-        console.error('Error processing Google OAuth callback:', error);
+        console.error("Error processing Google OAuth callback:", error);
       }
     }
   }, []);
@@ -75,6 +80,7 @@ function App() {
             <Router />
           </Layout>
           <Toaster />
+          <WebsiteChatbot />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -2,42 +2,38 @@
 
 Modern hotel management application with booking system, admin dashboard, and multi-language support.
 
-## 🚀 Quick Start (Local with PostgreSQL)
+## 🚀 Quick Start (Local with MySQL)
 
 ### 1. Download & Setup
+
 ```bash
 # Download ZIP from Replit
 # Extract to your project folder
-cd hotellux
+cd hotelharmony
 ```
 
-### 2. Auto Setup (Recommended)
-**Windows:**
-```cmd
-setup-postgresql.bat
-```
+### 2. MySQL Setup
 
-**Linux/Mac:**
-```bash
-./setup-postgresql.sh
+**Tạo database và user MySQL:**
+
+```sql
+CREATE DATABASE hotelharmony;
+CREATE USER 'hotel_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON hotelharmony.* TO 'hotel_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
 ### 3. Manual Setup
+
 ```bash
 # Install dependencies
 npm install
 
-# Create .env file
-DATABASE_URL=postgresql://user:password@localhost:5432/hotellux
+# Tạo file .env
+DATABASE_URL=mysql://hotel_user:your_password@localhost:3306/hotelharmony
 JWT_SECRET=your-secret-key
 
-# Create database
-sudo -u postgres psql
-CREATE DATABASE hotellux;
-CREATE USER hotellux_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE hotellux TO hotellux_user;
-
-# Run migrations
+# Chạy migrate
 npm run db:push
 
 # Seed sample data
@@ -45,16 +41,20 @@ npm run db:seed
 ```
 
 ### 4. Run Application
+
 ```bash
 npm run dev
 ```
+
 Visit: http://localhost:5000
 
 ## 🔑 Default Accounts
+
 - **Admin:** admin@hotellux.com / admin123
 - **Customer:** customer@hotellux.com / customer123
 
 ## 📋 Features
+
 - ✅ Room booking system
 - ✅ Admin dashboard with analytics
 - ✅ Multi-language (Vietnamese/English)
@@ -67,28 +67,32 @@ Visit: http://localhost:5000
 - ✅ Contact system
 
 ## 🛠️ Tech Stack
+
 - **Frontend:** React 18, TypeScript, Tailwind CSS
-- **Backend:** Node.js, Express, PostgreSQL
+- **Backend:** Node.js, Express, MySQL
 - **Database:** Drizzle ORM
 - **Auth:** JWT + bcrypt
 - **Payments:** Stripe
 - **Real-time:** WebSocket
 
 ## 📁 Project Structure
+
 ```
-hotellux/
+hotelharmony/
 ├── client/src/          # React frontend
-├── server/              # Express backend  
+├── server/              # Express backend
 ├── shared/              # Shared types & schema
 ├── scripts/             # Database scripts
-└── POSTGRESQL_LOCAL_SETUP.md  # Detailed setup guide
+└── MYSQL_SETUP.md       # Detailed setup guide
 ```
 
 ## 📚 Documentation
-- `POSTGRESQL_LOCAL_SETUP.md` - Detailed local setup guide
+
+- `MYSQL_SETUP.md` - Detailed local setup guide for MySQL
 - `replit.md` - Project architecture & changelog
 
-## 🐘 Database Tools
+## 🐬 Database Tools
+
 ```bash
 npm run db:studio    # Drizzle Studio UI
 npm run db:seed      # Insert sample data

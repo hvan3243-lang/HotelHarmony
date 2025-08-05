@@ -1,10 +1,10 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
-import * as schema from '@shared/schema';
+import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
+import * as schema from "../shared/schema";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    "DATABASE_URL must be set. Please configure your MySQL database connection.",
+    "DATABASE_URL must be set. Please configure your MySQL database connection."
   );
 }
 
@@ -15,4 +15,4 @@ export const connection = mysql.createPool({
 });
 
 // Create drizzle instance
-export const db = drizzle(connection, { schema, mode: 'default' });
+export const db = drizzle(connection, { schema, mode: "default" });

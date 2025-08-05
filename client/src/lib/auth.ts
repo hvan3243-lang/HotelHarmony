@@ -16,9 +16,9 @@ class AuthManager {
   }
 
   private loadFromStorage() {
-    const token = localStorage.getItem('auth_token');
-    const user = localStorage.getItem('auth_user');
-    
+    const token = localStorage.getItem("auth_token");
+    const user = localStorage.getItem("auth_user");
+
     if (token && user) {
       this.state = {
         token,
@@ -29,11 +29,11 @@ class AuthManager {
 
   private saveToStorage() {
     if (this.state.token && this.state.user) {
-      localStorage.setItem('auth_token', this.state.token);
-      localStorage.setItem('auth_user', JSON.stringify(this.state.user));
+      localStorage.setItem("auth_token", this.state.token);
+      localStorage.setItem("auth_user", JSON.stringify(this.state.user));
     } else {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
     }
   }
 
@@ -51,6 +51,11 @@ class AuthManager {
     return this.state.user;
   }
 
+  setUser(user: User) {
+    this.state.user = user;
+    this.saveToStorage();
+  }
+
   getToken(): string | null {
     return this.state.token;
   }
@@ -60,7 +65,7 @@ class AuthManager {
   }
 
   isAdmin(): boolean {
-    return this.state.user?.role === 'admin';
+    return this.state.user?.role === "admin";
   }
 }
 

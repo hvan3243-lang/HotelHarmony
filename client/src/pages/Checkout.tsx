@@ -1,24 +1,42 @@
-import { useState, useEffect } from "react";
-import { useParams } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, CheckCircle, Calendar, Users, Bed, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { authManager } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import {
+  Elements,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  Bed,
+  Calendar,
+  CheckCircle,
+  CreditCard,
+  MapPin,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "wouter";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "");
+const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
-const CheckoutForm = ({ booking, totalAmount }: { booking: any; totalAmount: number }) => {
+const CheckoutForm = ({
+  booking,
+  totalAmount,
+}: {
+  booking: any;
+  totalAmount: number;
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -79,10 +97,10 @@ const CheckoutForm = ({ booking, totalAmount }: { booking: any; totalAmount: num
       <div className="p-4 border rounded-lg">
         <PaymentElement />
       </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full" 
+
+      <Button
+        type="submit"
+        className="w-full"
         size="lg"
         disabled={!stripe || isProcessing || confirmPaymentMutation.isPending}
       >
@@ -94,7 +112,7 @@ const CheckoutForm = ({ booking, totalAmount }: { booking: any; totalAmount: num
         ) : (
           <div className="flex items-center">
             <CreditCard className="mr-2" size={20} />
-            Thanh toán {new Intl.NumberFormat('vi-VN').format(totalAmount)}đ
+            Thanh toán {new Intl.NumberFormat("vi-VN").format(totalAmount)}đ
           </div>
         )}
       </Button>
@@ -119,7 +137,7 @@ export default function Checkout() {
   const { data: booking, isLoading } = useQuery({
     queryKey: [`/api/bookings`],
     select: (bookings: any[]) => {
-      return bookings.find(b => b.id === parseInt(params.bookingId || "0"));
+      return bookings.find((b) => b.id === parseInt(params.bookingId || "0"));
     },
     enabled: !!params.bookingId,
   });
@@ -129,16 +147,21 @@ export default function Checkout() {
       // Create PaymentIntent as soon as the booking is loaded
       const createPaymentIntent = async () => {
         try {
-          const response = await apiRequest("POST", "/api/create-payment-intent", { 
-            amount: parseFloat(booking.totalPrice),
-            bookingId: booking.id,
-          });
+          const response = await apiRequest(
+            "POST",
+            "/api/create-payment-intent",
+            {
+              amount: parseFloat(booking.totalPrice),
+              bookingId: booking.id,
+            }
+          );
           const data = await response.json();
           setClientSecret(data.clientSecret);
         } catch (error: any) {
           toast({
             title: "Lỗi khởi tạo thanh toán",
-            description: error.message || "Có lỗi xảy ra khi khởi tạo thanh toán",
+            description:
+              error.message || "Có lỗi xảy ra khi khởi tạo thanh toán",
             variant: "destructive",
           });
         }
@@ -153,7 +176,9 @@ export default function Checkout() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground">Đang tải thông tin đặt phòng...</p>
+          <p className="text-muted-foreground">
+            Đang tải thông tin đặt phòng...
+          </p>
         </div>
       </div>
     );
@@ -164,13 +189,13 @@ export default function Checkout() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="text-center py-8">
-            <h2 className="text-xl font-semibold mb-2">Không tìm thấy đặt phòng</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Không tìm thấy đặt phòng
+            </h2>
             <p className="text-muted-foreground mb-4">
               Đặt phòng này không tồn tại hoặc bạn không có quyền truy cập.
             </p>
-            <Button onClick={() => setLocation("/")}>
-              Về trang chủ
-            </Button>
+            <Button onClick={() => setLocation("/")}>Về trang chủ</Button>
           </CardContent>
         </Card>
       </div>
@@ -189,15 +214,15 @@ export default function Checkout() {
   }
 
   const formatPrice = (price: string) => {
-    return new Intl.NumberFormat('vi-VN').format(parseFloat(price)) + "đ";
+    return new Intl.NumberFormat("vi-VN").format(parseFloat(price)) + "đ";
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-      weekday: 'long',
-      year: 'numeric', 
-      month: 'long',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("vi-VN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -214,7 +239,9 @@ export default function Checkout() {
   const calculateNights = () => {
     const checkIn = new Date(booking.checkIn);
     const checkOut = new Date(booking.checkOut);
-    return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    );
   };
 
   const nights = calculateNights();
@@ -308,8 +335,15 @@ export default function Checkout() {
                 <div>
                   <h4 className="font-medium mb-2">Tiện nghi phòng</h4>
                   <div className="flex flex-wrap gap-2">
-                    {booking.room.amenities.map((amenity: string, index: number) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                    {(Array.isArray(booking.room.amenities)
+                      ? booking.room.amenities
+                      : JSON.parse(booking.room.amenities || "[]")
+                    ).map((amenity: string, index: number) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {amenity}
                       </Badge>
                     ))}
@@ -336,7 +370,10 @@ export default function Checkout() {
                   <h4 className="font-medium">Chi tiết giá</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span>{formatPrice((basePrice / nights).toString())} x {nights} đêm</span>
+                      <span>
+                        {formatPrice((basePrice / nights).toString())} x{" "}
+                        {nights} đêm
+                      </span>
                       <span>{formatPrice(basePrice.toString())}</span>
                     </div>
                     <div className="flex justify-between">
@@ -381,12 +418,18 @@ export default function Checkout() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {!import.meta.env.VITE_STRIPE_PUBLIC_KEY ? (
+                {!stripePromise ? (
                   <div className="text-center py-8">
-                    <CreditCard className="mx-auto mb-4 text-muted-foreground" size={48} />
-                    <h3 className="text-lg font-semibold mb-2">Stripe chưa được cấu hình</h3>
+                    <CreditCard
+                      className="mx-auto mb-4 text-muted-foreground"
+                      size={48}
+                    />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Stripe chưa được cấu hình
+                    </h3>
                     <p className="text-muted-foreground mb-4">
-                      Vui lòng cấu hình VITE_STRIPE_PUBLIC_KEY để sử dụng tính năng thanh toán.
+                      Vui lòng cấu hình VITE_STRIPE_PUBLISHABLE_KEY để sử dụng tính
+                      năng thanh toán.
                     </p>
                     <Button onClick={() => setLocation("/customer")}>
                       Quay lại trang khách hàng
@@ -394,9 +437,9 @@ export default function Checkout() {
                   </div>
                 ) : (
                   <Elements stripe={stripePromise} options={{ clientSecret }}>
-                    <CheckoutForm 
-                      booking={booking} 
-                      totalAmount={parseFloat(booking.totalPrice)} 
+                    <CheckoutForm
+                      booking={booking}
+                      totalAmount={parseFloat(booking.totalPrice)}
                     />
                   </Elements>
                 )}

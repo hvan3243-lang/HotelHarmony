@@ -1,31 +1,39 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  UserPlus, 
-  Calendar, 
-  Users, 
-  CreditCard, 
-  CheckCircle, 
-  AlertCircle,
-  Bed,
-  Eye,
-  Clock
-} from "lucide-react";
-import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { authManager } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 import type { Room, User as UserType } from "@shared/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  CreditCard,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 interface CustomerForm {
   firstName: string;
@@ -74,32 +82,42 @@ export default function WalkInBooking() {
     email: "",
     phone: "",
     address: "",
-    idNumber: ""
+    idNumber: "",
   });
   const [bookingForm, setBookingForm] = useState<BookingForm>({
-    checkIn: new Date().toISOString().split('T')[0],
-    checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    checkIn: new Date().toISOString().split("T")[0],
+    checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
     checkInTime: "14:00",
     checkOutTime: "12:00",
     guests: 1,
-    specialRequests: ""
+    specialRequests: "",
   });
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [customerExists, setCustomerExists] = useState<UserType | null>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Get available rooms based on dates
   const { data: roomData, isLoading: roomsLoading } = useQuery({
-    queryKey: ["/api/rooms/available", bookingForm.checkIn, bookingForm.checkOut],
+    queryKey: [
+      "/api/rooms/available",
+      bookingForm.checkIn,
+      bookingForm.checkOut,
+    ],
     queryFn: async () => {
-      const response = await apiRequest("POST", "/api/rooms/check-availability", {
-        checkIn: bookingForm.checkIn,
-        checkOut: bookingForm.checkOut
-      });
+      const response = await apiRequest(
+        "POST",
+        "/api/rooms/check-availability",
+        {
+          checkIn: bookingForm.checkIn,
+          checkOut: bookingForm.checkOut,
+        }
+      );
       return await response.json();
     },
     enabled: !!bookingForm.checkIn && !!bookingForm.checkOut && step === 2,
@@ -110,7 +128,10 @@ export default function WalkInBooking() {
   // Check if customer exists
   const checkCustomerMutation = useMutation({
     mutationFn: async (email: string) => {
-      const response = await apiRequest("GET", `/api/customers/check?email=${email}`);
+      const response = await apiRequest(
+        "GET",
+        `/api/customers/check?email=${email}`
+      );
       return await response.json();
     },
     onSuccess: (data) => {
@@ -122,7 +143,7 @@ export default function WalkInBooking() {
           email: data.customer.email,
           phone: data.customer.phone || "",
           address: data.customer.address || "",
-          idNumber: ""
+          idNumber: "",
         });
         toast({
           title: "Tìm thấy khách hàng",
@@ -147,22 +168,32 @@ export default function WalkInBooking() {
         customerId = customerExists.id;
       } else {
         // Check if customer exists first
-        const checkResponse = await apiRequest("GET", `/api/customers/check?email=${customerForm.email}`);
+        const checkResponse = await apiRequest(
+          "GET",
+          `/api/customers/check?email=${customerForm.email}`
+        );
         const checkResult = await checkResponse.json();
-        
+
         if (checkResult.exists) {
           customerId = checkResult.customer.id;
         } else {
           try {
-            const customerResponse = await apiRequest("POST", "/api/customers/walkin", {
-              ...customerForm,
-              role: "customer"
-            });
+            const customerResponse = await apiRequest(
+              "POST",
+              "/api/customers/walkin",
+              {
+                ...customerForm,
+                role: "customer",
+              }
+            );
             const customer = await customerResponse.json();
             customerId = customer.id;
           } catch (createError: any) {
             // If creation fails due to duplicate, try to get existing customer
-            const fallbackResponse = await apiRequest("GET", `/api/customers/check?email=${customerForm.email}`);
+            const fallbackResponse = await apiRequest(
+              "GET",
+              `/api/customers/check?email=${customerForm.email}`
+            );
             const fallbackResult = await fallbackResponse.json();
             if (fallbackResult.exists) {
               customerId = fallbackResult.customer.id;
@@ -183,7 +214,7 @@ export default function WalkInBooking() {
         checkOutTime: bookingForm.checkOutTime,
         guests: bookingForm.guests,
         specialRequests: bookingForm.specialRequests,
-        totalPrice: calculateTotalPrice().toString()
+        totalPrice: calculateTotalPrice().toString(),
       });
       return await bookingResponse.json();
     },
@@ -206,19 +237,26 @@ export default function WalkInBooking() {
 
   // Complete payment
   const completePaymentMutation = useMutation({
-    mutationFn: async (data: { paymentMethod: string; paymentType: 'full' | 'deposit' }) => {
+    mutationFn: async (data: {
+      paymentMethod: string;
+      paymentType: "full" | "deposit";
+    }) => {
       const response = await apiRequest("POST", "/api/walkin-payment", {
         bookingId: createdBooking.id,
         paymentMethod: data.paymentMethod,
         paymentType: data.paymentType,
-        amount: data.paymentType === 'full' ? calculateTotalPrice() : Math.round(calculateTotalPrice() * 0.3)
+        amount:
+          data.paymentType === "full"
+            ? calculateTotalPrice()
+            : Math.round(calculateTotalPrice() * 0.3),
       });
       return await response.json();
     },
     onSuccess: () => {
       toast({
         title: "Thanh toán đầy đủ thành công",
-        description: "Đặt phòng walk-in đã được xác nhận và khách có thể nhận phòng ngay!",
+        description:
+          "Đặt phòng walk-in đã được xác nhận và khách có thể nhận phòng ngay!",
       });
       // Reset form
       setStep(1);
@@ -228,15 +266,17 @@ export default function WalkInBooking() {
         email: "",
         phone: "",
         address: "",
-        idNumber: ""
+        idNumber: "",
       });
       setBookingForm({
-        checkIn: new Date().toISOString().split('T')[0],
-        checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        checkIn: new Date().toISOString().split("T")[0],
+        checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
         checkInTime: "14:00",
         checkOutTime: "12:00",
         guests: 1,
-        specialRequests: ""
+        specialRequests: "",
       });
       setSelectedRoom(null);
       setCustomerExists(null);
@@ -254,39 +294,44 @@ export default function WalkInBooking() {
   });
 
   const calculateTotalPrice = () => {
-    if (!selectedRoom || !bookingForm.checkIn || !bookingForm.checkOut) return 0;
+    if (!selectedRoom || !bookingForm.checkIn || !bookingForm.checkOut)
+      return 0;
     const checkIn = new Date(bookingForm.checkIn);
     const checkOut = new Date(bookingForm.checkOut);
-    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-    return nights * parseFloat(selectedRoom.price.replace(/[.,]/g, ''));
+    const nights = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return nights * parseFloat(selectedRoom.price.replace(/[.,]/g, ""));
   };
 
   const calculateStayInfo = () => {
     if (!bookingForm.checkIn || !bookingForm.checkOut) return null;
     const checkInDate = new Date(bookingForm.checkIn);
     const checkOutDate = new Date(bookingForm.checkOut);
-    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const nights = Math.ceil(
+      (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     return {
       nights,
       checkInTime: bookingForm.checkInTime,
       checkOutTime: bookingForm.checkOutTime,
-      isOvernightStay: nights >= 1
+      isOvernightStay: nights >= 1,
     };
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN').format(price) + "đ";
+    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN');
+    return new Date(date).toLocaleDateString("vi-VN");
   };
 
   const getRoomTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       standard: "Standard",
-      deluxe: "Deluxe", 
+      deluxe: "Deluxe",
       suite: "Suite",
       presidential: "Presidential",
     };
@@ -295,7 +340,12 @@ export default function WalkInBooking() {
 
   const handleNextStep = () => {
     if (step === 1) {
-      if (!customerForm.firstName || !customerForm.lastName || !customerForm.email || !customerForm.phone) {
+      if (
+        !customerForm.firstName ||
+        !customerForm.lastName ||
+        !customerForm.email ||
+        !customerForm.phone
+      ) {
         toast({
           title: "Thiếu thông tin",
           description: "Vui lòng nhập đầy đủ thông tin bắt buộc",
@@ -322,21 +372,43 @@ export default function WalkInBooking() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8">
+      <div className="max-w-5xl mx-auto px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Card className="shadow-lg">
+          <Card className="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-2xl border-0">
             <CardContent className="p-8">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold mb-2">Đặt Phòng Walk-in</h1>
-                <p className="text-muted-foreground">
+              <div className="text-center text-white">
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm"
+                >
+                  <UserPlus className="w-8 h-8 text-white" />
+                </motion.div>
+                <h1 className="text-4xl font-bold mb-3">Đặt Phòng Walk-in</h1>
+                <p className="text-emerald-100 text-lg">
                   👨‍💼 Nhân viên lễ tân đặt phòng cho khách hàng đến trực tiếp
                 </p>
+                <div className="mt-4 flex justify-center space-x-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <span>Thông tin khách hàng</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                    <span>Chọn phòng</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+                    <span>Thanh toán</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -349,32 +421,88 @@ export default function WalkInBooking() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-center space-x-8">
-            <div className={`flex items-center ${step >= 1 ? 'text-primary' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-primary text-white' : 'bg-muted'}`}>
-                1
+          <Card className="bg-white/80 backdrop-blur-sm border-emerald-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center space-x-8">
+                <div
+                  className={`flex items-center transition-all duration-300 ${
+                    step >= 1 ? "text-emerald-600" : "text-gray-400"
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      step >= 1
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {step > 1 ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <span className="font-semibold">1</span>
+                    )}
+                  </div>
+                  <span className="ml-3 font-medium">Thông tin khách hàng</span>
+                </div>
+
+                <div
+                  className={`w-20 h-1 rounded-full transition-all duration-300 ${
+                    step >= 2
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600"
+                      : "bg-gray-200"
+                  }`}
+                ></div>
+
+                <div
+                  className={`flex items-center transition-all duration-300 ${
+                    step >= 2 ? "text-emerald-600" : "text-gray-400"
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      step >= 2
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {step > 2 ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <span className="font-semibold">2</span>
+                    )}
+                  </div>
+                  <span className="ml-3 font-medium">Chọn phòng</span>
+                </div>
+
+                <div
+                  className={`w-20 h-1 rounded-full transition-all duration-300 ${
+                    step >= 3
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600"
+                      : "bg-gray-200"
+                  }`}
+                ></div>
+
+                <div
+                  className={`flex items-center transition-all duration-300 ${
+                    step >= 3 ? "text-emerald-600" : "text-gray-400"
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      step >= 3
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    <span className="font-semibold">3</span>
+                  </div>
+                  <span className="ml-3 font-medium">
+                    Xác nhận & Thanh toán
+                  </span>
+                </div>
               </div>
-              <span className="ml-2 font-medium">Thông tin khách hàng</span>
-            </div>
-            
-            <div className={`w-16 h-0.5 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
-            
-            <div className={`flex items-center ${step >= 2 ? 'text-primary' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-primary text-white' : 'bg-muted'}`}>
-                2
-              </div>
-              <span className="ml-2 font-medium">Chọn phòng</span>
-            </div>
-            
-            <div className={`w-16 h-0.5 ${step >= 3 ? 'bg-primary' : 'bg-muted'}`}></div>
-            
-            <div className={`flex items-center ${step >= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-primary text-white' : 'bg-muted'}`}>
-                3
-              </div>
-              <span className="ml-2 font-medium">Xác nhận & Thanh toán</span>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Step 1: Customer Information */}
@@ -384,15 +512,16 @@ export default function WalkInBooking() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
-              <CardHeader>
+            <Card className="bg-gradient-to-br from-white to-emerald-50 border-emerald-200 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
-                  <UserPlus className="mr-2" size={20} />
+                  <UserPlus className="mr-3" size={24} />
                   Thông tin khách hàng
                 </CardTitle>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    📋 <strong>Hướng dẫn:</strong> Nhân viên lễ tân nhập thông tin khách hàng đến trực tiếp
+                <div className="bg-white/20 p-4 rounded-lg border border-white/30 backdrop-blur-sm">
+                  <p className="text-emerald-50">
+                    📋 <strong>Hướng dẫn:</strong> Nhân viên lễ tân nhập thông
+                    tin khách hàng đến trực tiếp
                   </p>
                 </div>
               </CardHeader>
@@ -405,13 +534,22 @@ export default function WalkInBooking() {
                       id="email"
                       type="email"
                       value={customerForm.email}
-                      onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerForm((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       placeholder="email@example.com"
                       className="flex-1"
                     />
-                    <Button 
-                      onClick={() => checkCustomerMutation.mutate(customerForm.email)}
-                      disabled={!customerForm.email || checkCustomerMutation.isPending}
+                    <Button
+                      onClick={() =>
+                        checkCustomerMutation.mutate(customerForm.email)
+                      }
+                      disabled={
+                        !customerForm.email || checkCustomerMutation.isPending
+                      }
                       variant="outline"
                     >
                       Kiểm tra
@@ -431,7 +569,12 @@ export default function WalkInBooking() {
                     <Input
                       id="firstName"
                       value={customerForm.firstName}
-                      onChange={(e) => setCustomerForm(prev => ({ ...prev, firstName: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerForm((prev) => ({
+                          ...prev,
+                          firstName: e.target.value,
+                        }))
+                      }
                       placeholder="Nguyễn"
                     />
                   </div>
@@ -440,7 +583,12 @@ export default function WalkInBooking() {
                     <Input
                       id="lastName"
                       value={customerForm.lastName}
-                      onChange={(e) => setCustomerForm(prev => ({ ...prev, lastName: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerForm((prev) => ({
+                          ...prev,
+                          lastName: e.target.value,
+                        }))
+                      }
                       placeholder="Văn A"
                     />
                   </div>
@@ -452,7 +600,12 @@ export default function WalkInBooking() {
                     <Input
                       id="phone"
                       value={customerForm.phone}
-                      onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerForm((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
                       placeholder="0123456789"
                     />
                   </div>
@@ -461,7 +614,12 @@ export default function WalkInBooking() {
                     <Input
                       id="idNumber"
                       value={customerForm.idNumber}
-                      onChange={(e) => setCustomerForm(prev => ({ ...prev, idNumber: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerForm((prev) => ({
+                          ...prev,
+                          idNumber: e.target.value,
+                        }))
+                      }
                       placeholder="123456789012"
                     />
                   </div>
@@ -472,15 +630,29 @@ export default function WalkInBooking() {
                   <Input
                     id="address"
                     value={customerForm.address}
-                    onChange={(e) => setCustomerForm(prev => ({ ...prev, address: e.target.value }))}
+                    onChange={(e) =>
+                      setCustomerForm((prev) => ({
+                        ...prev,
+                        address: e.target.value,
+                      }))
+                    }
                     placeholder="Địa chỉ đầy đủ"
                   />
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleNextStep}>
-                    Tiếp theo: Chọn phòng
-                  </Button>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      Tiếp theo: Chọn phòng
+                      <Calendar className="ml-2" size={20} />
+                    </Button>
+                  </motion.div>
                 </div>
               </CardContent>
             </Card>
@@ -496,18 +668,20 @@ export default function WalkInBooking() {
             className="space-y-6"
           >
             {/* Booking Details */}
-            <Card>
-              <CardHeader>
+            <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-200 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
-                  <Calendar className="mr-2" size={20} />
+                  <Calendar className="mr-3" size={24} />
                   Chi tiết đặt phòng
                 </CardTitle>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    🏨 <strong>Quy trình:</strong> Nhân viên chọn phòng trống phù hợp với yêu cầu của khách
+                <div className="bg-white/20 p-4 rounded-lg border border-white/30 backdrop-blur-sm">
+                  <p className="text-blue-50">
+                    🏨 <strong>Quy trình:</strong> Nhân viên chọn phòng trống
+                    phù hợp với yêu cầu của khách
                   </p>
-                  <p className="text-xs text-blue-700 mt-1">
-                    💡 <strong>Ví dụ:</strong> Khách đặt 4:00 PM hôm nay đến 2:00 PM ngày mai = 1 đêm
+                  <p className="text-blue-100 text-sm mt-2">
+                    💡 <strong>Ví dụ:</strong> Khách đặt 4:00 PM hôm nay đến
+                    2:00 PM ngày mai = 1 đêm
                   </p>
                 </div>
               </CardHeader>
@@ -519,7 +693,12 @@ export default function WalkInBooking() {
                       id="checkIn"
                       type="date"
                       value={bookingForm.checkIn}
-                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkIn: e.target.value }))}
+                      onChange={(e) =>
+                        setBookingForm((prev) => ({
+                          ...prev,
+                          checkIn: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div>
@@ -528,9 +707,16 @@ export default function WalkInBooking() {
                       id="checkInTime"
                       type="time"
                       value={bookingForm.checkInTime}
-                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkInTime: e.target.value }))}
+                      onChange={(e) =>
+                        setBookingForm((prev) => ({
+                          ...prev,
+                          checkInTime: e.target.value,
+                        }))
+                      }
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Mặc định: 14:00 (2:00 PM)</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Mặc định: 14:00 (2:00 PM)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="checkOut">Ngày trả phòng</Label>
@@ -538,7 +724,12 @@ export default function WalkInBooking() {
                       id="checkOut"
                       type="date"
                       value={bookingForm.checkOut}
-                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkOut: e.target.value }))}
+                      onChange={(e) =>
+                        setBookingForm((prev) => ({
+                          ...prev,
+                          checkOut: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div>
@@ -547,19 +738,36 @@ export default function WalkInBooking() {
                       id="checkOutTime"
                       type="time"
                       value={bookingForm.checkOutTime}
-                      onChange={(e) => setBookingForm(prev => ({ ...prev, checkOutTime: e.target.value }))}
+                      onChange={(e) =>
+                        setBookingForm((prev) => ({
+                          ...prev,
+                          checkOutTime: e.target.value,
+                        }))
+                      }
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Mặc định: 12:00 (12:00 PM)</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Mặc định: 12:00 (12:00 PM)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="guests">Số khách</Label>
-                    <Select value={bookingForm.guests.toString()} onValueChange={(value) => setBookingForm(prev => ({ ...prev, guests: parseInt(value) }))}>
+                    <Select
+                      value={bookingForm.guests.toString()}
+                      onValueChange={(value) =>
+                        setBookingForm((prev) => ({
+                          ...prev,
+                          guests: parseInt(value),
+                        }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[1, 2, 3, 4, 5, 6].map(num => (
-                          <SelectItem key={num} value={num.toString()}>{num} khách</SelectItem>
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} khách
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -571,7 +779,12 @@ export default function WalkInBooking() {
                   <Textarea
                     id="specialRequests"
                     value={bookingForm.specialRequests}
-                    onChange={(e) => setBookingForm(prev => ({ ...prev, specialRequests: e.target.value }))}
+                    onChange={(e) =>
+                      setBookingForm((prev) => ({
+                        ...prev,
+                        specialRequests: e.target.value,
+                      }))
+                    }
                     placeholder="Giường đôi, tầng cao, view biển..."
                     rows={3}
                   />
@@ -580,9 +793,12 @@ export default function WalkInBooking() {
             </Card>
 
             {/* Available Rooms */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Phòng trống ({availableRooms.length})</CardTitle>
+            <Card className="bg-gradient-to-br from-white to-purple-50 border-purple-200 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center">
+                  <Users className="mr-3" size={24} />
+                  Phòng trống ({availableRooms.length})
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {roomsLoading ? (
@@ -592,31 +808,47 @@ export default function WalkInBooking() {
                   </div>
                 ) : availableRooms.length === 0 ? (
                   <div className="text-center py-8">
-                    <AlertCircle className="mx-auto mb-4 text-orange-500" size={48} />
-                    <h3 className="font-semibold text-lg mb-2">Không có phòng trống</h3>
+                    <AlertCircle
+                      className="mx-auto mb-4 text-orange-500"
+                      size={48}
+                    />
+                    <h3 className="font-semibold text-lg mb-2">
+                      Không có phòng trống
+                    </h3>
                     <p className="text-muted-foreground mb-4">
-                      Không có phòng nào trống trong thời gian từ {formatDate(bookingForm.checkIn)} đến {formatDate(bookingForm.checkOut)}
+                      Không có phòng nào trống trong thời gian từ{" "}
+                      {formatDate(bookingForm.checkIn)} đến{" "}
+                      {formatDate(bookingForm.checkOut)}
                     </p>
                     <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                       <p className="text-sm text-orange-800">
-                        💡 <strong>Gợi ý:</strong> Thử chọn ngày khác hoặc kiểm tra lại ngày đã đặt
+                        💡 <strong>Gợi ý:</strong> Thử chọn ngày khác hoặc kiểm
+                        tra lại ngày đã đặt
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {availableRooms.map((room: Room) => (
-                      <Card 
-                        key={room.id} 
-                        className={`cursor-pointer transition-all ${selectedRoom?.id === room.id ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+                      <Card
+                        key={room.id}
+                        className={`cursor-pointer transition-all ${
+                          selectedRoom?.id === room.id
+                            ? "ring-2 ring-primary"
+                            : "hover:shadow-md"
+                        }`}
                         onClick={() => setSelectedRoom(room)}
                       >
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
-                                <h3 className="font-semibold">Phòng {room.number}</h3>
-                                <Badge variant="outline">{getRoomTypeLabel(room.type)}</Badge>
+                                <h3 className="font-semibold">
+                                  Phòng {room.number}
+                                </h3>
+                                <Badge variant="outline">
+                                  {getRoomTypeLabel(room.type)}
+                                </Badge>
                                 {selectedRoom?.id === room.id && (
                                   <Badge className="bg-green-100 text-green-800 border-green-200">
                                     ✓ Đã chọn
@@ -627,14 +859,20 @@ export default function WalkInBooking() {
                                 Sức chứa: {room.capacity} khách
                               </p>
                               {room.description && (
-                                <p className="text-sm text-muted-foreground">{room.description}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {room.description}
+                                </p>
                               )}
                             </div>
                             <div className="text-right">
                               <p className="text-lg font-semibold text-primary">
-                                {formatPrice(parseFloat(room.price.replace(/[.,]/g, '')))}
+                                {formatPrice(
+                                  parseFloat(room.price.replace(/[.,]/g, ""))
+                                )}
                               </p>
-                              <p className="text-sm text-muted-foreground">/ đêm</p>
+                              <p className="text-sm text-muted-foreground">
+                                / đêm
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -646,12 +884,31 @@ export default function WalkInBooking() {
             </Card>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Quay lại
-              </Button>
-              <Button onClick={handleNextStep} disabled={!selectedRoom}>
-                Tiếp theo: Xác nhận
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(1)}
+                  className="px-6 py-3 text-lg font-medium border-2 hover:bg-gray-50 transition-all duration-300"
+                >
+                  Quay lại
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  onClick={handleNextStep}
+                  disabled={!selectedRoom}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                >
+                  Tiếp theo: Xác nhận
+                  <CheckCircle className="ml-2" size={20} />
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -663,10 +920,10 @@ export default function WalkInBooking() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
-              <CardHeader>
+            <Card className="bg-gradient-to-br from-white to-green-50 border-green-200 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
-                  <CheckCircle className="mr-2" size={20} />
+                  <CheckCircle className="mr-3" size={24} />
                   Xác nhận đặt phòng
                 </CardTitle>
               </CardHeader>
@@ -677,7 +934,9 @@ export default function WalkInBooking() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Họ tên:</span>
-                      <p>{customerForm.firstName} {customerForm.lastName}</p>
+                      <p>
+                        {customerForm.firstName} {customerForm.lastName}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Email:</span>
@@ -702,7 +961,10 @@ export default function WalkInBooking() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Phòng:</span>
-                      <p>{selectedRoom.number} - {getRoomTypeLabel(selectedRoom.type)}</p>
+                      <p>
+                        {selectedRoom.number} -{" "}
+                        {getRoomTypeLabel(selectedRoom.type)}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Số khách:</span>
@@ -719,7 +981,9 @@ export default function WalkInBooking() {
                   </div>
                   {bookingForm.specialRequests && (
                     <div className="mt-3">
-                      <span className="font-medium text-sm">Yêu cầu đặc biệt:</span>
+                      <span className="font-medium text-sm">
+                        Yêu cầu đặc biệt:
+                      </span>
                       <p className="text-sm">{bookingForm.specialRequests}</p>
                     </div>
                   )}
@@ -733,22 +997,36 @@ export default function WalkInBooking() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Giá phòng/đêm:</span>
-                      <span>{formatPrice(parseFloat(selectedRoom.price.replace(/[.,]/g, '')))}</span>
+                      <span>
+                        {formatPrice(
+                          parseFloat(selectedRoom.price.replace(/[.,]/g, ""))
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Số đêm:</span>
-                      <span>{Math.ceil((new Date(bookingForm.checkOut).getTime() - new Date(bookingForm.checkIn).getTime()) / (1000 * 60 * 60 * 24))} đêm</span>
+                      <span>
+                        {Math.ceil(
+                          (new Date(bookingForm.checkOut).getTime() -
+                            new Date(bookingForm.checkIn).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )}{" "}
+                        đêm
+                      </span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Thanh toán đầy đủ:</span>
                       <div className="text-right">
-                        <span className="text-primary">{formatPrice(calculateTotalPrice())}</span>
+                        <span className="text-primary">
+                          {formatPrice(calculateTotalPrice())}
+                        </span>
                         {(() => {
                           const stayInfo = calculateStayInfo();
                           return stayInfo ? (
                             <div className="text-xs text-muted-foreground mt-1">
-                              {stayInfo.nights} đêm • {stayInfo.checkInTime} - {stayInfo.checkOutTime}
+                              {stayInfo.nights} đêm • {stayInfo.checkInTime} -{" "}
+                              {stayInfo.checkOutTime}
                             </div>
                           ) : null;
                         })()}
@@ -761,16 +1039,33 @@ export default function WalkInBooking() {
                 </div>
 
                 <div className="flex justify-between">
-                  <Button variant="outline" onClick={() => setStep(2)}>
-                    Quay lại
-                  </Button>
-                  <Button 
-                    onClick={handleCompleteBooking}
-                    disabled={createBookingMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {createBookingMutation.isPending ? "Đang tạo..." : "Tạo đặt phòng"}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setStep(2)}
+                      className="px-6 py-3 text-lg font-medium border-2 hover:bg-gray-50 transition-all duration-300"
+                    >
+                      Quay lại
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      onClick={handleCompleteBooking}
+                      disabled={createBookingMutation.isPending}
+                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                    >
+                      {createBookingMutation.isPending
+                        ? "Đang tạo..."
+                        : "Tạo đặt phòng"}
+                      <CreditCard className="ml-2" size={20} />
+                    </Button>
+                  </motion.div>
                 </div>
               </CardContent>
             </Card>
@@ -779,22 +1074,35 @@ export default function WalkInBooking() {
 
         {/* Payment Dialog */}
         <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Chọn phương thức thanh toán</DialogTitle>
-              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                <p className="text-sm text-green-800">
-                  💳 <strong>Bước cuối:</strong> Nhân viên thu tiền từ khách và xác nhận thanh toán
+          <DialogContent className="max-w-lg bg-gradient-to-br from-white to-green-50 border-green-200 shadow-2xl">
+            <DialogHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg -m-6 mb-6 p-6">
+              <DialogTitle className="flex items-center text-xl">
+                <CreditCard className="mr-3" size={24} />
+                Chọn phương thức thanh toán
+              </DialogTitle>
+              <div className="bg-white/20 p-4 rounded-lg border border-white/30 backdrop-blur-sm mt-4">
+                <p className="text-green-50">
+                  💳 <strong>Bước cuối:</strong> Nhân viên thu tiền từ khách và
+                  xác nhận thanh toán
                 </p>
               </div>
             </DialogHeader>
-            
+
             {createdBooking && (
               <div className="space-y-6">
-                <div className="text-center p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Mã đặt phòng:</p>
-                  <p className="text-lg font-bold">HLX{createdBooking.id}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Tổng tiền: {formatPrice(calculateTotalPrice())}</p>
+                <div className="text-center p-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-white" />
+                  </div>
+                  <p className="text-sm text-emerald-600 font-medium mb-2">
+                    Mã đặt phòng:
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-800 mb-2">
+                    HLX{createdBooking.id}
+                  </p>
+                  <p className="text-lg font-semibold text-emerald-700">
+                    Tổng tiền: {formatPrice(calculateTotalPrice())}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
@@ -802,10 +1110,15 @@ export default function WalkInBooking() {
                   <p className="text-sm text-muted-foreground bg-amber-50 p-3 rounded-lg border border-amber-200">
                     💡 Khách đến trực tiếp cần thanh toán đầy đủ ngay
                   </p>
-                  
+
                   <div className="space-y-3">
                     <Button
-                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "cash", paymentType: "full" })}
+                      onClick={() =>
+                        completePaymentMutation.mutate({
+                          paymentMethod: "cash",
+                          paymentType: "full",
+                        })
+                      }
                       disabled={completePaymentMutation.isPending}
                       className="w-full justify-start"
                       variant="outline"
@@ -813,9 +1126,14 @@ export default function WalkInBooking() {
                       <CreditCard className="mr-2" size={16} />
                       Tiền mặt ({formatPrice(calculateTotalPrice())})
                     </Button>
-                    
+
                     <Button
-                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "card", paymentType: "full" })}
+                      onClick={() =>
+                        completePaymentMutation.mutate({
+                          paymentMethod: "card",
+                          paymentType: "full",
+                        })
+                      }
                       disabled={completePaymentMutation.isPending}
                       className="w-full justify-start"
                       variant="outline"
@@ -825,7 +1143,12 @@ export default function WalkInBooking() {
                     </Button>
 
                     <Button
-                      onClick={() => completePaymentMutation.mutate({ paymentMethod: "transfer", paymentType: "full" })}
+                      onClick={() =>
+                        completePaymentMutation.mutate({
+                          paymentMethod: "transfer",
+                          paymentType: "full",
+                        })
+                      }
                       disabled={completePaymentMutation.isPending}
                       className="w-full justify-start"
                       variant="outline"

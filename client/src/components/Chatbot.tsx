@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Bot } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, MessageCircle, Send, X } from "lucide-react";
+import { useState } from "react";
 
 interface Message {
   id: number;
@@ -24,12 +24,28 @@ export function Chatbot() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
 
+  // Thêm các state cho quy trình đặt phòng
+  const [bookingStep, setBookingStep] = useState<null | number>(null);
+  const [bookingInfo, setBookingInfo] = useState<{
+    name?: string;
+    checkIn?: string;
+    checkOut?: string;
+    roomType?: string;
+  }>({});
+
   const quickActions = [
     "Giá phòng",
     "Tiện nghi",
     "Đặt phòng",
-    "Chính sách hủy"
+    "Chính sách hủy",
   ];
+
+  const roomTypes = ["Standard", "Deluxe", "Suite", "Presidential"];
+
+  const resetBooking = () => {
+    setBookingStep(null);
+    setBookingInfo({});
+  };
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -41,24 +57,37 @@ export function Chatbot() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+
+    // Nếu đang trong quy trình đặt phòng
+    if (bookingStep !== null) {
+      handleBookingStep(text);
+      return;
+    }
 
     // Simulate AI response
     setTimeout(() => {
       const responses: Record<string, string> = {
-        "giá phòng": "Giá phòng của chúng tôi: Standard (800.000đ), Deluxe (1.500.000đ), Suite (2.800.000đ), Presidential (8.500.000đ). Tất cả đã bao gồm ăn sáng!",
-        "tiện nghi": "Tiện nghi bao gồm: WiFi miễn phí, TV 4K, điều hòa, minibar, két an toàn, và dịch vụ phòng 24/7. Phòng cao cấp có thêm balcony và jacuzzi.",
-        "đặt phòng": "Để đặt phòng, bạn có thể sử dụng form tìm kiếm trên trang chủ hoặc tôi có thể chuyển bạn đến trang đặt phòng ngay bây giờ!",
-        "chính sách hủy": "Bạn có thể hủy miễn phí trước 24h. Hủy trong vòng 24h sẽ tính phí 50% tổng tiền đặt phòng.",
+        "giá phòng":
+          "Giá phòng của chúng tôi: Standard (800.000đ), Deluxe (1.500.000đ), Suite (2.800.000đ), Presidential (8.500.000đ). Tất cả đã bao gồm ăn sáng!",
+        "tiện nghi":
+          "Tiện nghi bao gồm: WiFi miễn phí, TV 4K, điều hòa, minibar, két an toàn, và dịch vụ phòng 24/7. Phòng cao cấp có thêm balcony và jacuzzi.",
+        "đặt phòng":
+          "Để đặt phòng, tôi sẽ cần một số thông tin. Bạn vui lòng cho biết tên của bạn?",
+        "chính sách hủy":
+          "Bạn có thể hủy miễn phí trước 24h. Hủy trong vòng 24h sẽ tính phí 50% tổng tiền đặt phòng.",
       };
 
       const lowerText = text.toLowerCase();
-      let response = "Cảm ơn bạn đã liên hệ! Tôi đang xử lý yêu cầu của bạn. Bạn có thể hỏi về giá phòng, tiện nghi, hoặc cách đặt phòng.";
+      let response =
+        "Cảm ơn bạn đã liên hệ! Tôi đang xử lý yêu cầu của bạn. Bạn có thể hỏi về giá phòng, tiện nghi, hoặc cách đặt phòng.";
 
+      let isBooking = false;
       for (const [key, value] of Object.entries(responses)) {
         if (lowerText.includes(key)) {
           response = value;
+          if (key === "đặt phòng") isBooking = true;
           break;
         }
       }
@@ -70,8 +99,98 @@ export function Chatbot() {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, aiMessage]);
+      if (isBooking) {
+        setBookingStep(0); // Bắt đầu quy trình đặt phòng
+      }
+    }, 800);
+  };
+
+  // Xử lý từng bước đặt phòng
+  const handleBookingStep = (text: string) => {
+    if (bookingStep === 0) {
+      setBookingInfo((info) => ({ ...info, name: text }));
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          text: "Bạn muốn nhận phòng ngày nào? (Vui lòng nhập theo định dạng YYYY-MM-DD)",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setBookingStep(1);
+    } else if (bookingStep === 1) {
+      setBookingInfo((info) => ({ ...info, checkIn: text }));
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 3,
+          text: "Bạn sẽ trả phòng ngày nào? (YYYY-MM-DD)",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setBookingStep(2);
+    } else if (bookingStep === 2) {
+      setBookingInfo((info) => ({ ...info, checkOut: text }));
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 4,
+          text: `Bạn muốn đặt loại phòng nào? (${roomTypes.join(", ")})`,
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setBookingStep(3);
+    } else if (bookingStep === 3) {
+      setBookingInfo((info) => ({ ...info, roomType: text }));
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 5,
+          text: `Vui lòng xác nhận thông tin đặt phòng:\n- Tên: ${bookingInfo.name}\n- Nhận phòng: ${bookingInfo.checkIn}\n- Trả phòng: ${bookingInfo.checkOut}\n- Loại phòng: ${text}\n\nNhập 'Xác nhận' để hoàn tất hoặc 'Hủy' để bỏ qua.`,
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setBookingStep(4);
+    } else if (bookingStep === 4) {
+      if (text.toLowerCase().includes("xác nhận")) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 6,
+            text: `Đặt phòng thành công! Cảm ơn bạn, ${bookingInfo.name}. Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.`,
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+        resetBooking();
+      } else if (text.toLowerCase().includes("hủy")) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 7,
+            text: "Đặt phòng đã được hủy. Nếu bạn muốn đặt lại, hãy nhấn 'Đặt phòng' hoặc nhập lại thông tin.",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+        resetBooking();
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 8,
+            text: "Vui lòng nhập 'Xác nhận' để hoàn tất hoặc 'Hủy' để bỏ qua.",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -1,36 +1,45 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Search, 
-  Filter, 
-  Star, 
-  Wifi, 
-  Car, 
-  Coffee, 
-  Tv, 
-  Bath, 
+import { useToast } from "@/hooks/use-toast";
+import { authManager } from "@/lib/auth";
+import { Room } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  Bath,
   Bed,
-  Users,
   Calendar,
-  MapPin,
+  Car,
   ChevronLeft,
   ChevronRight,
-  X,
-  ImageIcon
+  Coffee,
+  Filter,
+  ImageIcon,
+  Search,
+  Star,
+  Tv,
+  Users,
+  Wifi,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { authManager } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
-import { Room } from "@shared/schema";
 
 export default function Booking() {
   const [, setLocation] = useLocation();
@@ -41,7 +50,7 @@ export default function Booking() {
     checkInTime: "14:00",
     checkOutTime: "12:00",
     guests: "2",
-    roomType: "all"
+    roomType: "all",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -52,11 +61,11 @@ export default function Booking() {
 
   // Load saved room data from localStorage if coming from customer page
   useEffect(() => {
-    const savedRoomData = localStorage.getItem('selectedRoomData');
+    const savedRoomData = localStorage.getItem("selectedRoomData");
     if (savedRoomData) {
       const roomData = JSON.parse(savedRoomData);
       setSelectedRoom(roomData);
-      localStorage.removeItem('selectedRoomData'); // Clear after use
+      localStorage.removeItem("selectedRoomData"); // Clear after use
     }
   }, []);
 
@@ -70,21 +79,27 @@ export default function Booking() {
   });
 
   const filteredRooms = (rooms as Room[]).filter((room) => {
-    const matchesType = searchParams.roomType === "all" || room.type === searchParams.roomType;
+    const matchesType =
+      searchParams.roomType === "all" || room.type === searchParams.roomType;
     const matchesGuests = parseInt(searchParams.guests) <= room.capacity;
     return matchesType && matchesGuests && room.status === "available";
   });
 
   const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
   const startIndex = (currentPage - 1) * roomsPerPage;
-  const paginatedRooms = filteredRooms.slice(startIndex, startIndex + roomsPerPage);
+  const paginatedRooms = filteredRooms.slice(
+    startIndex,
+    startIndex + roomsPerPage
+  );
 
   const calculateTotalPrice = (room: Room) => {
     if (!searchParams.checkIn || !searchParams.checkOut) return 0;
     const checkIn = new Date(searchParams.checkIn);
     const checkOut = new Date(searchParams.checkOut);
-    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-    return nights * parseFloat(room.price.replace(/[.,]/g, ''));
+    const nights = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return nights * parseFloat(room.price.replace(/[.,]/g, ""));
   };
 
   const openGallery = (room: Room, startIndex = 0) => {
@@ -95,7 +110,7 @@ export default function Booking() {
 
   const nextImage = () => {
     if (galleryRoom && galleryRoom.images) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === galleryRoom.images!.length - 1 ? 0 : prev + 1
       );
     }
@@ -103,7 +118,7 @@ export default function Booking() {
 
   const prevImage = () => {
     if (galleryRoom && galleryRoom.images) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === 0 ? galleryRoom.images!.length - 1 : prev - 1
       );
     }
@@ -130,44 +145,89 @@ export default function Booking() {
     }
 
     try {
+      // Kiểm tra phòng trống trước khi đặt
+      const availabilityResponse = await fetch("/api/check-room-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authManager.getToken()}`,
+        },
+        body: JSON.stringify({
+          roomId: room.id,
+          checkIn: new Date(searchParams.checkIn).toISOString(),
+          checkOut: new Date(searchParams.checkOut).toISOString(),
+        }),
+      });
+
+      if (!availabilityResponse.ok) {
+        const error = await availabilityResponse.json();
+        throw new Error(error.message || "Không thể kiểm tra phòng trống");
+      }
+
+      const availability = await availabilityResponse.json();
+
+      if (!availability.available) {
+        toast({
+          title: "Phòng không khả dụng",
+          description:
+            "Phòng này đã được đặt cho thời gian bạn chọn. Vui lòng chọn phòng khác hoặc thời gian khác.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const bookingData = {
         roomId: room.id,
-        checkIn: searchParams.checkIn,
-        checkOut: searchParams.checkOut,
+        checkIn: new Date(searchParams.checkIn).toISOString(),
+        checkOut: new Date(searchParams.checkOut).toISOString(),
         checkInTime: searchParams.checkInTime,
         checkOutTime: searchParams.checkOutTime,
         guests: parseInt(searchParams.guests),
         totalPrice: calculateTotalPrice(room).toString(),
-        specialRequests: ""
+        specialRequests: "",
       };
 
       // Create booking in database first
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
+      const response = await fetch("/api/bookings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authManager.getToken()}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authManager.getToken()}`,
         },
-        body: JSON.stringify(bookingData)
+        body: JSON.stringify(bookingData),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Không thể tạo đặt phòng');
+        throw new Error(error.message || "Không thể tạo đặt phòng");
       }
 
       const booking = await response.json();
-      
-      // Save booking info to localStorage for payment
-      localStorage.setItem('currentBooking', JSON.stringify(booking));
-      localStorage.setItem('selectedRoomInfo', JSON.stringify(room));
-      
+
+      // Lưu đầy đủ thông tin booking vào localStorage
+      const bookingToSave = {
+        id: booking.id || booking.insertId, // Sử dụng id hoặc insertId
+        roomId: bookingData.roomId,
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        guests: bookingData.guests,
+        totalPrice: bookingData.totalPrice,
+        specialRequests: bookingData.specialRequests || "",
+        checkInTime: bookingData.checkInTime,
+        checkOutTime: bookingData.checkOutTime,
+      };
+
+      console.log("Debug - Saving booking to localStorage:", bookingToSave);
+      localStorage.setItem("currentBooking", JSON.stringify(bookingToSave));
+      localStorage.setItem("selectedRoomInfo", JSON.stringify(room));
+      console.log("Debug - Booking saved successfully");
+
       toast({
         title: "Tạo đặt phòng thành công",
         description: "Chuyển đến trang thanh toán...",
       });
-      
-      setLocation('/payment');
+
+      setLocation("/payment");
     } catch (error: any) {
       toast({
         title: "Lỗi tạo đặt phòng",
@@ -180,7 +240,7 @@ export default function Booking() {
   const getRoomTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       standard: "Standard",
-      deluxe: "Deluxe", 
+      deluxe: "Deluxe",
       suite: "Suite",
       presidential: "Presidential",
     };
@@ -189,14 +249,14 @@ export default function Booking() {
 
   const getAmenityIcon = (amenity: string) => {
     const iconMap: Record<string, any> = {
-      "wifi": Wifi,
-      "tv": Tv,
-      "parking": Car,
-      "coffee": Coffee,
-      "bath": Bath,
-      "bed": Bed,
+      wifi: Wifi,
+      tv: Tv,
+      parking: Car,
+      coffee: Coffee,
+      bath: Bath,
+      bed: Bed,
     };
-    
+
     for (const [key, Icon] of Object.entries(iconMap)) {
       if (amenity.toLowerCase().includes(key)) {
         return Icon;
@@ -215,7 +275,9 @@ export default function Booking() {
           className="text-center mb-8"
         >
           <h1 className="text-4xl font-bold mb-4">Đặt phòng khách sạn</h1>
-          <p className="text-muted-foreground text-lg">Tìm và đặt phòng phù hợp với nhu cầu của bạn</p>
+          <p className="text-muted-foreground text-lg">
+            Tìm và đặt phòng phù hợp với nhu cầu của bạn
+          </p>
         </motion.div>
 
         {/* Search Filters */}
@@ -225,51 +287,108 @@ export default function Booking() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <Card className="card-enhanced glass backdrop-blur-lg">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+          <Card className="card-enhanced glass backdrop-blur-lg rounded-2xl shadow-md border-0">
+            <CardContent className="p-4 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 md:gap-4">
                 <div>
-                  <Label htmlFor="checkin">Ngày nhận phòng</Label>
+                  <Label
+                    htmlFor="checkin"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Ngày nhận phòng
+                  </Label>
                   <Input
                     id="checkin"
                     type="date"
                     value={searchParams.checkIn}
-                    onChange={(e) => setSearchParams({...searchParams, checkIn: e.target.value})}
-                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) =>
+                      setSearchParams({
+                        ...searchParams,
+                        checkIn: e.target.value,
+                      })
+                    }
+                    min={new Date().toISOString().split("T")[0]}
+                    className="rounded-lg px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="checkinTime">Giờ nhận</Label>
+                  <Label
+                    htmlFor="checkinTime"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Giờ nhận
+                  </Label>
                   <Input
                     id="checkinTime"
                     type="time"
                     value={searchParams.checkInTime}
-                    onChange={(e) => setSearchParams({...searchParams, checkInTime: e.target.value})}
+                    onChange={(e) =>
+                      setSearchParams({
+                        ...searchParams,
+                        checkInTime: e.target.value,
+                      })
+                    }
+                    className="rounded-lg px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="checkout">Ngày trả phòng</Label>
+                  <Label
+                    htmlFor="checkout"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Ngày trả phòng
+                  </Label>
                   <Input
                     id="checkout"
                     type="date"
                     value={searchParams.checkOut}
-                    onChange={(e) => setSearchParams({...searchParams, checkOut: e.target.value})}
-                    min={searchParams.checkIn || new Date().toISOString().split('T')[0]}
+                    onChange={(e) =>
+                      setSearchParams({
+                        ...searchParams,
+                        checkOut: e.target.value,
+                      })
+                    }
+                    min={
+                      searchParams.checkIn ||
+                      new Date().toISOString().split("T")[0]
+                    }
+                    className="rounded-lg px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="checkoutTime">Giờ trả</Label>
+                  <Label
+                    htmlFor="checkoutTime"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Giờ trả
+                  </Label>
                   <Input
                     id="checkoutTime"
                     type="time"
                     value={searchParams.checkOutTime}
-                    onChange={(e) => setSearchParams({...searchParams, checkOutTime: e.target.value})}
+                    onChange={(e) =>
+                      setSearchParams({
+                        ...searchParams,
+                        checkOutTime: e.target.value,
+                      })
+                    }
+                    className="rounded-lg px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="guests">Số khách</Label>
-                  <Select value={searchParams.guests} onValueChange={(value) => setSearchParams({...searchParams, guests: value})}>
-                    <SelectTrigger>
+                  <Label
+                    htmlFor="guests"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Số khách
+                  </Label>
+                  <Select
+                    value={searchParams.guests}
+                    onValueChange={(value) =>
+                      setSearchParams({ ...searchParams, guests: value })
+                    }
+                  >
+                    <SelectTrigger className="rounded-lg px-3 py-2 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -282,9 +401,19 @@ export default function Booking() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="roomtype">Loại phòng</Label>
-                  <Select value={searchParams.roomType} onValueChange={(value) => setSearchParams({...searchParams, roomType: value})}>
-                    <SelectTrigger>
+                  <Label
+                    htmlFor="roomtype"
+                    className="text-xs font-semibold mb-1 block"
+                  >
+                    Loại phòng
+                  </Label>
+                  <Select
+                    value={searchParams.roomType}
+                    onValueChange={(value) =>
+                      setSearchParams({ ...searchParams, roomType: value })
+                    }
+                  >
+                    <SelectTrigger className="rounded-lg px-3 py-2 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -297,7 +426,7 @@ export default function Booking() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button className="w-full btn-primary hover-glow">
+                  <Button className="w-full btn-primary hover-glow rounded-lg text-base py-2">
                     <Search className="mr-2" size={16} />
                     Tìm kiếm
                   </Button>
@@ -325,12 +454,19 @@ export default function Booking() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {recommendations.slice(0, 3).map((room: Room) => (
-                    <div key={room.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <div
+                      key={room.id}
+                      className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
+                    >
                       <h4 className="font-semibold">Phòng {room.number}</h4>
-                      <p className="text-sm text-muted-foreground">{getRoomTypeLabel(room.type)}</p>
-                      <p className="text-lg font-bold text-primary">{room.price}đ/đêm</p>
-                      <Button 
-                        size="sm" 
+                      <p className="text-sm text-muted-foreground">
+                        {getRoomTypeLabel(room.type)}
+                      </p>
+                      <p className="text-lg font-bold text-primary">
+                        {room.price}đ/đêm
+                      </p>
+                      <Button
+                        size="sm"
                         className="mt-2 w-full"
                         onClick={() => handleBookRoom(room)}
                       >
@@ -347,109 +483,137 @@ export default function Booking() {
         {/* Results Count */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-muted-foreground">
-            Tìm thấy <span className="font-semibold">{filteredRooms.length}</span> phòng phù hợp
+            Tìm thấy{" "}
+            <span className="font-semibold">{filteredRooms.length}</span> phòng
+            phù hợp
           </p>
           <div className="flex items-center space-x-2">
             <Filter size={16} className="text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Sắp xếp theo giá</span>
+            <span className="text-sm text-muted-foreground">
+              Sắp xếp theo giá
+            </span>
           </div>
         </div>
 
         {/* Room Cards */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <div className="h-48 bg-muted"></div>
-                <CardContent className="p-6">
+              <Card key={i} className="animate-pulse rounded-2xl shadow-md">
+                <div className="h-44 bg-muted rounded-t-2xl"></div>
+                <CardContent className="p-4">
                   <div className="h-4 bg-muted rounded mb-2"></div>
-                  <div className="h-4 bg-muted rounded mb-4 w-2/3"></div>
+                  <div className="h-4 bg-muted rounded mb-3 w-2/3"></div>
                   <div className="h-6 bg-muted rounded"></div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {paginatedRooms.map((room: Room, index) => (
               <motion.div
                 key={room.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -4, scale: 1.01 }}
                 className="group"
               >
-                <Card className="card-enhanced hover-grow overflow-hidden h-full">
+                <Card className="card-enhanced hover-grow overflow-hidden h-full rounded-2xl shadow-md border-0">
                   {/* Room Image Gallery */}
-                  <div 
-                    className="relative h-48 overflow-hidden group/image cursor-pointer"
-                    onClick={() => room.images && room.images.length > 0 && openGallery(room, 0)}
+                  <div
+                    className="relative h-44 overflow-hidden group/image cursor-pointer"
+                    onClick={() =>
+                      room.images &&
+                      room.images.length > 0 &&
+                      openGallery(room, 0)
+                    }
                   >
                     {room.images && room.images.length > 0 ? (
                       <>
                         <img
                           src={room.images[0]}
                           alt={`Phòng ${room.number}`}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105 rounded-t-2xl"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
                           }}
                         />
                         {room.images.length > 1 && (
-                          <div className="absolute top-3 left-3 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-0.5 rounded-full text-xs font-medium">
                             1/{room.images.length}
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300" />
-                        <div className="absolute bottom-3 left-3 text-white opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex items-center">
-                          <ImageIcon size={16} className="mr-2" />
-                          <span className="text-sm font-medium">Xem thêm ảnh</span>
+                        <div className="absolute bottom-2 left-2 text-white opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex items-center">
+                          <ImageIcon size={14} className="mr-2" />
+                          <span className="text-xs font-medium">
+                            Xem thêm ảnh
+                          </span>
                         </div>
                       </>
                     ) : (
-                      <div className={`relative h-48 gradient-bg-${(index % 5) + 1} flex items-center justify-center`}>
+                      <div
+                        className={`relative h-44 gradient-bg-${
+                          (index % 5) + 1
+                        } flex items-center justify-center rounded-t-2xl`}
+                      >
                         <div className="text-white text-center animate-float">
-                          <Bed className="mx-auto mb-2" size={32} />
-                          <span className="text-lg font-semibold">Phòng {room.number}</span>
+                          <Bed className="mx-auto mb-2" size={28} />
+                          <span className="text-base font-semibold">
+                            Phòng {room.number}
+                          </span>
                         </div>
                       </div>
                     )}
-                    <Badge className="absolute top-3 right-3 glass backdrop-blur-lg text-white">
+                    <Badge className="absolute top-2 right-2 glass backdrop-blur-lg text-white text-xs px-2 py-0.5 rounded-full">
                       {getRoomTypeLabel(room.type)}
                     </Badge>
                   </div>
 
-                  <CardContent className="p-6 flex-1 flex flex-col">
+                  <CardContent className="p-4 flex-1 flex flex-col">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold mb-2">
+                      <h3 className="text-lg font-semibold mb-1">
                         Phòng {room.number}
                       </h3>
-                      
-                      <div className="flex items-center text-sm text-muted-foreground mb-3">
-                        <Users className="mr-1" size={14} />
+
+                      <div className="flex items-center text-xs text-muted-foreground mb-2">
+                        <Users className="mr-1" size={12} />
                         <span>Tối đa {room.capacity} khách</span>
                       </div>
 
                       {room.description && (
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                           {room.description}
                         </p>
                       )}
 
                       {/* Amenities */}
                       {room.amenities && room.amenities.length > 0 && (
-                        <div className="mb-4">
-                          <div className="flex flex-wrap gap-2">
-                            {room.amenities.slice(0, 4).map((amenity, i) => {
-                              const Icon = getAmenityIcon(amenity);
-                              return (
-                                <div key={i} className="flex items-center bg-muted/50 rounded-full px-2 py-1">
-                                  <Icon size={12} className="mr-1 text-muted-foreground" />
-                                  <span className="text-xs">{amenity}</span>
-                                </div>
-                              );
-                            })}
+                        <div className="mb-2">
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(room.amenities)
+                              ? room.amenities
+                              : JSON.parse(room.amenities || "[]")
+                            )
+                              .slice(0, 4)
+                              .map((amenity, i) => {
+                                const Icon = getAmenityIcon(amenity);
+                                return (
+                                  <div
+                                    key={i}
+                                    className="flex items-center bg-muted/50 rounded-full px-2 py-0.5"
+                                  >
+                                    <Icon
+                                      size={10}
+                                      className="mr-1 text-muted-foreground"
+                                    />
+                                    <span className="text-xs">{amenity}</span>
+                                  </div>
+                                );
+                              })}
                           </div>
                           {room.amenities.length > 4 && (
                             <p className="text-xs text-muted-foreground mt-1">
@@ -461,23 +625,29 @@ export default function Booking() {
                     </div>
 
                     {/* Pricing and Booking */}
-                    <Separator className="my-4" />
-                    <div className="space-y-3">
+                    <Separator className="my-3" />
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <div>
-                          <span className="text-2xl font-bold text-primary">
+                          <span className="text-lg font-bold text-primary">
                             {parseInt(room.price).toLocaleString()}đ
                           </span>
-                          <span className="text-sm text-muted-foreground">/đêm</span>
+                          <span className="text-xs text-muted-foreground">
+                            /đêm
+                          </span>
                         </div>
                         <div className="flex items-center">
-                          <Star className="text-yellow-500 mr-1" size={16} fill="currentColor" />
-                          <span className="text-sm font-medium">4.8</span>
+                          <Star
+                            className="text-yellow-500 mr-1"
+                            size={12}
+                            fill="currentColor"
+                          />
+                          <span className="text-xs font-medium">4.8</span>
                         </div>
                       </div>
 
                       {searchParams.checkIn && searchParams.checkOut && (
-                        <div className="text-sm">
+                        <div className="text-xs">
                           <div className="flex justify-between">
                             <span>Tổng tiền:</span>
                             <span className="font-semibold">
@@ -486,18 +656,23 @@ export default function Booking() {
                           </div>
                           <div className="flex justify-between text-muted-foreground">
                             <span>
-                              {Math.ceil((new Date(searchParams.checkOut).getTime() - new Date(searchParams.checkIn).getTime()) / (1000 * 60 * 60 * 24))} đêm
+                              {Math.ceil(
+                                (new Date(searchParams.checkOut).getTime() -
+                                  new Date(searchParams.checkIn).getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                              )}{" "}
+                              đêm
                             </span>
                             <span>{searchParams.guests} khách</span>
                           </div>
                         </div>
                       )}
 
-                      <Button 
-                        className="w-full btn-secondary hover-glow group-hover:shadow-md transition-all"
+                      <Button
+                        className="w-full btn-secondary hover-glow group-hover:shadow-md transition-all rounded-lg text-base py-2"
                         onClick={() => handleBookRoom(room)}
                       >
-                        <Calendar className="mr-2" size={16} />
+                        <Calendar className="mr-2" size={14} />
                         Đặt phòng ngay
                       </Button>
                     </div>
@@ -514,12 +689,12 @@ export default function Booking() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft size={16} />
             </Button>
-            
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button
                 key={page}
@@ -530,11 +705,13 @@ export default function Booking() {
                 {page}
               </Button>
             ))}
-            
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               <ChevronRight size={16} />
@@ -553,21 +730,26 @@ export default function Booking() {
               <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="text-muted-foreground" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Không tìm thấy phòng phù hợp</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Không tìm thấy phòng phù hợp
+              </h3>
               <p className="text-muted-foreground mb-4">
                 Thử thay đổi tiêu chí tìm kiếm hoặc ngày để xem thêm lựa chọn
               </p>
-              <Button variant="outline" onClick={() => {
-                setSearchParams({
-                  checkIn: "",
-                  checkOut: "",
-                  checkInTime: "14:00",
-                  checkOutTime: "12:00",
-                  guests: "2",
-                  roomType: "all"
-                });
-                setCurrentPage(1);
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchParams({
+                    checkIn: "",
+                    checkOut: "",
+                    checkInTime: "14:00",
+                    checkOutTime: "12:00",
+                    guests: "2",
+                    roomType: "all",
+                  });
+                  setCurrentPage(1);
+                }}
+              >
                 Đặt lại bộ lọc
               </Button>
             </div>
@@ -575,65 +757,69 @@ export default function Booking() {
         )}
       </div>
 
-      {/* Image Gallery Dialog */}
+      {/* Image Gallery Dialog chỉnh lại bo góc, shadow, thumbnail nhỏ */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-4xl h-[80vh] p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="flex items-center justify-between">
+        <DialogContent className="max-w-4xl h-[80vh] p-0 rounded-2xl shadow-xl">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle className="flex items-center justify-between text-base">
               <span>Hình ảnh phòng {galleryRoom?.number}</span>
-              <div className="text-sm text-muted-foreground">
-                {galleryRoom?.images && `${currentImageIndex + 1}/${galleryRoom.images.length}`}
+              <div className="text-xs text-muted-foreground">
+                {galleryRoom?.images &&
+                  `${currentImageIndex + 1}/${galleryRoom.images.length}`}
               </div>
             </DialogTitle>
           </DialogHeader>
-          
+
           {galleryRoom?.images && galleryRoom.images.length > 0 && (
-            <div className="relative flex-1 flex items-center justify-center bg-black/5">
+            <div className="relative flex-1 flex items-center justify-center bg-black/5 rounded-b-2xl">
               {/* Main Image */}
               <div className="relative w-full h-full flex items-center justify-center">
                 <img
                   src={galleryRoom.images[currentImageIndex]}
-                  alt={`Phòng ${galleryRoom.number} - Ảnh ${currentImageIndex + 1}`}
-                  className="max-w-full max-h-full object-contain"
+                  alt={`Phòng ${galleryRoom.number} - Ảnh ${
+                    currentImageIndex + 1
+                  }`}
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-lg"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    (e.target as HTMLImageElement).src =
+                      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
                   }}
                 />
-                
+
                 {/* Navigation Arrows */}
                 {galleryRoom.images.length > 1 && (
                   <>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full"
                       onClick={prevImage}
                     >
-                      <ChevronLeft size={24} />
+                      <ChevronLeft size={20} />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full"
                       onClick={nextImage}
                     >
-                      <ChevronRight size={24} />
+                      <ChevronRight size={20} />
                     </Button>
                   </>
                 )}
               </div>
-              
+
               {/* Thumbnail Strip */}
               {galleryRoom.images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 p-2 rounded-lg max-w-full overflow-x-auto">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-lg max-w-full overflow-x-auto">
                   {galleryRoom.images.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex 
-                          ? 'border-white opacity-100' 
-                          : 'border-transparent opacity-60 hover:opacity-80'
+                      className={`flex-shrink-0 w-10 h-8 rounded overflow-hidden border-2 transition-all ${
+                        index === currentImageIndex
+                          ? "border-white opacity-100"
+                          : "border-transparent opacity-60 hover:opacity-80"
                       }`}
                     >
                       <img
@@ -641,7 +827,8 @@ export default function Booking() {
                         alt={`Thumbnail ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80';
+                          (e.target as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80";
                         }}
                       />
                     </button>
