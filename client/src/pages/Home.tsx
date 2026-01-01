@@ -266,7 +266,7 @@ export default function Home() {
                           : JSON.parse(room.amenities || "[]")
                         )
                           .slice(0, 3)
-                          .map((amenity, i) => (
+                          .map((amenity: string, i: number) => (
                             <Badge
                               key={i}
                               variant="secondary"

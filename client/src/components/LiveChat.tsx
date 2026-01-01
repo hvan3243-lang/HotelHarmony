@@ -149,8 +149,8 @@ export function LiveChat({ isAdmin = false, selectedUserId }: LiveChatProps) {
   useEffect(() => {
     if (isOpen && !wsRef.current) {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const port = window.location.port || "5000";
-      const wsUrl = `${protocol}//${window.location.hostname}:${port}/ws`;
+      // Always connect to port 5000 for WebSocket (server port)
+      const wsUrl = `${protocol}//${window.location.hostname}:5000/ws`;
 
       try {
         wsRef.current = new WebSocket(wsUrl);

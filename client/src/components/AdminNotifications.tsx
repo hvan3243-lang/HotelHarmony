@@ -21,8 +21,8 @@ export function AdminNotifications() {
   useEffect(() => {
     // Kết nối WebSocket
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const port = window.location.port || "5000";
-    const wsUrl = `${protocol}//${window.location.hostname}:${port}/ws`;
+    // Always connect to port 5000 for WebSocket (server port)
+    const wsUrl = `${protocol}//${window.location.hostname}:5000/ws`;
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {

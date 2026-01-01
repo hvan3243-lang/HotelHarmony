@@ -136,8 +136,8 @@ export class DatabaseStorage implements IStorage {
         await this.createUser({
           email: "admin@hotellux.com",
           password: "admin123",
-          firstName: "Admin",
-          lastName: "User",
+          first_name: "Admin",
+          last_name: "User",
           role: "admin",
         });
         console.log("Admin user created successfully");
@@ -152,8 +152,8 @@ export class DatabaseStorage implements IStorage {
         await this.createUser({
           email: "user@hotellux.com",
           password: "user123",
-          firstName: "Regular",
-          lastName: "User",
+          first_name: "Regular",
+          last_name: "User",
           role: "customer",
         });
         console.log("Regular user created successfully");
@@ -168,11 +168,11 @@ export class DatabaseStorage implements IStorage {
         status: "available",
         price: "150.00",
         capacity: 2,
-        amenities: ["wifi", "tv", "minibar"],
-        images: [
+        amenities: JSON.stringify(["wifi", "tv", "minibar"]),
+        images: JSON.stringify([
           "https://images.unsplash.com/photo-1540518614846-7eded1dcaeb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
           "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        ],
+        ]),
         description: "Comfortable standard room with modern amenities",
       });
 
@@ -182,11 +182,17 @@ export class DatabaseStorage implements IStorage {
         status: "available",
         price: "250.00",
         capacity: 3,
-        amenities: ["wifi", "tv", "minibar", "balcony", "room-service"],
-        images: [
+        amenities: JSON.stringify([
+          "wifi",
+          "tv",
+          "minibar",
+          "balcony",
+          "room-service",
+        ]),
+        images: JSON.stringify([
           "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
           "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        ],
+        ]),
         description:
           "Spacious deluxe room with city view and premium amenities",
       });
@@ -197,18 +203,18 @@ export class DatabaseStorage implements IStorage {
         status: "available",
         price: "400.00",
         capacity: 4,
-        amenities: [
+        amenities: JSON.stringify([
           "wifi",
           "tv",
           "minibar",
           "balcony",
           "room-service",
           "jacuzzi",
-        ],
-        images: [
+        ]),
+        images: JSON.stringify([
           "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
           "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        ],
+        ]),
         description:
           "Luxurious suite with separate living area and premium amenities",
       });
@@ -219,7 +225,7 @@ export class DatabaseStorage implements IStorage {
         status: "available",
         price: "800.00",
         capacity: 6,
-        amenities: [
+        amenities: JSON.stringify([
           "wifi",
           "tv",
           "minibar",
@@ -227,11 +233,11 @@ export class DatabaseStorage implements IStorage {
           "room-service",
           "jacuzzi",
           "kitchen",
-        ],
-        images: [
+        ]),
+        images: JSON.stringify([
           "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
           "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        ],
+        ]),
         description:
           "Presidential suite with panoramic views and exclusive amenities",
       });
@@ -303,8 +309,8 @@ export class DatabaseStorage implements IStorage {
         last_name: "An",
         phone: "0987654321",
         role: "customer",
-        preferences: ["luxury", "spa"],
-        is_vip: false,
+        preferences: JSON.stringify(["luxury", "spa"]),
+        is_vip: 0,
       });
 
       await db.insert(users).values({
@@ -314,8 +320,8 @@ export class DatabaseStorage implements IStorage {
         last_name: "Bình",
         phone: "0976543210",
         role: "customer",
-        preferences: ["wifi", "parking"],
-        is_vip: true,
+        preferences: JSON.stringify(["wifi", "parking"]),
+        is_vip: 1,
       });
     } catch (error) {
       console.error("Error seeding data:", error);
@@ -338,8 +344,8 @@ export class DatabaseStorage implements IStorage {
     const userData: any = {
       email: insertUser.email,
       password: hashedPassword,
-      first_name: insertUser.firstName,
-      last_name: insertUser.lastName,
+      first_name: insertUser.first_name,
+      last_name: insertUser.last_name,
       phone: insertUser.phone || null,
       role: insertUser.role || "customer",
       preferences: Array.isArray(insertUser.preferences)
@@ -347,7 +353,7 @@ export class DatabaseStorage implements IStorage {
         : typeof insertUser.preferences === "string"
         ? insertUser.preferences
         : "[]",
-      is_vip: insertUser.isVip ? 1 : 0,
+      is_vip: insertUser.is_vip ? 1 : 0,
     };
     await db.insert(users).values(userData);
     const [user] = await db
@@ -384,7 +390,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoom(insertRoom: InsertRoom): Promise<Room> {
-    const [room] = await db.insert(rooms).values(insertRoom);
+    await db.insert(rooms).values(insertRoom);
+    const [room] = await db
+      .select()
+      .from(rooms)
+      .where(eq(rooms.number, insertRoom.number));
     return room;
   }
 
@@ -392,7 +402,8 @@ export class DatabaseStorage implements IStorage {
     id: number,
     updates: Partial<Room>
   ): Promise<Room | undefined> {
-    const [room] = await db.update(rooms).set(updates).where(eq(rooms.id, id));
+    await db.update(rooms).set(updates).where(eq(rooms.id, id));
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
     return room || undefined;
   }
 
@@ -407,10 +418,10 @@ export class DatabaseStorage implements IStorage {
         return result.length > 0;
       }
       if (typeof result === "object" && "affectedRows" in result) {
-        return result.affectedRows > 0;
+        return (result as any).affectedRows > 0;
       }
       if (typeof result === "object" && "rowCount" in result) {
-        return result.rowCount > 0;
+        return (result as any).rowCount > 0;
       }
       return false;
     } catch (error) {
@@ -613,18 +624,18 @@ export class DatabaseStorage implements IStorage {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
-          insertBooking.userId,
-          insertBooking.roomId,
-          insertBooking.checkIn,
-          insertBooking.checkOut,
+          insertBooking.user_id,
+          insertBooking.room_id,
+          insertBooking.check_in,
+          insertBooking.check_out,
           insertBooking.guests,
-          insertBooking.totalPrice,
+          insertBooking.total_price,
           "pending",
-          insertBooking.specialRequests || "",
-          insertBooking.checkInTime || "14:00",
-          insertBooking.checkOutTime || "12:00",
-          insertBooking.depositAmount || null,
-          insertBooking.remainingAmount || insertBooking.totalPrice,
+          insertBooking.special_requests || "",
+          insertBooking.check_in_time || "14:00",
+          insertBooking.check_out_time || "12:00",
+          insertBooking.deposit_amount || null,
+          insertBooking.remaining_amount || insertBooking.total_price,
         ]
       );
 
@@ -678,9 +689,10 @@ export class DatabaseStorage implements IStorage {
     id: number,
     updates: Partial<Booking>
   ): Promise<Booking | undefined> {
+    await db.update(bookings).set(updates).where(eq(bookings.id, id));
     const [booking] = await db
-      .update(bookings)
-      .set(updates)
+      .select()
+      .from(bookings)
       .where(eq(bookings.id, id));
     return booking || undefined;
   }

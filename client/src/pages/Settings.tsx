@@ -1,32 +1,38 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoyaltyBadge } from "@/components/LoyaltyProgram";
+import { useTheme } from "@/components/ThemeProvider";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  Shield, 
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { authManager } from "@/lib/auth";
+import { useLanguageStore, useTranslation } from "@/lib/i18n";
+import { apiRequest } from "@/lib/queryClient";
+import type { User as UserType } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  Bell,
+  Crown,
   Globe,
   Moon,
+  Settings as SettingsIcon,
+  Shield,
+  Star,
   Sun,
-  Crown,
-  Star
+  User,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useTranslation, useLanguageStore } from "@/lib/i18n";
-import { useTheme } from "@/components/ThemeProvider";
-import { authManager } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { LoyaltyBadge } from "@/components/LoyaltyProgram";
-import type { User as UserType } from "@shared/schema";
+import { useEffect, useState } from "react";
 
 interface UserSettings {
   firstName: string;
@@ -45,7 +51,7 @@ export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [user, setUser] = useState<UserType | null>(null);
   const [settings, setSettings] = useState<UserSettings>({
     firstName: "",
@@ -73,11 +79,15 @@ export default function Settings() {
         marketingEmails: false,
       });
     }
-  }, [language]);
+  }, [currentLanguage]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: Partial<UserSettings>) => {
-      const response = await apiRequest("PUT", "/api/users/profile", profileData);
+      const response = await apiRequest(
+        "PUT",
+        "/api/users/profile",
+        profileData
+      );
       return await response.json();
     },
     onSuccess: (updatedUser) => {
@@ -99,7 +109,7 @@ export default function Settings() {
   });
 
   const handleSettingChange = (key: keyof UserSettings, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleLanguageChange = (newLanguage: string) => {
@@ -124,7 +134,10 @@ export default function Settings() {
   };
 
   const handleRemovePreference = (preference: string) => {
-    handleSettingChange("preferences", settings.preferences.filter(p => p !== preference));
+    handleSettingChange(
+      "preferences",
+      settings.preferences.filter((p) => p !== preference)
+    );
   };
 
   const commonPreferences = [
@@ -145,7 +158,9 @@ export default function Settings() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">Vui lòng đăng nhập để truy cập cài đặt</p>
+            <p className="text-muted-foreground">
+              Vui lòng đăng nhập để truy cập cài đặt
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -165,15 +180,18 @@ export default function Settings() {
             <SettingsIcon className="mr-3" size={32} />
             <h1 className="text-3xl font-bold">Cài đặt tài khoản</h1>
           </motion.div>
-          
+
           {/* User Status */}
           <div className="flex items-center justify-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
-                {user.firstName[0]}{user.lastName[0]}
+                {user.firstName[0]}
+                {user.lastName[0]}
               </div>
               <div className="text-left">
-                <p className="font-semibold">{user.firstName} {user.lastName}</p>
+                <p className="font-semibold">
+                  {user.firstName} {user.lastName}
+                </p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
             </div>
@@ -184,7 +202,10 @@ export default function Settings() {
               </Badge>
             )}
             {user.loyaltyPoints !== undefined && (
-              <LoyaltyBadge level={user.loyaltyLevel || "Bronze"} points={user.loyaltyPoints} />
+              <LoyaltyBadge
+                level={user.loyaltyLevel || "Bronze"}
+                points={user.loyaltyPoints}
+              />
             )}
           </div>
         </div>
@@ -210,7 +231,9 @@ export default function Settings() {
                     <Input
                       id="firstName"
                       value={settings.firstName}
-                      onChange={(e) => handleSettingChange("firstName", e.target.value)}
+                      onChange={(e) =>
+                        handleSettingChange("firstName", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -218,27 +241,33 @@ export default function Settings() {
                     <Input
                       id="lastName"
                       value={settings.lastName}
-                      onChange={(e) => handleSettingChange("lastName", e.target.value)}
+                      onChange={(e) =>
+                        handleSettingChange("lastName", e.target.value)
+                      }
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="phone">{t("phone")}</Label>
                   <Input
                     id="phone"
                     value={settings.phone}
-                    onChange={(e) => handleSettingChange("phone", e.target.value)}
+                    onChange={(e) =>
+                      handleSettingChange("phone", e.target.value)
+                    }
                     placeholder="+84 123 456 789"
                   />
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleSaveProfile}
                   disabled={updateProfileMutation.isPending}
                   className="w-full"
                 >
-                  {updateProfileMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
+                  {updateProfileMutation.isPending
+                    ? "Đang lưu..."
+                    : "Lưu thông tin"}
                 </Button>
               </CardContent>
             </Card>
@@ -260,7 +289,10 @@ export default function Settings() {
               <CardContent className="space-y-6">
                 <div>
                   <Label>Ngôn ngữ</Label>
-                  <Select value={settings.language} onValueChange={handleLanguageChange}>
+                  <Select
+                    value={settings.language}
+                    onValueChange={handleLanguageChange}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -316,7 +348,7 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">
                   Chọn các sở thích để chúng tôi có thể phục vụ bạn tốt hơn
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {settings.preferences.map((preference) => (
                     <Badge
@@ -334,18 +366,18 @@ export default function Settings() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {commonPreferences
-                    .filter(pref => !settings.preferences.includes(pref))
+                    .filter((pref) => !settings.preferences.includes(pref))
                     .map((preference) => (
-                    <Button
-                      key={preference}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddPreference(preference)}
-                      className="justify-start"
-                    >
-                      + {preference}
-                    </Button>
-                  ))}
+                      <Button
+                        key={preference}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddPreference(preference)}
+                        className="justify-start"
+                      >
+                        + {preference}
+                      </Button>
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -375,7 +407,9 @@ export default function Settings() {
                   </div>
                   <Switch
                     checked={settings.emailNotifications}
-                    onCheckedChange={(checked) => handleSettingChange("emailNotifications", checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("emailNotifications", checked)
+                    }
                   />
                 </div>
 
@@ -388,7 +422,9 @@ export default function Settings() {
                   </div>
                   <Switch
                     checked={settings.pushNotifications}
-                    onCheckedChange={(checked) => handleSettingChange("pushNotifications", checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("pushNotifications", checked)
+                    }
                   />
                 </div>
 
@@ -401,7 +437,9 @@ export default function Settings() {
                   </div>
                   <Switch
                     checked={settings.marketingEmails}
-                    onCheckedChange={(checked) => handleSettingChange("marketingEmails", checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("marketingEmails", checked)
+                    }
                   />
                 </div>
               </CardContent>
@@ -430,9 +468,7 @@ export default function Settings() {
                       Cập nhật mật khẩu để bảo mật tài khoản
                     </p>
                   </div>
-                  <Button variant="outline">
-                    Đổi mật khẩu
-                  </Button>
+                  <Button variant="outline">Đổi mật khẩu</Button>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -442,9 +478,7 @@ export default function Settings() {
                       Tăng cường bảo mật với xác thực 2 lớp
                     </p>
                   </div>
-                  <Button variant="outline">
-                    Thiết lập
-                  </Button>
+                  <Button variant="outline">Thiết lập</Button>
                 </div>
               </CardContent>
             </Card>

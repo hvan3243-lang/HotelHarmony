@@ -997,8 +997,8 @@ export default function Customer() {
                                                   {booking.checkOut ||
                                                   booking.check_out
                                                     ? formatDate(
-                                                        booking.checkOut ||
-                                                          booking.check_out
+                                                        (booking.checkOut ||
+                                                          booking.check_out) as string
                                                       )
                                                     : "N/A"}
                                                 </p>
@@ -1025,8 +1025,10 @@ export default function Customer() {
                                                 </Label>
                                                 <p className="text-xl font-bold text-amber-700">
                                                   {formatPrice(
-                                                    booking.totalPrice ||
-                                                      booking.total_price
+                                                    (booking.totalPrice ||
+                                                      booking.total_price) as
+                                                      | string
+                                                      | number
                                                   )}
                                                 </p>
                                               </div>
@@ -1042,8 +1044,10 @@ export default function Customer() {
                                                   {booking.depositAmount ||
                                                   booking.deposit_amount
                                                     ? formatPrice(
-                                                        booking.depositAmount ||
-                                                          booking.deposit_amount
+                                                        (booking.depositAmount ||
+                                                          booking.deposit_amount) as
+                                                          | string
+                                                          | number
                                                       )
                                                     : booking.status ===
                                                         "deposit_paid" ||
@@ -1132,14 +1136,19 @@ export default function Customer() {
                                                       booking.room.amenities ||
                                                         "[]"
                                                     )
-                                                ).map((amenity, idx) => (
-                                                  <Badge
-                                                    key={idx}
-                                                    className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200"
-                                                  >
-                                                    {amenity}
-                                                  </Badge>
-                                                ))}
+                                                ).map(
+                                                  (
+                                                    amenity: string,
+                                                    idx: number
+                                                  ) => (
+                                                    <Badge
+                                                      key={idx}
+                                                      className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200"
+                                                    >
+                                                      {amenity}
+                                                    </Badge>
+                                                  )
+                                                )}
                                               </div>
                                             </div>
 

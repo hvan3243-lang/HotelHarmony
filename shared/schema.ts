@@ -117,12 +117,12 @@ export const invoices = mysqlTable("invoices", {
   services_total: decimal("services_total", {
     precision: 10,
     scale: 2,
-  }).default(0.0),
-  tax_amount: decimal("tax_amount", { precision: 10, scale: 2 }).default(0.0),
+  }).default("0.00"),
+  tax_amount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"),
   total_amount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   payment_method: varchar("payment_method", { length: 50 }),
   payment_status: varchar("payment_status", { length: 50 }).default("unpaid"),
-  paid_amount: decimal("paid_amount", { precision: 10, scale: 2 }).default(0.0),
+  paid_amount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0.00"),
   notes: text("notes"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
@@ -157,7 +157,7 @@ export const promotionalCodes = mysqlTable("promotional_codes", {
     precision: 10,
     scale: 2,
   }).notNull(),
-  min_amount: decimal("min_amount", { precision: 10, scale: 2 }).default(0.0),
+  min_amount: decimal("min_amount", { precision: 10, scale: 2 }).default("0.00"),
   max_discount: decimal("max_discount", { precision: 10, scale: 2 }),
   usage_limit: int("usage_limit"),
   used_count: int("used_count").default(0),
@@ -286,3 +286,17 @@ export const insertUserSchema = z.object({
   preferences: z.string().optional(),
   isVip: z.boolean().optional(),
 });
+
+// Export types for use in other files
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = typeof rooms.$inferInsert;
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;
+export type Service = typeof services.$inferSelect;
+export type InsertService = typeof services.$inferInsert;

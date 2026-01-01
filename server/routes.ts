@@ -154,12 +154,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const userData = {
                 email: profile.emails?.[0]?.value || "",
                 password: "", // No password for Google users
-                firstName: profile.name?.givenName || "",
-                lastName: profile.name?.familyName || "",
+                first_name: profile.name?.givenName || "",
+                last_name: profile.name?.familyName || "",
                 phone: null,
                 role: "customer" as const,
-                preferences: [],
-                isVip: false,
+                preferences: "[]",
+                is_vip: 0,
               };
 
               user = await storage.createUser(userData);
@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             return done(null, user);
           } catch (error) {
-            return done(error, null);
+            return done(error, undefined);
           }
         }
       )
@@ -186,7 +186,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email đã được sử dụng" });
       }
 
-      const user = await storage.createUser(userData);
+      // Convert camelCase to snake_case
+      const dbUserData = {
+        email: userData.email,
+        password: userData.password,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        phone: userData.phone || null,
+        role: userData.role || "customer",
+        preferences: userData.preferences || "[]",
+        is_vip: userData.isVip ? 1 : 0,
+      };
+
+      const user = await storage.createUser(dbUserData);
+      const { password, ...userWithoutPassword } = user;
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.json({ user: userWithoutPassword, token });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Temporary endpoint to create admin user
+  app.post("/api/auth/create-admin", async (req: Request, res: Response) => {
+    try {
+      console.log("Create admin body:", req.body);
+      const userData = insertUserSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email đã được sử dụng" });
+      }
+
+      // Convert camelCase to snake_case and force admin role
+      const dbUserData = {
+        email: userData.email,
+        password: userData.password,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        phone: userData.phone || null,
+        role: "admin",
+        preferences: userData.preferences || "[]",
+        is_vip: userData.isVip ? 1 : 0,
+      };
+
+      const user = await storage.createUser(dbUserData);
       const { password, ...userWithoutPassword } = user;
 
       const token = jwt.sign(
@@ -578,6 +629,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...req.body,
           userId: req.user.id, // Đảm bảo đúng tên trường và kiểu số
         });
+
+        // Convert to database format
+        const dbBookingData = {
+          user_id: bookingData.userId,
+          room_id: bookingData.roomId,
+          check_in: new Date(bookingData.checkIn),
+          check_out: new Date(bookingData.checkOut),
+          guests: bookingData.guests,
+          total_price: bookingData.totalPrice,
+          status: bookingData.status || "pending",
+          special_requests: bookingData.specialRequests || null,
+          check_in_time: bookingData.checkInTime || "14:00",
+          check_out_time: bookingData.checkOutTime || "12:00",
+          deposit_amount: bookingData.depositAmount || null,
+          remaining_amount:
+            bookingData.remainingAmount || bookingData.totalPrice,
+        };
         console.log("Booking data after parse:", bookingData);
         console.log("=== END DEBUG ===");
         // Check room availability
@@ -612,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           availableRooms.find((room) => room.id === bookingData.roomId)
         );
 
-        if (!availableRooms.find((room) => room.id === bookingData.roomId)) {
+        if (!availableRooms.find((room) => room.id === dbBookingData.room_id)) {
           console.log("Debug - Room not available, returning error");
           return res.status(400).json({
             message:
@@ -620,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             code: "ROOM_NOT_AVAILABLE",
           });
         }
-        const booking = await storage.createBooking(bookingData);
+        const booking = await storage.createBooking(dbBookingData);
         console.log("Debug - Created booking:", booking);
         console.log("Debug - Booking ID:", booking.id);
 
@@ -652,9 +720,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: bookingWithDetails.id,
               customerName: `${req.user.firstName} ${req.user.lastName}`,
               room: `${bookingWithDetails.room.type} - Phòng ${bookingWithDetails.room.number}`,
-              checkIn: safeToISOString(bookingWithDetails.checkIn),
-              checkOut: safeToISOString(bookingWithDetails.checkOut),
-              totalPrice: bookingWithDetails.totalPrice,
+              checkIn: safeToISOString(bookingWithDetails.check_in),
+              checkOut: safeToISOString(bookingWithDetails.check_out),
+              totalPrice: bookingWithDetails.total_price,
               timestamp: new Date().toISOString(),
             },
           });
@@ -728,10 +796,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Debug: Kiểm tra user ID matching
         console.log("Debug - Cancel booking check:");
         console.log(
-          "  - booking.userId:",
-          booking.userId,
+          "  - booking.user_id:",
+          booking.user_id,
           "type:",
-          typeof booking.userId
+          typeof booking.user_id
         );
         console.log(
           "  - req.user.id:",
@@ -755,7 +823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check if booking can be cancelled based on check-in date
-        const checkInDate = new Date(booking.checkIn);
+        const checkInDate = new Date(booking.check_in);
         const now = new Date();
         const hoursUntilCheckIn =
           (checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -765,11 +833,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (hoursUntilCheckIn > 48) {
           // Full refund if cancelled more than 48 hours before check-in
-          refundAmount = parseFloat(booking.totalPrice);
+          refundAmount = parseFloat(booking.total_price);
           refundPercentage = 100;
         } else if (hoursUntilCheckIn > 24) {
           // 50% refund if cancelled 24-48 hours before check-in
-          refundAmount = parseFloat(booking.totalPrice) * 0.5;
+          refundAmount = parseFloat(booking.total_price) * 0.5;
           refundPercentage = 50;
         }
         // No refund if cancelled within 24 hours
@@ -783,7 +851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Hủy đặt phòng thành công",
           refundAmount: refundAmount,
           refundPercentage: refundPercentage,
-          originalAmount: parseFloat(booking.totalPrice),
+          originalAmount: parseFloat(booking.total_price),
         });
       } catch (error: any) {
         res.status(400).json({ message: error.message });
@@ -883,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update booking with payment intent ID
         if (bookingId) {
           await storage.updateBooking(bookingId, {
-            paymentIntentId: paymentIntent.id,
+            payment_intent_id: paymentIntent.id,
           });
         }
 
@@ -932,13 +1000,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update booking status and amounts
         const updateData: any = {
           status: paymentStatus,
-          paymentMethod: paymentMethod,
+          payment_method: paymentMethod,
           deposit_amount: depositAmount,
           remaining_amount: remainingAmount,
         };
 
         if (paymentIntentId) {
-          updateData.paymentIntentId = paymentIntentId;
+          updateData.payment_intent_id = paymentIntentId;
         }
 
         console.log("Debug - Confirm payment update data:", updateData);
@@ -1054,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate total revenue from confirmed and completed bookings
         const totalRevenue = bookings
           .filter((b) => b.status === "confirmed" || b.status === "completed")
-          .reduce((sum, b) => sum + parseFloat(b.totalPrice), 0);
+          .reduce((sum, b) => sum + parseFloat(b.total_price), 0);
 
         res.json({
           totalRooms,
@@ -1065,8 +1133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           recentBookings: bookings
             .sort(
               (a, b) =>
-                new Date(b.createdAt!).getTime() -
-                new Date(a.createdAt!).getTime()
+                new Date(b.created_at!).getTime() -
+                new Date(a.created_at!).getTime()
             )
             .slice(0, 5),
         });
@@ -1102,7 +1170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
 
           const monthBookings = bookings.filter((booking) => {
-            const bookingDate = new Date(booking.createdAt!);
+            const bookingDate = new Date(booking.created_at!);
             return (
               bookingDate.getMonth() === monthDate.getMonth() &&
               bookingDate.getFullYear() === monthDate.getFullYear() &&
@@ -1111,7 +1179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
 
           const revenue = monthBookings.reduce(
-            (sum, booking) => sum + parseFloat(booking.totalPrice),
+            (sum, booking) => sum + parseFloat(booking.total_price),
             0
           );
           monthlyRevenue.push({ month: monthName, revenue });
@@ -1132,7 +1200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Booking status distribution
         const statusCount = bookings.reduce((acc, booking) => {
-          acc[booking.status] = (acc[booking.status] || 0) + 1;
+          const status = booking.status || "unknown";
+          acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
 
@@ -1231,7 +1300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const rooms = await storage.getRooms();
-        let recommendations = [];
+        let recommendations: any[] = [];
 
         // Simple AI recommendation based on preferences
         let userPreferences = [];
@@ -1364,7 +1433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const [actualMessage] = await db
           .select()
           .from(chatMessages)
-          .where(eq(chatMessages.id, chatMessage.insertId));
+          .where(eq(chatMessages.id, chatMessage.id));
 
         console.log("Actual message from DB:", actualMessage);
 
@@ -1562,7 +1631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await db
           .delete(chatMessages)
           .where(eq(chatMessages.id, message_id));
-        if ((result?.rowCount || result?.affectedRows || 0) > 0) {
+        if ((result as any)?.affectedRows > 0) {
           res.json({ success: true, message: "Đã xóa tin nhắn" });
         } else {
           res
@@ -1628,18 +1697,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const bookings = await storage.getBookings();
             data = bookings.map((booking) => ({
               "Mã đặt phòng": booking.id,
-              "Khách hàng": `${booking.user.firstName} ${booking.user.lastName}`,
+              "Khách hàng": `${booking.user.first_name} ${booking.user.last_name}`,
               Email: booking.user.email,
               "Số điện thoại": booking.user.phone || "",
               "Số phòng": booking.room.number,
               "Loại phòng": booking.room.type,
-              "Ngày nhận": safeToISOString(booking.checkIn),
-              "Ngày trả": safeToISOString(booking.checkOut),
+              "Ngày nhận": safeToISOString(booking.check_in),
+              "Ngày trả": safeToISOString(booking.check_out),
               "Số khách": booking.guests,
-              "Tổng tiền": booking.totalPrice,
+              "Tổng tiền": booking.total_price,
               "Trạng thái": booking.status,
-              "Phương thức TT": booking.paymentMethod || "",
-              "Ngày tạo": safeToISOString(booking.createdAt),
+              "Phương thức TT": booking.payment_method || "",
+              "Ngày tạo": safeToISOString(booking.created_at),
             }));
             filename = `bookings_${new Date().toISOString().split("T")[0]}`;
             headers = Object.keys(data[0] || {});
@@ -1653,10 +1722,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "Loại phòng": room.type,
               Giá: room.price,
               "Sức chứa": room.capacity,
-              "Trạng thái": room.isAvailable ? "Có sẵn" : "Đã đặt",
+              "Trạng thái": room.status === "available" ? "Có sẵn" : "Đã đặt",
               "Mô tả": room.description || "",
-              "Tiện nghi": room.amenities?.join(", ") || "",
-              "Ngày tạo": safeToISOString(room.createdAt),
+              "Tiện nghi":
+                typeof room.amenities === "string"
+                  ? room.amenities
+                  : Array.isArray(room.amenities)
+                  ? room.amenities.join(", ")
+                  : "",
+              "Ngày tạo": safeToISOString(room.created_at),
             }));
             filename = `rooms_${new Date().toISOString().split("T")[0]}`;
             headers = Object.keys(data[0] || {});
@@ -1667,7 +1741,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const revenueData = allBookings
               .filter((b) => b.status === "confirmed")
               .reduce((acc: any, booking) => {
-                const month = safeToISOString(booking.createdAt).slice(0, 7);
+                const month =
+                  safeToISOString(booking.created_at)?.slice(0, 7) || "unknown";
                 if (!acc[month]) {
                   acc[month] = {
                     month,
@@ -1677,7 +1752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   };
                 }
                 acc[month].totalBookings += 1;
-                acc[month].totalRevenue += parseFloat(booking.totalPrice);
+                acc[month].totalRevenue += parseFloat(booking.total_price);
                 return acc;
               }, {});
 
@@ -1861,7 +1936,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password: hashedPassword,
           role: "customer",
         });
-        const user = await storage.createUser(userData);
+
+        // Convert to database format
+        const dbUserData = {
+          email: userData.email,
+          password: userData.password,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          phone: userData.phone || null,
+          role: userData.role || "customer",
+          preferences: userData.preferences || "[]",
+          is_vip: userData.isVip ? 1 : 0,
+        };
+
+        const user = await storage.createUser(dbUserData);
         const { password, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
       } catch (error: any) {
@@ -1923,7 +2011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const booking = await storage.updateBooking(bookingId, {
           status: "confirmed",
-          paymentMethod,
+          payment_method: paymentMethod,
         });
 
         if (!booking) {
@@ -1952,7 +2040,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const booking = await storage.updateBooking(bookingId, {
           status: "confirmed",
-          paymentMethod: paymentMethod,
+          payment_method: paymentMethod,
         });
 
         if (!booking) {
@@ -2209,7 +2297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const booking = await storage.getBooking(reviewData.bookingId);
         if (
           !booking ||
-          booking.userId !== req.user.id ||
+          booking.user_id !== req.user.id ||
           booking.status !== "completed"
         ) {
           return res.status(400).json({
@@ -2308,7 +2396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceList = services
         .map((s) => `${s.name} (${s.description}, ${s.price}đ)`)
         .join("; ");
-      const blogList = blogs.map((b) => b.title || b.name || b.slug).join("; ");
+      const blogList = blogs.map((b) => b.title || b.slug).join("; ");
       const contactInfo = `Địa chỉ: ${contact.address}; Điện thoại: ${contact.phone}; Email: ${contact.email}`;
       // Ghép prompt tối ưu
       const prompt = `${userInfoStr}${INSTRUCTION}\n\nDỮ LIỆU KHÁCH SẠN:\n- Phòng: ${roomList}\n- Dịch vụ: ${serviceList}\n- Blog: ${blogList}\n- Liên hệ: ${contactInfo}\n\nCâu hỏi: ${question}`;
@@ -2330,7 +2418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: "Gemini API error", error: err });
       }
-      const data = await response.json();
+      const data: any = await response.json();
       // Lấy câu trả lời đầu tiên
       const answer =
         data.candidates?.[0]?.content?.parts?.[0]?.text ||

@@ -37,6 +37,7 @@ import {
 import React, { useState } from "react";
 
 import { AdminContactMessages } from "@/components/AdminContactMessages";
+import { CreateAdmin } from "@/components/CreateAdmin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +69,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { authManager } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -189,6 +191,10 @@ export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get user info for debugging
+  const user = authManager.getUser();
+  const token = authManager.getToken();
+
   // Queries
   const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
@@ -214,12 +220,6 @@ export default function Admin() {
     queryKey: ["/api/bookings"],
   });
 
-  // Debug logs for bookings
-  console.log("Debug - Admin page bookings:", bookings);
-  console.log("Debug - Admin bookings loading:", bookingsLoading);
-  console.log("Debug - Admin bookings error:", bookingsError);
-  console.log("Debug - Admin bookings length:", bookings?.length);
-
   // Chat queries
   const { data: chatConversations } = useQuery({
     queryKey: ["/api/admin/chat/conversations"],
@@ -243,7 +243,6 @@ export default function Admin() {
   // Test API: Create unread message
   const createTestMessageMutation = useMutation({
     mutationFn: async (data: { message: string; targetUserId: number }) => {
-      console.log("Creating test message:", data);
       try {
         const response = await apiRequest(
           "POST",
@@ -251,7 +250,6 @@ export default function Admin() {
           data
         );
         const jsonResponse = await response.json();
-        console.log("Test message created:", jsonResponse);
         return jsonResponse;
       } catch (error) {
         console.error("Error creating test message:", error);
@@ -269,16 +267,13 @@ export default function Admin() {
   // Mark messages as read when admin views them
   const markAsReadMutation = useMutation({
     mutationFn: async (data: { targetUserId: number }) => {
-      console.log("Calling mark as read API with:", data);
       try {
         const response = await apiRequest(
           "PUT",
           "/api/chat/messages/read",
           data
         );
-        console.log("API response:", response);
         const jsonResponse = await response.json();
-        console.log("JSON response:", jsonResponse);
         return jsonResponse;
       } catch (error) {
         console.error("API call error:", error);
@@ -815,6 +810,25 @@ export default function Admin() {
     sourceCounts.partner,
     sourceCounts.other,
   ];
+
+  // Check if user is admin
+  if (!authManager.isAdmin()) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+              Truy cập bị từ chối
+            </h1>
+            <p className="text-slate-600 dark:text-slate-300 mb-8">
+              Bạn cần quyền admin để truy cập trang này.
+            </p>
+            <CreateAdmin />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -2579,13 +2593,20 @@ export default function Admin() {
                                     <span className="font-medium">
                                       Phương thức:
                                     </span>{" "}
-                                    {booking.paymentMethod === "stripe" || booking.payment_method === "stripe"
+                                    {booking.paymentMethod === "stripe" ||
+                                    booking.payment_method === "stripe"
                                       ? "Thẻ tín dụng"
-                                      : booking.paymentMethod === "cash_on_arrival" || booking.payment_method === "cash_on_arrival"
+                                      : booking.paymentMethod ===
+                                          "cash_on_arrival" ||
+                                        booking.payment_method ===
+                                          "cash_on_arrival"
                                       ? "Tiền mặt"
-                                      : booking.paymentMethod === "e_wallet" || booking.payment_method === "e_wallet"
+                                      : booking.paymentMethod === "e_wallet" ||
+                                        booking.payment_method === "e_wallet"
                                       ? "Ví điện tử"
-                                      : booking.paymentMethod || booking.payment_method || "Chưa xác định"}
+                                      : booking.paymentMethod ||
+                                        booking.payment_method ||
+                                        "Chưa xác định"}
                                   </div>
                                 </div>
                               </div>
@@ -2907,10 +2928,6 @@ export default function Admin() {
                     <CardContent className="p-0 flex flex-col flex-1">
                       {/* Messages */}
                       <div className="flex-1 p-8 overflow-y-auto space-y-6 bg-gradient-to-br from-slate-50/50 to-white">
-                        {/* Debug: Show message count */}
-                        <div className="text-xs text-slate-400 mb-4 text-center">
-                          Total messages: {(chatMessages as any[])?.length || 0}
-                        </div>
                         {(chatMessages as any[])?.map(
                           (message: any, index: number) => (
                             <div
